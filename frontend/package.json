@@ -10,8 +10,12 @@
   },
   "dependencies": {
     "@next/font": "^14.2.15",
+    "@sentry/nextjs": "^10.42.0",
     "@stripe/stripe-js": "^8.8.0",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.98.0",
     "next": "16.1.6",
+    "posthog-js": "^1.359.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.2",

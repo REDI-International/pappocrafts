@@ -6,5 +6,6 @@ export async function GET(request: NextRequest) {
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const session = validateSession(token);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json(getStats());
+  const stats = await getStats();
+  return NextResponse.json(stats);
 }

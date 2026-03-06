@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password required." }, { status: 400 });
     }
-    const session = authenticate(email, password);
+    const session = await authenticate(email, password);
     if (!session) {
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }

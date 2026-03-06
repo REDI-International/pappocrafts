@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    addOrder(storedOrder);
+    await addOrder(storedOrder);
 
     const resend = getResend();
 

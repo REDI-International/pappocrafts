@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { LocaleProvider } from "@/lib/locale-context";
+import PostHogProvider from "@/components/PostHogProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -44,7 +46,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
-        <LocaleProvider><CartProvider>{children}</CartProvider></LocaleProvider>
+        <Suspense fallback={null}>
+          <PostHogProvider>
+            <LocaleProvider><CartProvider>{children}</CartProvider></LocaleProvider>
+          </PostHogProvider>
+        </Suspense>
       </body>
     </html>
   );

@@ -25,12 +25,13 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get("id");
 
   if (id) {
-    const order = getOrder(id);
+    const order = await getOrder(id);
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
     return NextResponse.json(order);
   }
 
-  return NextResponse.json(getAllOrders());
+  const orders = await getAllOrders();
+  return NextResponse.json(orders);
 }
 
 export async function PATCH(request: NextRequest) {
@@ -44,13 +45,13 @@ export async function PATCH(request: NextRequest) {
     if (!id) return NextResponse.json({ error: "Order ID required" }, { status: 400 });
 
     if (status) {
-      const updated = updateOrderStatus(id, status as OrderStatus);
+      const updated = await updateOrderStatus(id, status as OrderStatus);
       if (!updated) return NextResponse.json({ error: "Order not found" }, { status: 404 });
       return NextResponse.json(updated);
     }
 
     if (paymentStatus) {
-      const updated = updatePaymentStatus(id, paymentStatus);
+      const updated = await updatePaymentStatus(id, paymentStatus);
       if (!updated) return NextResponse.json({ error: "Order not found" }, { status: 404 });
       return NextResponse.json(updated);
     }
@@ -71,7 +72,7 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Order ID required" }, { status: 400 });
 
-  const deleted = deleteOrder(id);
+  const deleted = await deleteOrder(id);
   if (!deleted) return NextResponse.json({ error: "Order not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }
