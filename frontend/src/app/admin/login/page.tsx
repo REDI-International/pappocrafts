@@ -31,7 +31,11 @@ export default function AdminLogin() {
 
       localStorage.setItem("admin-token", data.token);
       localStorage.setItem("admin-user", JSON.stringify({ email: data.email, role: data.role, name: data.name }));
-      router.push("/admin");
+      if (data.role === "user") {
+        router.push("/account");
+      } else {
+        router.push("/admin");
+      }
     } catch {
       setError("Connection error.");
       setLoading(false);

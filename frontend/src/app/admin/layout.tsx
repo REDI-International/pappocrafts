@@ -6,7 +6,7 @@ import Link from "next/link";
 
 interface AdminUser {
   email: string;
-  role: "superadmin" | "admin";
+  role: "superadmin" | "admin" | "user";
   name: string;
 }
 
@@ -57,6 +57,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
       const data = await res.json();
+      if (data.role === "user") {
+        router.replace("/account");
+        return;
+      }
       setUser(data);
       if (isLoginPage) router.replace("/admin");
     } catch {

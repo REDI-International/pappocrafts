@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-export type AdminRole = "superadmin" | "admin";
+export type UserRole = "superadmin" | "admin" | "user";
 
 export interface StoredOrder {
   id: string;
@@ -40,7 +40,7 @@ export interface StoredOrder {
 interface Session {
   token: string;
   email: string;
-  role: AdminRole;
+  role: UserRole;
   name: string;
   createdAt: number;
 }
@@ -50,8 +50,9 @@ function sha256(input: string): string {
 }
 
 const FALLBACK_USERS = [
-  { email: "petrica@redi-ngo.eu", passwordHash: sha256("Ppapadie83*"), role: "superadmin" as AdminRole, name: "Petrica" },
-  { email: "richard@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "admin" as AdminRole, name: "Richard" },
+  { email: "petrica@redi-ngo.eu", passwordHash: sha256("Ppapadie83*"), role: "superadmin" as UserRole, name: "Petrica" },
+  { email: "richard@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "admin" as UserRole, name: "Richard" },
+  { email: "user@papposhop.org", passwordHash: sha256("PappoUser2026!"), role: "user" as UserRole, name: "Demo User" },
 ];
 
 const sessions: Map<string, Session> = new Map();
@@ -68,7 +69,7 @@ export async function authenticate(email: string, password: string): Promise<Ses
   const hash = sha256(password);
   const db = supabase();
 
-  let user: { email: string; role: AdminRole; name: string } | null = null;
+  let user: { email: string; role: UserRole; name: string } | null = null;
 
   if (db) {
     const { data } = await db
@@ -78,7 +79,7 @@ export async function authenticate(email: string, password: string): Promise<Ses
       .single();
 
     if (data && data.password_hash === hash) {
-      user = { email: data.email, role: data.role as AdminRole, name: data.name };
+      user = { email: data.email, role: data.role as UserRole, name: data.name };
     }
   }
 

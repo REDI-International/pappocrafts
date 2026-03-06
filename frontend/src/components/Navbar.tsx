@@ -7,6 +7,14 @@ import { useCart } from "@/lib/cart-context";
 import { useLocale, locales } from "@/lib/locale-context";
 import CartSidebar from "./CartSidebar";
 
+function useLoggedIn() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    setLoggedIn(!!localStorage.getItem("admin-token"));
+  }, []);
+  return loggedIn;
+}
+
 function LanguageSelector({ variant }: { variant: "desktop" | "mobile" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -71,6 +79,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
   const { t } = useLocale();
+  const loggedIn = useLoggedIn();
 
   return (
     <>
@@ -97,6 +106,16 @@ export default function Navbar() {
 
               <LanguageSelector variant="desktop" />
 
+              <Link
+                href={loggedIn ? "/account" : "/login"}
+                className="p-2 text-charcoal/70 hover:text-green transition-colors"
+                aria-label="Account"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              </Link>
+
               <button
                 onClick={() => setIsCartOpen(true)}
                 className="relative p-2 text-charcoal/70 hover:text-green transition-colors"
@@ -121,6 +140,11 @@ export default function Navbar() {
 
             <div className="flex items-center gap-2 md:hidden">
               <LanguageSelector variant="mobile" />
+              <Link href={loggedIn ? "/account" : "/login"} className="p-2 text-charcoal" aria-label="Account">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              </Link>
               <button
                 onClick={() => setIsCartOpen(true)}
                 className="relative p-2 text-charcoal"
