@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
 import { useLocale, locales } from "@/lib/locale-context";
+import { useSiteSettings } from "@/lib/site-settings-context";
 import CartSidebar from "./CartSidebar";
 
 function useLoggedIn() {
@@ -79,6 +80,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
   const { t } = useLocale();
+  const { logo_url } = useSiteSettings();
   const loggedIn = useLoggedIn();
 
   return (
@@ -87,7 +89,7 @@ export default function Navbar() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center">
-              <Image src="/pappocrafts-logo.png" alt="PappoCrafts" width={160} height={48} className="h-10 w-auto" priority />
+              <Image src={logo_url} alt="PappoCrafts" width={160} height={48} className="h-10 w-auto" priority unoptimized />
             </Link>
 
             <div className="hidden md:flex items-center gap-5">

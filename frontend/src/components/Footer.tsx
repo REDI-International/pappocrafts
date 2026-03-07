@@ -3,19 +3,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useLocale } from "@/lib/locale-context";
+import { useSiteSettings } from "@/lib/site-settings-context";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { t } = useLocale();
+  const { logo_url, footer_description } = useSiteSettings();
 
   return (
     <footer className="bg-charcoal border-t border-charcoal-light">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid gap-8 md:grid-cols-4">
           <div>
-            <Image src="/pappocrafts-logo.png" alt="PappoCrafts" width={140} height={42} className="h-10 w-auto brightness-0 invert" />
+            <Image src={logo_url} alt="PappoCrafts" width={140} height={42} className="h-10 w-auto brightness-0 invert" unoptimized />
             <p className="mt-3 text-sm text-white/50 leading-relaxed max-w-xs">
-              {t("footer.desc")}
+              {footer_description || t("footer.desc")}
             </p>
           </div>
 

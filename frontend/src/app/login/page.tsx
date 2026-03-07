@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useSiteSettings } from "@/lib/site-settings-context";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { logo_url } = useSiteSettings();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -66,12 +68,13 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <Link href="/">
               <Image
-                src="/pappocrafts-logo.png"
+                src={logo_url}
                 alt="PappoCrafts"
                 width={180}
                 height={54}
                 className="h-12 w-auto mx-auto"
                 priority
+                unoptimized
               />
             </Link>
             <h1 className="mt-6 text-2xl font-bold text-charcoal">Welcome back</h1>

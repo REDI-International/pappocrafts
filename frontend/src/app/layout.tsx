@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { LocaleProvider } from "@/lib/locale-context";
+import { SiteSettingsProvider } from "@/lib/site-settings-context";
 import PostHogProvider from "@/components/PostHogProvider";
 import "./globals.css";
 
@@ -48,7 +49,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
         <Suspense fallback={null}>
           <PostHogProvider>
-            <LocaleProvider><CartProvider>{children}</CartProvider></LocaleProvider>
+            <SiteSettingsProvider><LocaleProvider><CartProvider>{children}</CartProvider></LocaleProvider></SiteSettingsProvider>
           </PostHogProvider>
         </Suspense>
       </body>

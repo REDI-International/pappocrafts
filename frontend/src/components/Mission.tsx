@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLocale } from "@/lib/locale-context";
+import { useSiteSettings } from "@/lib/site-settings-context";
 import type { TranslationKey } from "@/lib/translations";
 
 const values: { titleKey: TranslationKey; descKey: TranslationKey }[] = [
@@ -13,6 +14,7 @@ const values: { titleKey: TranslationKey; descKey: TranslationKey }[] = [
 
 export default function Mission() {
   const { t } = useLocale();
+  const siteSettings = useSiteSettings();
 
   return (
     <section id="mission" className="py-24 sm:py-32">
@@ -20,16 +22,16 @@ export default function Mission() {
         <div className="grid gap-16 lg:grid-cols-2 lg:gap-24 items-center">
           <div>
             <p className="text-sm font-semibold text-green uppercase tracking-wide">
-              {t("mission.badge")}
+              {siteSettings.mission_badge || t("mission.badge")}
             </p>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-bold text-charcoal tracking-tight leading-tight">
-              {t("mission.title")}
+              {siteSettings.mission_title || t("mission.title")}
             </h2>
             <p className="mt-6 text-lg text-charcoal/70 leading-relaxed">
-              {t("mission.desc1")}
+              {siteSettings.mission_desc1 || t("mission.desc1")}
             </p>
             <p className="mt-4 text-lg text-charcoal/70 leading-relaxed">
-              {t("mission.desc2")}
+              {siteSettings.mission_desc2 || t("mission.desc2")}
             </p>
 
             <div className="mt-8 flex items-center gap-4">

@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useLocale } from "@/lib/locale-context";
+import { useSiteSettings } from "@/lib/site-settings-context";
 
 export default function Hero() {
   const { t } = useLocale();
+  const siteSettings = useSiteSettings();
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
@@ -22,17 +24,17 @@ export default function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
         <div className="mx-auto max-w-3xl">
           <p className="mb-4 inline-block rounded-full bg-green/10 px-4 py-1.5 text-sm font-semibold text-green tracking-wide uppercase">
-            {t("hero.badge")}
+            {siteSettings.hero_badge || t("hero.badge")}
           </p>
 
           <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-charcoal leading-[1.1] tracking-tight">
-            {t("hero.title1")}
+            {siteSettings.hero_title1 || t("hero.title1")}
             <br />
-            <span className="text-green">{t("hero.title2")}</span>
+            <span className="text-green">{siteSettings.hero_title2 || t("hero.title2")}</span>
           </h1>
 
           <p className="mt-6 text-lg sm:text-xl text-charcoal/70 max-w-2xl mx-auto leading-relaxed">
-            {t("hero.desc")}
+            {siteSettings.hero_description || t("hero.desc")}
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
