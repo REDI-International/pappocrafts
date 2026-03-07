@@ -49,7 +49,7 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
             <div className="lg:col-span-2">
               <div className="flex items-start gap-5 mb-6">
                 <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full bg-light">
-                  <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="80px" priority />
+                  <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="80px" priority unoptimized />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -231,7 +231,7 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-light">
-                        <Image src={p.image} alt={p.name} fill className="object-cover" sizes="48px" />
+                        <Image src={p.image} alt={p.name} fill className="object-cover" sizes="48px" unoptimized />
                       </div>
                       <div>
                         <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors">{p.name}</h3>

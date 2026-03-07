@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { serviceCategories } from "@/lib/services";
 
@@ -33,7 +33,7 @@ const emptyService: EditableService = {
   id: "", name: "", title: "", description: "", long_description: "",
   category: serviceCategories[1].name, hourly_rate: 0, fixed_rate_from: null,
   currency: "EUR", rating: 5, review_count: 0, location: "", country: "",
-  image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop",
+  image: "",
   badges: [], available: true, response_time: "Under 1 hour", completed_jobs: 0,
 };
 
@@ -50,6 +50,9 @@ export default function AdminServices() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [badgeInput, setBadgeInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchServices = useCallback(async () => {
     try {
@@ -106,6 +109,25 @@ export default function AdminServices() {
       setEditing({ ...editing, badges: [...editing.badges, badgeInput.trim()] });
     }
     setBadgeInput("");
+  }
+
+  async function handleImageUpload(file: File) {
+    if (!editing) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: formData,
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        setEditing({ ...editing, image: url });
+      }
+    } catch { /* ignore */ }
+    setUploading(false);
   }
 
   if (loading) {
@@ -190,8 +212,55 @@ export default function AdminServices() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-white/40 mb-1.5">Image URL</label>
-                <input value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-medium text-white/40">Provider Photo</label>
+                  <div className="flex rounded-lg bg-white/5 p-0.5">
+                    <button type="button" onClick={() => setImageMode("upload")} className={`px-3 py-1 text-[10px] font-medium rounded-md transition-colors ${imageMode === "upload" ? "bg-[#4A9B3F] text-white" : "text-white/40 hover:text-white/60"}`}>Upload</button>
+                    <button type="button" onClick={() => setImageMode("url")} className={`px-3 py-1 text-[10px] font-medium rounded-md transition-colors ${imageMode === "url" ? "bg-[#4A9B3F] text-white" : "text-white/40 hover:text-white/60"}`}>URL</button>
+                  </div>
+                </div>
+                {imageMode === "upload" ? (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="w-full rounded-xl border border-dashed border-white/20 bg-white/5 px-4 py-5 text-sm text-white/50 hover:border-[#4A9B3F]/50 hover:text-white/70 transition-all disabled:opacity-50"
+                    >
+                      {uploading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                          Uploading...
+                        </span>
+                      ) : (
+                        <span className="flex flex-col items-center gap-1">
+                          <svg className="h-6 w-6 text-white/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                          Click to upload a photo from your computer
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <input value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} placeholder="https://images.unsplash.com/..." className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50" />
+                )}
+                {editing.image && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="h-14 w-14 rounded-xl overflow-hidden bg-white/5 relative flex-shrink-0">
+                      <Image src={editing.image} alt="Preview" fill className="object-cover" sizes="56px" unoptimized />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-white/30 truncate">{editing.image}</p>
+                      <button type="button" onClick={() => setEditing({ ...editing, image: "" })} className="mt-1 text-xs text-red-400 hover:text-red-300">Remove image</button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-white/40 mb-1.5">Response Time</label>
@@ -240,7 +309,7 @@ export default function AdminServices() {
           {filtered.map((provider) => (
             <div key={provider.id} className="rounded-2xl bg-[#1A1D27] border border-white/5 p-4 flex gap-4 items-center hover:border-white/10 transition-colors">
               <div className="relative h-14 w-14 rounded-xl overflow-hidden bg-white/5 flex-shrink-0">
-                <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="56px" />
+                <Image src={provider.image || "/placeholder.svg"} alt={provider.name} fill className="object-cover" sizes="56px" unoptimized />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">

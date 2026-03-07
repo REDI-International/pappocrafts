@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { categories } from "@/lib/products";
 
@@ -24,7 +24,7 @@ interface DBProduct {
 const emptyProduct: Omit<DBProduct, "created_at" | "updated_at"> = {
   id: "", name: "", description: "", long_description: "", price: 0, currency: "EUR",
   category: categories[1], artisan: "", country: "",
-  image: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&h=600&fit=crop",
+  image: "",
   tags: [], in_stock: true,
 };
 
@@ -41,6 +41,9 @@ export default function AdminProducts() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [tagInput, setTagInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -116,6 +119,25 @@ export default function AdminProducts() {
   function removeTag(tag: string) {
     if (!editing) return;
     setEditing({ ...editing, tags: editing.tags.filter((t) => t !== tag) });
+  }
+
+  async function handleImageUpload(file: File) {
+    if (!editing) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: formData,
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        setEditing({ ...editing, image: url });
+      }
+    } catch { /* ignore */ }
+    setUploading(false);
   }
 
   if (loading) {
@@ -199,11 +221,53 @@ export default function AdminProducts() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-white/40 mb-1.5">Image URL</label>
-                <input value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} placeholder="https://images.unsplash.com/..." className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-medium text-white/40">Product Image</label>
+                  <div className="flex rounded-lg bg-white/5 p-0.5">
+                    <button type="button" onClick={() => setImageMode("upload")} className={`px-3 py-1 text-[10px] font-medium rounded-md transition-colors ${imageMode === "upload" ? "bg-[#4A9B3F] text-white" : "text-white/40 hover:text-white/60"}`}>Upload</button>
+                    <button type="button" onClick={() => setImageMode("url")} className={`px-3 py-1 text-[10px] font-medium rounded-md transition-colors ${imageMode === "url" ? "bg-[#4A9B3F] text-white" : "text-white/40 hover:text-white/60"}`}>URL</button>
+                  </div>
+                </div>
+                {imageMode === "upload" ? (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="w-full rounded-xl border border-dashed border-white/20 bg-white/5 px-4 py-5 text-sm text-white/50 hover:border-[#4A9B3F]/50 hover:text-white/70 transition-all disabled:opacity-50"
+                    >
+                      {uploading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                          Uploading...
+                        </span>
+                      ) : (
+                        <span className="flex flex-col items-center gap-1">
+                          <svg className="h-6 w-6 text-white/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                          Click to upload an image from your computer
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <input value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} placeholder="https://images.unsplash.com/..." className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50" />
+                )}
                 {editing.image && (
-                  <div className="mt-2 h-20 w-20 rounded-lg overflow-hidden bg-white/5 relative">
-                    <Image src={editing.image} alt="Preview" fill className="object-cover" sizes="80px" />
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="h-20 w-20 rounded-lg overflow-hidden bg-white/5 relative flex-shrink-0">
+                      <Image src={editing.image} alt="Preview" fill className="object-cover" sizes="80px" unoptimized />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-white/30 truncate">{editing.image}</p>
+                      <button type="button" onClick={() => setEditing({ ...editing, image: "" })} className="mt-1 text-xs text-red-400 hover:text-red-300">Remove image</button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -250,7 +314,7 @@ export default function AdminProducts() {
           {filtered.map((product) => (
             <div key={product.id} className="rounded-2xl bg-[#1A1D27] border border-white/5 overflow-hidden group hover:border-white/10 transition-colors">
               <div className="relative h-36 bg-white/5">
-                <Image src={product.image} alt={product.name} fill className="object-cover" sizes="400px" />
+                <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" sizes="400px" unoptimized />
                 {!product.in_stock && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                     <span className="text-xs font-bold text-red-400 bg-red-500/20 px-3 py-1 rounded-full">OUT OF STOCK</span>

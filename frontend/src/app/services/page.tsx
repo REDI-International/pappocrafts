@@ -103,7 +103,7 @@ function ServicesContent() {
                   <div className="p-5">
                     <div className="flex items-start gap-4">
                       <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full bg-light">
-                        <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="64px" />
+                        <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="64px" unoptimized />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
