@@ -132,11 +132,16 @@ export default function AdminProducts() {
         headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
       });
-      if (res.ok) {
-        const { url } = await res.json();
-        setEditing({ ...editing, image: url });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setEditing({ ...editing, image: data.url });
+      } else {
+        alert(`Image upload failed: ${data.error || "Unknown error"}`);
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      alert(`Image upload failed: ${err instanceof Error ? err.message : "Network error"}`);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setUploading(false);
   }
 
