@@ -15,6 +15,7 @@ interface OrderItem {
   quantity: number;
   artisan: string;
   country: string;
+  image?: string;
 }
 
 interface OrderPayload {
@@ -52,10 +53,13 @@ function buildEmailHtml(order: OrderPayload, orderId: string): string {
     .map(
       (item) => `
       <tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${item.name}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${item.artisan} (${item.country})</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">€${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eee;width:60px;">
+          ${item.image ? `<img src="${item.image}" alt="${item.name}" width="56" height="56" style="border-radius:8px;object-fit:cover;display:block;" />` : `<div style="width:56px;height:56px;border-radius:8px;background:#f0f0f0;"></div>`}
+        </td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eee;">${item.name}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eee;">${item.artisan} (${item.country})</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:500;">€${(item.price * item.quantity).toFixed(2)}</td>
       </tr>`
     )
     .join("");
@@ -99,6 +103,7 @@ function buildEmailHtml(order: OrderPayload, orderId: string): string {
   <table style="width:100%;border-collapse:collapse;font-size:14px;">
     <thead>
       <tr style="background:#f0f0f0;">
+        <th style="padding:8px 12px;text-align:left;">Image</th>
         <th style="padding:8px 12px;text-align:left;">Product</th>
         <th style="padding:8px 12px;text-align:center;">Qty</th>
         <th style="padding:8px 12px;text-align:left;">Artisan</th>
@@ -128,9 +133,15 @@ function buildCustomerEmailHtml(order: OrderPayload, orderId: string): string {
     .map(
       (item) => `
       <tr>
-        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">${item.name}<br><span style="color:#888;font-size:12px;">by ${item.artisan}</span></td>
-        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:center;">${item.quantity}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:500;">&euro;${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding:12px;border-bottom:1px solid #f0f0f0;width:68px;">
+          ${item.image ? `<img src="${item.image}" alt="${item.name}" width="64" height="64" style="border-radius:10px;object-fit:cover;display:block;" />` : `<div style="width:64px;height:64px;border-radius:10px;background:#f5f5f5;"></div>`}
+        </td>
+        <td style="padding:12px;border-bottom:1px solid #f0f0f0;">
+          <strong style="color:#2D2D2D;">${item.name}</strong><br>
+          <span style="color:#888;font-size:12px;">by ${item.artisan}</span>
+        </td>
+        <td style="padding:12px;border-bottom:1px solid #f0f0f0;text-align:center;font-size:14px;">${item.quantity}</td>
+        <td style="padding:12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;color:#2D2D2D;">&euro;${(item.price * item.quantity).toFixed(2)}</td>
       </tr>`
     )
     .join("");
@@ -172,6 +183,7 @@ function buildCustomerEmailHtml(order: OrderPayload, orderId: string): string {
   <table style="width:100%;border-collapse:collapse;font-size:14px;">
     <thead>
       <tr style="background:#f5f5f5;">
+        <th style="padding:10px 12px;text-align:left;font-weight:600;"></th>
         <th style="padding:10px 12px;text-align:left;font-weight:600;">Product</th>
         <th style="padding:10px 12px;text-align:center;font-weight:600;">Qty</th>
         <th style="padding:10px 12px;text-align:right;font-weight:600;">Price</th>
@@ -266,7 +278,7 @@ export async function POST(request: NextRequest) {
       await Promise.allSettled([
         resend.emails.send({
           from: "PappoCrafts Orders <onboarding@resend.dev>",
-          to: ["petrica@redi-ngo.eu"],
+          to: ["petrica@redi-ngo.eu", "lejla@redi-ngo.eu"],
           replyTo: order.customer.email,
           subject: `New Order ${orderId} — ${order.customer.name} (${order.paymentMethod === "online" ? "Paid Online" : "Pay Later"})`,
           html: buildEmailHtml(order, orderId),

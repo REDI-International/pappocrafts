@@ -21,6 +21,17 @@ export const categories = [
   "Woodwork & Carving",
   "Leather Goods",
   "Food & Spices",
+  "Furniture",
+  "Machines",
+  "Home Decor",
+  "Art & Paintings",
+  "Beauty & Personal Care",
+  "Traditional Clothing",
+  "Handmade Accessories",
+  "Eco Products",
+  "Natural Products",
+  "Agricultural Products",
+  "Other",
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

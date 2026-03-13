@@ -23,6 +23,7 @@ export interface StoredOrder {
     quantity: number;
     artisan: string;
     country: string;
+    image?: string;
   }[];
   subtotal: number;
   shippingCost: number;

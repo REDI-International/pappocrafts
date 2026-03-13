@@ -60,6 +60,7 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         artisan: item.product.artisan,
         country: item.product.country,
+        image: item.product.image,
       })),
       subtotal: regionalTotal,
       shippingCost: shipping.cost,

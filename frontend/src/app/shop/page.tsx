@@ -91,20 +91,22 @@ function ShopContent() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  activeCategory === cat
-                    ? "bg-green text-white shadow-sm"
-                    : "bg-white text-charcoal/60 border border-charcoal/10 hover:border-green/30 hover:text-green"
-                }`}
-              >
-                {cat === "All" ? t("shop.all") : cat}
-              </button>
-            ))}
+          <div className="relative mb-12">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+                    activeCategory === cat
+                      ? "bg-green text-white shadow-sm"
+                      : "bg-white text-charcoal/60 border border-charcoal/10 hover:border-green/30 hover:text-green"
+                  }`}
+                >
+                  {cat === "All" ? t("shop.all") : cat}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loading ? (
