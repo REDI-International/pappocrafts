@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getDomainConfig } from "@/lib/domain-config";
 
-export const metadata: Metadata = {
-  title: "Terms of Service",
-  description: "PappoShop terms of service — rules and conditions for using our marketplace.",
-  alternates: { canonical: "https://pappo.org/terms" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getDomainConfig();
+  return {
+    title: "Terms of Service",
+    description: "PappoShop terms of service — rules and conditions for using our marketplace.",
+    alternates: { canonical: `${cfg.baseUrl}/terms` },
+  };
+}
 
 export default function TermsPage() {
   return (

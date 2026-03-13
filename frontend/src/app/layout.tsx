@@ -8,6 +8,7 @@ import PostHogProvider from "@/components/PostHogProvider";
 import Analytics from "@/components/Analytics";
 import StructuredData from "@/components/StructuredData";
 import CookieConsent from "@/components/CookieConsent";
+import { getDomainConfig } from "@/lib/domain-config";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,84 +21,68 @@ const playfair = Playfair_Display({
   subsets: ["latin", "latin-ext"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://pappo.org"),
-  icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/apple-icon" }],
-  },
-  title: {
-    default: "PappoShop — Handmade by Roma Artisans in the Balkans",
-    template: "%s | PappoShop",
-  },
-  description:
-    "Discover unique handmade products and services from Roma entrepreneurs across the Western Balkans — Serbia, Albania, Bosnia, Kosovo, North Macedonia, Montenegro. Pottery, textiles, jewelry, traditional clothing, furniture, and more.",
-  keywords: [
-    "handmade products", "Roma artisans", "Western Balkans", "marketplace",
-    "handcrafted", "pottery", "textiles", "jewelry", "woodwork", "craftsmanship",
-    "traditional clothing", "furniture", "home decor", "eco products",
-    "Serbia", "Albania", "Bosnia", "Kosovo", "North Macedonia", "Montenegro",
-    "ručni rad", "zanatstvo", "Balkanski proizvodi",
-    "artizanë", "punë dore", "prodhime ballkanike",
-    "Roma entrepreneurs", "social enterprise", "fair trade Balkans",
-    "buy handmade Balkans", "kupovina online Balkan",
-    "papposhop", "pappo shop", "pappo.org",
-  ],
-  authors: [{ name: "PappoShop", url: "https://pappo.org" }],
-  creator: "PappoShop",
-  publisher: "PappoShop",
-  alternates: {
-    canonical: "https://pappo.org",
-    languages: {
-      "en": "https://pappo.org",
-      "sr": "https://pappo.org",
-      "sq": "https://pappo.org",
-      "bs": "https://pappo.org",
-      "mk": "https://pappo.org",
-      "tr": "https://pappo.org",
-      "x-default": "https://pappo.org",
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getDomainConfig();
+  const langMap = Object.fromEntries(cfg.languages.map((l) => [l, cfg.baseUrl]));
+
+  return {
+    metadataBase: new URL(cfg.baseUrl),
+    icons: {
+      icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+      apple: [{ url: "/apple-icon" }],
     },
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    title: {
+      default: cfg.title,
+      template: "%s | PappoShop",
+    },
+    description: cfg.description,
+    keywords: cfg.keywords,
+    authors: [{ name: "PappoShop", url: cfg.baseUrl }],
+    creator: "PappoShop",
+    publisher: "PappoShop",
+    alternates: {
+      canonical: cfg.baseUrl,
+      languages: { ...langMap, "x-default": cfg.baseUrl },
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-  },
-  openGraph: {
-    title: "PappoShop — Handmade by Roma Artisans in the Balkans",
-    description:
-      "Discover unique handmade products and services from Roma entrepreneurs across Serbia, Albania, Bosnia, Kosovo, North Macedonia, and Montenegro.",
-    type: "website",
-    locale: "en_US",
-    alternateLocale: ["sr_RS", "sq_AL", "bs_BA", "mk_MK", "tr_TR"],
-    siteName: "PappoShop",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "PappoShop — Handmade by Roma Artisans in the Western Balkans",
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
       },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "PappoShop — Handmade by Roma Artisans in the Balkans",
-    description:
-      "Unique handmade products from Roma entrepreneurs in Serbia, Albania, Bosnia, Kosovo, North Macedonia, and Montenegro.",
-    images: ["/og-image.png"],
-  },
-  category: "shopping",
-};
+    },
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    },
+    openGraph: {
+      title: cfg.title,
+      description: cfg.description,
+      type: "website",
+      locale: cfg.ogLocale,
+      alternateLocale: cfg.alternateLocales,
+      siteName: cfg.siteName,
+      images: [
+        {
+          url: "/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: cfg.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: cfg.title,
+      description: cfg.description,
+      images: ["/og-image.png"],
+    },
+    category: "shopping",
+  };
+}
 
 export default function RootLayout({
   children,

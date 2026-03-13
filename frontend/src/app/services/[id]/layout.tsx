@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getServiceProvider } from "@/lib/services";
+import { getDomainConfig } from "@/lib/domain-config";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -7,12 +8,17 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const provider = getServiceProvider(id);
+  const [provider, cfg] = await Promise.all([
+    Promise.resolve(getServiceProvider(id)),
+    getDomainConfig(),
+  ]);
 
   if (!provider) {
     return { title: "Service Provider Not Found" };
   }
 
+  const isEU = cfg.region === "eu";
+  const regionLabel = isEU ? "Europe" : "the Western Balkans";
   const title = `${provider.name} — ${provider.title} in ${provider.location}, ${provider.country}`;
   const description = provider.description
     ? `${provider.description} ${provider.category} services by ${provider.name} in ${provider.location}, ${provider.country}. Book trusted local services on PappoShop.`
@@ -28,16 +34,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       provider.location,
       provider.country,
       "local services",
-      "Western Balkans",
+      isEU ? "Europe" : "Western Balkans",
       `${provider.category} ${provider.country}`,
     ],
     alternates: {
-      canonical: `https://pappo.org/services/${id}`,
+      canonical: `${cfg.baseUrl}/services/${id}`,
     },
     openGraph: {
       title,
       description,
-      url: `https://pappo.org/services/${id}`,
+      url: `${cfg.baseUrl}/services/${id}`,
       type: "profile",
       images: provider.image
         ? [{ url: provider.image, width: 400, height: 400, alt: provider.name }]

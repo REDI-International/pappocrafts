@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getDomainConfig } from "@/lib/domain-config";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -33,16 +34,18 @@ async function getProduct(id: string): Promise<ProductData | null> {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProduct(id);
+  const [product, cfg] = await Promise.all([getProduct(id), getDomainConfig()]);
 
   if (!product) {
     return { title: "Product Not Found" };
   }
 
+  const isEU = cfg.region === "eu";
+  const regionLabel = isEU ? "Europe" : "the Western Balkans";
   const title = `${product.name} by ${product.artisan} — Handmade in ${product.country}`;
   const description = product.description
-    ? `${product.description} Handcrafted by ${product.artisan} from ${product.country}. Buy authentic handmade ${product.category?.toLowerCase()} from the Western Balkans on PappoShop.`
-    : `Buy ${product.name} — authentic handmade ${product.category?.toLowerCase()} crafted by ${product.artisan} from ${product.country}. Shop unique artisan products from the Western Balkans.`;
+    ? `${product.description} Handcrafted by ${product.artisan} from ${product.country}. Buy authentic handmade ${product.category?.toLowerCase()} from ${regionLabel} on PappoShop.`
+    : `Buy ${product.name} — authentic handmade ${product.category?.toLowerCase()} crafted by ${product.artisan} from ${product.country}. Shop unique artisan products from ${regionLabel}.`;
 
   return {
     title,
@@ -54,17 +57,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       product.category,
       "handmade",
       "artisan",
-      "Western Balkans",
+      isEU ? "Europe" : "Western Balkans",
       "buy online",
       `handmade ${product.category?.toLowerCase() ?? "product"}`,
     ].filter((k): k is string => !!k),
     alternates: {
-      canonical: `https://pappo.org/shop/${id}`,
+      canonical: `${cfg.baseUrl}/shop/${id}`,
     },
     openGraph: {
       title,
       description,
-      url: `https://pappo.org/shop/${id}`,
+      url: `${cfg.baseUrl}/shop/${id}`,
       type: "website",
       images: product.image
         ? [{ url: product.image, width: 800, height: 800, alt: product.name }]
@@ -87,7 +90,28 @@ export default async function ProductLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = await getProduct(id);
+  const [product, cfg] = await Promise.all([getProduct(id), getDomainConfig()]);
+
+  const shippingDest =
+    cfg.region === "eu"
+      ? [
+          { "@type": "DefinedRegion", addressCountry: "DE" },
+          { "@type": "DefinedRegion", addressCountry: "FR" },
+          { "@type": "DefinedRegion", addressCountry: "NL" },
+          { "@type": "DefinedRegion", addressCountry: "AT" },
+          { "@type": "DefinedRegion", addressCountry: "IT" },
+          { "@type": "DefinedRegion", addressCountry: "ES" },
+          { "@type": "DefinedRegion", addressCountry: "BE" },
+          { "@type": "DefinedRegion", addressCountry: "PL" },
+          { "@type": "DefinedRegion", addressCountry: "SE" },
+        ]
+      : [
+          { "@type": "DefinedRegion", addressCountry: "RS" },
+          { "@type": "DefinedRegion", addressCountry: "AL" },
+          { "@type": "DefinedRegion", addressCountry: "BA" },
+          { "@type": "DefinedRegion", addressCountry: "MK" },
+          { "@type": "DefinedRegion", addressCountry: "ME" },
+        ];
 
   const jsonLd = product
     ? JSON.stringify({
@@ -98,23 +122,17 @@ export default async function ProductLayout({
           product.description ||
           `Handmade ${product.category?.toLowerCase()} by ${product.artisan} from ${product.country}`,
         image: product.image || undefined,
-        brand: {
-          "@type": "Brand",
-          name: product.artisan,
-        },
+        brand: { "@type": "Brand", name: product.artisan },
         manufacturer: {
           "@type": "Organization",
           name: product.artisan,
-          address: {
-            "@type": "PostalAddress",
-            addressCountry: product.country,
-          },
+          address: { "@type": "PostalAddress", addressCountry: product.country },
         },
         category: product.category || undefined,
-        url: `https://pappo.org/shop/${id}`,
+        url: `${cfg.baseUrl}/shop/${id}`,
         offers: {
           "@type": "Offer",
-          url: `https://pappo.org/shop/${id}`,
+          url: `${cfg.baseUrl}/shop/${id}`,
           priceCurrency: "EUR",
           price: product.price.toFixed(2),
           availability: product.in_stock
@@ -123,17 +141,11 @@ export default async function ProductLayout({
           seller: {
             "@type": "Organization",
             name: "PappoShop",
-            url: "https://pappo.org",
+            url: cfg.baseUrl,
           },
           shippingDetails: {
             "@type": "OfferShippingDetails",
-            shippingDestination: [
-              { "@type": "DefinedRegion", addressCountry: "RS" },
-              { "@type": "DefinedRegion", addressCountry: "AL" },
-              { "@type": "DefinedRegion", addressCountry: "BA" },
-              { "@type": "DefinedRegion", addressCountry: "MK" },
-              { "@type": "DefinedRegion", addressCountry: "ME" },
-            ],
+            shippingDestination: shippingDest,
           },
         },
       })

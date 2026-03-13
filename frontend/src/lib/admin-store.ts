@@ -51,10 +51,10 @@ function sha256(input: string): string {
 }
 
 const FALLBACK_USERS = [
-  { email: "petrica@redi-ngo.eu", passwordHash: sha256("Ppapadie83*"), role: "superadmin" as UserRole, name: "Petrica" },
+  { email: "petrica@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "superadmin" as UserRole, name: "Petrica" },
+  { email: "victor.dulgheru@yahoo.com", passwordHash: sha256("admin123"), role: "admin" as UserRole, name: "Victor" },
   { email: "richard@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "admin" as UserRole, name: "Richard" },
   { email: "lejla@redi-ngo.eu", passwordHash: sha256("admin123"), role: "admin" as UserRole, name: "Lejla" },
-  { email: "user@papposhop.org", passwordHash: sha256("PappoUser2026!"), role: "user" as UserRole, name: "Demo User" },
 ];
 
 const sessions: Map<string, Session> = new Map();

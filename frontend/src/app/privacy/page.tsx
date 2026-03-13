@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getDomainConfig } from "@/lib/domain-config";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "PappoShop privacy policy — how we collect, use, and protect your personal data.",
-  alternates: { canonical: "https://pappo.org/privacy" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getDomainConfig();
+  return {
+    title: "Privacy Policy",
+    description: "PappoShop privacy policy — how we collect, use, and protect your personal data.",
+    alternates: { canonical: `${cfg.baseUrl}/privacy` },
+  };
+}
 
 export default function PrivacyPage() {
   return (
