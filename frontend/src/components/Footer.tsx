@@ -56,8 +56,8 @@ export default function Footer() {
         <div className="mt-10 border-t border-charcoal-light pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/40">&copy; {currentYear} PappoShop. All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="text-xs text-white/40 hover:text-white/60 transition-colors">{t("footer.privacy")}</a>
-            <a href="#" className="text-xs text-white/40 hover:text-white/60 transition-colors">{t("footer.terms")}</a>
+            <Link href="/privacy" className="text-xs text-white/40 hover:text-white/60 transition-colors">{t("footer.privacy")}</Link>
+            <Link href="/terms" className="text-xs text-white/40 hover:text-white/60 transition-colors">{t("footer.terms")}</Link>
           </div>
         </div>
       </div>

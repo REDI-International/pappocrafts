@@ -1,12 +1,14 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import posthog from "posthog-js";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
+import { trackPurchase } from "@/components/Analytics";
 
 function SuccessContent() {
   const { clearCart } = useCart();
@@ -14,10 +16,22 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order");
   const method = searchParams.get("method");
+  const tracked = useRef(false);
 
   useEffect(() => {
     clearCart();
-  }, [clearCart]);
+
+    if (orderId && method === "online" && !tracked.current) {
+      tracked.current = true;
+      trackPurchase({ orderId, total: 0 });
+      if (posthog.__loaded) {
+        posthog.capture("purchase_completed", {
+          order_id: orderId,
+          payment_method: "online",
+        });
+      }
+    }
+  }, [clearCart, orderId, method]);
 
   return (
     <div className="mx-auto max-w-xl px-4 sm:px-6 text-center py-16">

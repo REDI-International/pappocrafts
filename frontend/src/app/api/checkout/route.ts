@@ -15,6 +15,11 @@ interface CheckoutItem {
   image: string;
 }
 
+interface CheckoutBody {
+  items: CheckoutItem[];
+  orderId?: string;
+}
+
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
 
@@ -26,8 +31,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { items } = body as { items: CheckoutItem[] };
+    const body = (await request.json()) as CheckoutBody;
+    const { items, orderId } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
@@ -61,11 +66,16 @@ export async function POST(request: NextRequest) {
 
     const origin = request.headers.get("origin") || "http://localhost:3000";
 
+    const successParams = orderId
+      ? `order=${encodeURIComponent(orderId)}&method=online&session_id={CHECKOUT_SESSION_ID}`
+      : `session_id={CHECKOUT_SESSION_ID}`;
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/checkout/success?${successParams}`,
       cancel_url: `${origin}/checkout/cancel`,
+      metadata: orderId ? { order_id: orderId } : undefined,
       shipping_address_collection: {
         allowed_countries: [
           "AL", "BA", "ME", "MK", "RS",

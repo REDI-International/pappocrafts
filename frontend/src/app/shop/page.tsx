@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { categories, type Product, mapSupabaseProduct } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
+import { trackAddToCart } from "@/components/Analytics";
 import { Suspense } from "react";
 
 function ShopContent() {
@@ -207,7 +208,7 @@ function ShopContent() {
                     <p className="mt-2 text-sm text-charcoal/60 line-clamp-2">{product.description}</p>
                     {product.inStock ? (
                       <button
-                        onClick={() => addItem(product)}
+                        onClick={() => { addItem(product); trackAddToCart({ id: product.id, name: product.name, price: product.price }); }}
                         className="mt-3 w-full rounded-full bg-green/10 py-2 text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
                       >
                         {t("shop.addToCart")}

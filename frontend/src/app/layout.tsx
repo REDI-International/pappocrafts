@@ -7,6 +7,7 @@ import { SiteSettingsProvider } from "@/lib/site-settings-context";
 import PostHogProvider from "@/components/PostHogProvider";
 import Analytics from "@/components/Analytics";
 import StructuredData from "@/components/StructuredData";
+import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
 const inter = Inter({
@@ -113,6 +114,7 @@ export default function RootLayout({
             <SiteSettingsProvider><LocaleProvider><CartProvider>{children}</CartProvider></LocaleProvider></SiteSettingsProvider>
           </PostHogProvider>
         </Suspense>
+        <CookieConsent />
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { type Product, mapSupabaseProduct } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
+import { trackViewContent, trackAddToCart } from "@/components/Analytics";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -34,6 +35,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         const mapped = mapSupabaseProduct(data);
         setProduct(mapped);
+        trackViewContent({ id: mapped.id, name: mapped.name, price: mapped.price, category: mapped.category });
 
         const relRes = await fetch(`/api/products?category=${encodeURIComponent(mapped.category)}`);
         if (relRes.ok) {
@@ -159,7 +161,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 {product.inStock ? (
                   <>
                     <button
-                      onClick={() => addItem(product)}
+                      onClick={() => { addItem(product); trackAddToCart({ id: product.id, name: product.name, price: product.price }); }}
                       className="flex-1 rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all"
                     >
                       {t("product.addToCart")}

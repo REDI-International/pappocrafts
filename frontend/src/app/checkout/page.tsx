@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
+import { trackPurchase, trackInitiateCheckout } from "@/components/Analytics";
 
 type PaymentMethod = "online" | "later";
 
@@ -91,6 +92,7 @@ export default function CheckoutPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            orderId: data.orderId,
             items: items.map((item) => ({
               id: item.product.id,
               name: item.product.name,
@@ -109,10 +111,21 @@ export default function CheckoutPage() {
         }
       }
 
+      trackPurchase({
+        orderId: data.orderId,
+        total: grandTotal,
+        items: items.map((item) => ({
+          id: item.product.id,
+          name: item.product.name,
+          price: getRegionalEurPrice(item.product.price),
+          quantity: item.quantity,
+        })),
+      });
+
       if (posthog.__loaded) {
         posthog.capture("purchase_completed", {
           order_id: data.orderId,
-          total: totalPrice,
+          total: grandTotal,
           item_count: items.length,
           payment_method: paymentMethod,
         });
@@ -127,8 +140,9 @@ export default function CheckoutPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    trackInitiateCheckout({ total: grandTotal, itemCount: items.length });
     if (posthog.__loaded) {
-      posthog.capture("checkout_started", { item_count: items.length, total: totalPrice });
+      posthog.capture("checkout_started", { item_count: items.length, total: grandTotal });
     }
     setTouched({ name: true, email: true, phone: true, address: true, city: true, country: true });
     if (!formValid) return;
