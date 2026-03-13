@@ -3,5 +3,15 @@ Allow: /
 Disallow: /admin
 Disallow: /api
 Disallow: /checkout
+Disallow: /account
 
+# Sitemaps
 Sitemap: https://pappo.org/sitemap.xml
+Sitemap: https://papposhop.org/sitemap.xml
+
+# Crawl directives for Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /checkout
