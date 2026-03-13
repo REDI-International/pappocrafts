@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { products, categories } from "@/lib/products";
+import { categories, type Product, mapSupabaseProduct } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
 import { Suspense } from "react";
@@ -17,8 +17,32 @@ function ShopContent() {
 
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [search, setSearch] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const { addItem } = useCart();
   const { t, formatRegionalPrice } = useLocale();
+
+  const loadProducts = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await fetch("/api/products");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setProducts(data.map(mapSupabaseProduct));
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const filtered = useMemo(() => {
     let result = products;
@@ -36,7 +60,7 @@ function ShopContent() {
       );
     }
     return result;
-  }, [activeCategory, search]);
+  }, [activeCategory, search, products]);
 
   return (
     <>
@@ -83,7 +107,31 @@ function ShopContent() {
             ))}
           </div>
 
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="rounded-2xl bg-white border border-charcoal/5 overflow-hidden animate-pulse">
+                  <div className="aspect-square bg-charcoal/5" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-charcoal/5 rounded w-3/4" />
+                    <div className="h-3 bg-charcoal/5 rounded w-1/2" />
+                    <div className="h-3 bg-charcoal/5 rounded w-full" />
+                    <div className="h-10 bg-charcoal/5 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-charcoal/50 text-lg">Something went wrong loading products.</p>
+              <button
+                onClick={loadProducts}
+                className="mt-4 text-green font-medium hover:text-green-dark transition-colors"
+              >
+                Try again
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-charcoal/50 text-lg">{t("shop.noProducts")}</p>
               <button
@@ -126,12 +174,18 @@ function ShopContent() {
                       </p>
                     </div>
                     <p className="mt-2 text-sm text-charcoal/60 line-clamp-2">{product.description}</p>
-                    <button
-                      onClick={() => addItem(product)}
-                      className="mt-3 w-full rounded-full bg-green/10 py-2 text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
-                    >
-                      {t("shop.addToCart")}
-                    </button>
+                    {product.inStock ? (
+                      <button
+                        onClick={() => addItem(product)}
+                        className="mt-3 w-full rounded-full bg-green/10 py-2 text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
+                      >
+                        {t("shop.addToCart")}
+                      </button>
+                    ) : (
+                      <div className="mt-3 w-full rounded-full bg-charcoal/5 py-2 text-sm font-semibold text-charcoal/40 text-center">
+                        Out of Stock
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

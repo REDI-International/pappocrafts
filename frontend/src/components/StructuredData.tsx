@@ -1,3 +1,5 @@
+import Script from "next/script";
+
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -15,12 +17,14 @@ const websiteSchema = {
 };
 
 export default function StructuredData() {
-  const jsonLd = [organizationSchema, websiteSchema];
+  const jsonLd = JSON.stringify([organizationSchema, websiteSchema]);
 
   return (
-    <script
+    <Script
+      id="structured-data"
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      strategy="afterInteractive"
+      dangerouslySetInnerHTML={{ __html: jsonLd }}
     />
   );
 }

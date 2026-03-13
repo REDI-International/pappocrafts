@@ -65,9 +65,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem("admin-token");
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     fetch("/api/admin/analytics", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);

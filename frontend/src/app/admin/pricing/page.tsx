@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   regionConfigs,
   shippingRates,
@@ -10,13 +10,39 @@ import {
   type PricingRegion,
   type ShippingZone,
 } from "@/lib/pricing";
-import { products } from "@/lib/products";
+import { type Product, mapSupabaseProduct } from "@/lib/products";
 
 export default function AdminPricingPage() {
   const [calcBasePrice, setCalcBasePrice] = useState(45);
   const [calcWeight, setCalcWeight] = useState(1);
   const [calcRegion, setCalcRegion] = useState<PricingRegion>("western_europe");
   const [calcZone, setCalcZone] = useState<ShippingZone>("eu");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+
+  const loadProducts = useCallback(async () => {
+    const token = localStorage.getItem("admin-token");
+    if (!token) {
+      setProductsLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/products", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      if (Array.isArray(data)) setProducts(data.map(mapSupabaseProduct));
+    } catch {
+      // products remain empty
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const margin = calculateMargin(calcBasePrice, calcRegion, calcZone, calcWeight);
   const shipping = calculateShipping(margin.sellingPrice, calcZone, calcWeight);
@@ -120,30 +146,40 @@ export default function AdminPricingPage() {
       {/* Products Table */}
       <section>
         <h2 className="text-sm font-semibold text-white mb-4">Product Prices by Region</h2>
-        <div className="overflow-x-auto rounded-xl bg-[#1A1D27] border border-white/5">
-          <table className="min-w-full text-xs">
-            <thead>
-              <tr className="border-b border-white/5">
-                <th className="px-3 py-2.5 text-left font-semibold text-white/40">Product</th>
-                <th className="px-3 py-2.5 text-right font-semibold text-white/40">Base</th>
-                {regionConfigs.map((r) => <th key={r.region} className="px-3 py-2.5 text-right font-semibold text-white/40">{r.label}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className="border-b border-white/5 last:border-0">
-                  <td className="px-3 py-2 text-white max-w-[160px] truncate">{p.name}</td>
-                  <td className="px-3 py-2 text-right text-white/40">&euro;{p.price.toFixed(2)}</td>
-                  {regionConfigs.map((r) => (
-                    <td key={r.region} className={`px-3 py-2 text-right font-medium ${r.priceMultiplier < 1 ? "text-blue-400" : r.priceMultiplier > 1 ? "text-[#4A9B3F]" : "text-white/60"}`}>
-                      &euro;{getRegionalPrice(p.price, r.region).toFixed(2)}
-                    </td>
-                  ))}
+        {productsLoading ? (
+          <div className="rounded-xl bg-[#1A1D27] border border-white/5 p-8 text-center">
+            <p className="text-sm text-white/30 animate-pulse">Loading products...</p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="rounded-xl bg-[#1A1D27] border border-white/5 p-8 text-center">
+            <p className="text-sm text-white/30">No products found.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl bg-[#1A1D27] border border-white/5">
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="px-3 py-2.5 text-left font-semibold text-white/40">Product</th>
+                  <th className="px-3 py-2.5 text-right font-semibold text-white/40">Base</th>
+                  {regionConfigs.map((r) => <th key={r.region} className="px-3 py-2.5 text-right font-semibold text-white/40">{r.label}</th>)}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {products.map((p) => (
+                  <tr key={p.id} className="border-b border-white/5 last:border-0">
+                    <td className="px-3 py-2 text-white max-w-[160px] truncate">{p.name}</td>
+                    <td className="px-3 py-2 text-right text-white/40">&euro;{p.price.toFixed(2)}</td>
+                    {regionConfigs.map((r) => (
+                      <td key={r.region} className={`px-3 py-2 text-right font-medium ${r.priceMultiplier < 1 ? "text-blue-400" : r.priceMultiplier > 1 ? "text-[#4A9B3F]" : "text-white/60"}`}>
+                        &euro;{getRegionalPrice(p.price, r.region).toFixed(2)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

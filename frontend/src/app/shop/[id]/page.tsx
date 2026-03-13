@@ -1,26 +1,103 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getProduct, products } from "@/lib/products";
+import { type Product, mapSupabaseProduct } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const product = getProduct(id);
   const { addItem } = useCart();
   const { t, formatRegionalPrice } = useLocale();
 
-  if (!product) notFound();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const related = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 3);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const res = await fetch(`/api/products?id=${encodeURIComponent(id)}`);
+        if (!res.ok) {
+          if (!cancelled) setNotFound(true);
+          return;
+        }
+        const data = await res.json();
+        if (cancelled) return;
+
+        const mapped = mapSupabaseProduct(data);
+        setProduct(mapped);
+
+        const relRes = await fetch(`/api/products?category=${encodeURIComponent(mapped.category)}`);
+        if (relRes.ok) {
+          const relData = await relRes.json();
+          if (!cancelled && Array.isArray(relData)) {
+            setRelated(
+              relData
+                .map(mapSupabaseProduct)
+                .filter((p: Product) => p.id !== id)
+                .slice(0, 3)
+            );
+          }
+        }
+      } catch {
+        if (!cancelled) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="pt-20 pb-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-12 lg:grid-cols-2 animate-pulse">
+              <div className="aspect-square rounded-2xl bg-charcoal/5" />
+              <div className="space-y-4 py-4">
+                <div className="h-6 bg-charcoal/5 rounded w-1/3" />
+                <div className="h-10 bg-charcoal/5 rounded w-3/4" />
+                <div className="h-4 bg-charcoal/5 rounded w-1/2" />
+                <div className="h-8 bg-charcoal/5 rounded w-1/4 mt-6" />
+                <div className="h-20 bg-charcoal/5 rounded w-full mt-6" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (notFound || !product) {
+    return (
+      <>
+        <Navbar />
+        <main className="pt-20 pb-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center py-24">
+            <h1 className="font-serif text-3xl font-bold text-charcoal">Product Not Found</h1>
+            <p className="mt-4 text-charcoal/60">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+            <Link href="/shop" className="mt-6 inline-block rounded-full bg-green px-6 py-3 text-white font-semibold hover:bg-green-dark transition-colors">
+              Back to Shop
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -73,19 +150,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => addItem(product)}
-                  className="flex-1 rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all"
-                >
-                  {t("product.addToCart")}
-                </button>
-                <Link
-                  href="/checkout"
-                  onClick={() => addItem(product)}
-                  className="flex-1 rounded-full border-2 border-green py-3.5 text-center text-base font-semibold text-green hover:bg-green hover:text-white transition-all"
-                >
-                  {t("product.buyNow")}
-                </Link>
+                {product.inStock ? (
+                  <>
+                    <button
+                      onClick={() => addItem(product)}
+                      className="flex-1 rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all"
+                    >
+                      {t("product.addToCart")}
+                    </button>
+                    <Link
+                      href="/checkout"
+                      onClick={() => addItem(product)}
+                      className="flex-1 rounded-full border-2 border-green py-3.5 text-center text-base font-semibold text-green hover:bg-green hover:text-white transition-all"
+                    >
+                      {t("product.buyNow")}
+                    </Link>
+                  </>
+                ) : (
+                  <div className="flex-1 rounded-full bg-charcoal/5 py-3.5 text-center text-base font-semibold text-charcoal/40">
+                    Out of Stock
+                  </div>
+                )}
               </div>
 
               <div className="mt-8 flex flex-wrap gap-2">
