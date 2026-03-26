@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type BookingRow = {
   id: string;
@@ -22,17 +22,36 @@ type BookingRow = {
   locale: string | null;
 };
 
+function statusBadgeClass(status: string) {
+  switch (status) {
+    case "pending":
+      return "bg-amber-500/20 text-amber-200 border-amber-500/30";
+    case "confirmed":
+      return "bg-[#4A9B3F]/20 text-green-light border-[#4A9B3F]/35";
+    case "declined":
+      return "bg-red-500/15 text-red-300 border-red-500/30";
+    case "completed":
+      return "bg-blue-500/15 text-blue-200 border-blue-500/30";
+    case "cancelled":
+      return "bg-white/10 text-white/50 border-white/15";
+    default:
+      return "bg-white/10 text-white/60 border-white/15";
+  }
+}
+
 export default function AdminBookingsPage() {
   const [entries, setEntries] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     const token = localStorage.getItem("admin-token");
     if (!token) {
       setLoading(false);
       return;
     }
+    setLoading(true);
     fetch("/api/admin/bookings", { headers: { Authorization: `Bearer ${token}` } })
       .then(async (r) => {
         if (!r.ok) {
@@ -52,15 +71,45 @@ export default function AdminBookingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function setStatus(id: string, status: string) {
+    const token = localStorage.getItem("admin-token");
+    if (!token) return;
+    setUpdatingId(id);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/bookings", {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Update failed");
+        return;
+      }
+      load();
+    } catch {
+      setError("Update request failed");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   return (
     <div className="p-6 lg:p-10 max-w-6xl">
       <h1 className="text-2xl font-bold text-white mb-1">Service booking requests</h1>
       <p className="text-sm text-white/45 mb-8">
-        Submissions from the public booking form on service provider pages. Requests are not sent automatically to providers until you follow up.
+        <strong className="text-white/70">Approve</strong> when you have confirmed with the provider and customer. Use{" "}
+        <strong className="text-white/70">Decline</strong> if you cannot fulfil the request.{" "}
+        <strong className="text-white/70">Complete</strong> after the service has been delivered.
       </p>
 
       {loading && <p className="text-white/40 text-sm">Loading…</p>}
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
       {!loading && !error && entries.length === 0 && (
         <p className="text-white/40 text-sm">No booking requests yet.</p>
@@ -74,7 +123,9 @@ export default function AdminBookingsPage() {
           >
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <span className="font-semibold text-white">{row.provider_name}</span>
-              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/30">
+              <span
+                className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusBadgeClass(row.status)}`}
+              >
                 {row.status}
               </span>
             </div>
@@ -104,6 +155,65 @@ export default function AdminBookingsPage() {
             {row.message && (
               <p className="mt-2 text-white/55 border-t border-white/5 pt-2 whitespace-pre-wrap">{row.message}</p>
             )}
+
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-white/5 pt-3">
+              {row.status === "pending" && (
+                <>
+                  <button
+                    type="button"
+                    disabled={updatingId === row.id}
+                    onClick={() => setStatus(row.id, "confirmed")}
+                    className="rounded-lg bg-[#4A9B3F] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2D7A25] disabled:opacity-50"
+                  >
+                    {updatingId === row.id ? "…" : "Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={updatingId === row.id}
+                    onClick={() => {
+                      if (confirm("Decline this booking request?")) setStatus(row.id, "declined");
+                    }}
+                    className="rounded-lg border border-red-500/35 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/20 disabled:opacity-50"
+                  >
+                    Decline
+                  </button>
+                </>
+              )}
+              {row.status === "confirmed" && (
+                <>
+                  <button
+                    type="button"
+                    disabled={updatingId === row.id}
+                    onClick={() => setStatus(row.id, "completed")}
+                    className="rounded-lg bg-blue-600/80 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {updatingId === row.id ? "…" : "Mark completed"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={updatingId === row.id}
+                    onClick={() => {
+                      if (confirm("Cancel this booking?")) setStatus(row.id, "cancelled");
+                    }}
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/5 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+              {(row.status === "declined" || row.status === "cancelled" || row.status === "completed") && (
+                <button
+                  type="button"
+                  disabled={updatingId === row.id}
+                  onClick={() => {
+                    if (confirm("Re-open as pending?")) setStatus(row.id, "pending");
+                  }}
+                  className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/5 disabled:opacity-50"
+                >
+                  Re-open as pending
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
