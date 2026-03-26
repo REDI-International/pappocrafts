@@ -2,20 +2,20 @@
   "schema_version": "1.0.0",
   "mode": "full",
   "commit_sha": "05457da3dc5b065a77193ec4d320f02f908d2eb2",
-  "author": "cboldis@yahoo.com",
-  "timestamp": "2026-03-26T20:02:34+02:00",
+  "author": "antoniac@adobe.com",
+  "timestamp": "2026-03-26T19:55:26+02:00",
   "detection": {
     "ai_assisted": true,
-    "method": "heuristic",
+    "method": "editor_hook",
     "tool": "cursor",
     "model": "",
-    "confidence": 0.95
+    "confidence": 1.0
   },
   "stats": {
     "total_additions": 615,
-    "total_deletions": 71,
+    "total_deletions": 0,
     "ai_additions": 615,
-    "ai_deletions": 71,
+    "ai_deletions": 0,
     "human_additions": 0,
     "human_deletions": 0
   },
@@ -23,50 +23,66 @@
     "frontend/package-lock.json": {
       "ai_additions": 39,
       "human_additions": 0,
-      "ai_deletions": 69,
-      "human_deletions": 0
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "76,1332,1354,1367,1949,2073,2091,2279,3213,3614,3699,4233,4239,4245,4262,4298,4369,4375,4382,4487,4797,4816,4960,5356,5446,5632,5955,6236,7055,7490,7626,7633,8307,8317,8476,8653,9263,9441,9869",
+      "human_lines": ""
     },
     "frontend/public/feedback-testing.html": {
       "ai_additions": 175,
       "human_additions": 0,
       "ai_deletions": 0,
-      "human_deletions": 0
+      "human_deletions": 0,
+      "ai_lines": "1-175",
+      "human_lines": ""
     },
     "frontend/src/app/admin/feedback/page.tsx": {
       "ai_additions": 276,
       "human_additions": 0,
       "ai_deletions": 0,
-      "human_deletions": 0
+      "human_deletions": 0,
+      "ai_lines": "1-276",
+      "human_lines": ""
     },
     "frontend/src/app/admin/layout.tsx": {
       "ai_additions": 3,
       "human_additions": 0,
-      "ai_deletions": 2,
-      "human_deletions": 0
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "19,155,174",
+      "human_lines": ""
     },
     "frontend/src/app/api/admin/feedback/route.ts": {
       "ai_additions": 31,
       "human_additions": 0,
       "ai_deletions": 0,
-      "human_deletions": 0
+      "human_deletions": 0,
+      "ai_lines": "1-31",
+      "human_lines": ""
     },
     "frontend/src/app/api/feedback/route.ts": {
       "ai_additions": 48,
       "human_additions": 0,
       "ai_deletions": 0,
-      "human_deletions": 0
+      "human_deletions": 0,
+      "ai_lines": "1-48",
+      "human_lines": ""
     },
     "supabase/migrations/020_feedback.sql": {
       "ai_additions": 27,
       "human_additions": 0,
       "ai_deletions": 0,
-      "human_deletions": 0
+      "human_deletions": 0,
+      "ai_lines": "1-27",
+      "human_lines": ""
     },
     "supabase/migrations/021_feedback_admin_read.sql": {
       "ai_additions": 16,
       "human_additions": 0,
       "ai_deletions": 0,
-      "human_deletions": 0
+      "human_deletions": 0,
+      "ai_lines": "1-16",
+      "human_lines": ""
     }
   }
 }
