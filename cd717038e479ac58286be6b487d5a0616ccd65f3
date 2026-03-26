@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "cd717038e479ac58286be6b487d5a0616ccd65f3",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-26T22:55:39+02:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "editor_hook",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 1.0
+  },
+  "stats": {
+    "total_additions": 506,
+    "total_deletions": 0,
+    "ai_additions": 506,
+    "ai_deletions": 0,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/src/app/admin/bookings/page.tsx": {
+      "ai_additions": 115,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "1-115",
+      "human_lines": ""
+    },
+    "frontend/src/app/admin/sellers/page.tsx": {
+      "ai_additions": 197,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "15-25,85-168,258-359",
+      "human_lines": ""
+    },
+    "frontend/src/app/api/admin/bookings/route.ts": {
+      "ai_additions": 47,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "31-77",
+      "human_lines": ""
+    },
+    "frontend/src/app/api/admin/sellers/route.ts": {
+      "ai_additions": 147,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "22-39,84,112-239",
+      "human_lines": ""
+    }
+  }
+}
