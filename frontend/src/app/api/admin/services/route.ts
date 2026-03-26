@@ -53,6 +53,11 @@ export async function POST(request: NextRequest) {
       available: body.available ?? true,
       response_time: body.responseTime || body.response_time || "",
       completed_jobs: body.completedJobs ?? body.completed_jobs ?? 0,
+      provider_name: body.providerName ?? body.provider_name ?? body.name ?? "",
+      summary: body.summary ?? "",
+      years_experience: body.yearsExperience ?? body.years_experience ?? "",
+      languages_spoken: body.languagesSpoken ?? body.languages_spoken ?? "",
+      booking_calendar_url: body.bookingCalendarUrl ?? body.booking_calendar_url ?? "",
     }).select().single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -84,6 +89,15 @@ export async function PATCH(request: NextRequest) {
     if (body.badges !== undefined) updates.badges = body.badges;
     if (body.available !== undefined) updates.available = body.available;
     if (body.responseTime !== undefined) updates.response_time = body.responseTime;
+    if (body.providerName !== undefined) updates.provider_name = body.providerName;
+    if (body.provider_name !== undefined) updates.provider_name = body.provider_name;
+    if (body.summary !== undefined) updates.summary = body.summary;
+    if (body.yearsExperience !== undefined) updates.years_experience = body.yearsExperience;
+    if (body.years_experience !== undefined) updates.years_experience = body.years_experience;
+    if (body.languagesSpoken !== undefined) updates.languages_spoken = body.languagesSpoken;
+    if (body.languages_spoken !== undefined) updates.languages_spoken = body.languages_spoken;
+    if (body.bookingCalendarUrl !== undefined) updates.booking_calendar_url = body.bookingCalendarUrl;
+    if (body.booking_calendar_url !== undefined) updates.booking_calendar_url = body.booking_calendar_url;
 
     const db = createAdminClient();
     const { data, error } = await db.from("services").update(updates).eq("id", body.id).select().single();

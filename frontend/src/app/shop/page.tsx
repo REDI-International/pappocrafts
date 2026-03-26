@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { categories, type Product, mapSupabaseProduct } from "@/lib/products";
@@ -13,13 +13,16 @@ import { trackAddToCart } from "@/components/Analytics";
 import { Suspense } from "react";
 
 function ShopContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "All";
   const artisanFilter = searchParams.get("artisan") || "";
+  const businessFilter = searchParams.get("business") || "";
 
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [search, setSearch] = useState("");
   const [activeArtisan, setActiveArtisan] = useState(artisanFilter);
+  const [activeBusinessSlug, setActiveBusinessSlug] = useState(businessFilter);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -47,9 +50,45 @@ function ShopContent() {
     loadProducts();
   }, [loadProducts]);
 
+  useEffect(() => {
+    setActiveArtisan(searchParams.get("artisan") || "");
+    setActiveBusinessSlug(searchParams.get("business") || "");
+  }, [searchParams]);
+
+  const filterLabel = useMemo(() => {
+    if (activeBusinessSlug) {
+      const p = products.find((x) => x.businessSlug === activeBusinessSlug);
+      return p?.businessName || activeBusinessSlug;
+    }
+    return activeArtisan;
+  }, [activeBusinessSlug, activeArtisan, products]);
+
+  const setBusinessFilter = (slug: string) => {
+    setActiveBusinessSlug(slug);
+    setActiveArtisan("");
+    const cat = activeCategory !== "All" ? `&category=${encodeURIComponent(activeCategory)}` : "";
+    router.replace(`/shop?business=${encodeURIComponent(slug)}${cat}`);
+  };
+
+  const setArtisanFilter = (name: string) => {
+    setActiveArtisan(name);
+    setActiveBusinessSlug("");
+    const cat = activeCategory !== "All" ? `&category=${encodeURIComponent(activeCategory)}` : "";
+    router.replace(`/shop?artisan=${encodeURIComponent(name)}${cat}`);
+  };
+
+  const clearMakerFilter = () => {
+    setActiveArtisan("");
+    setActiveBusinessSlug("");
+    const cat = activeCategory !== "All" ? `?category=${encodeURIComponent(activeCategory)}` : "";
+    router.replace(`/shop${cat}`);
+  };
+
   const filtered = useMemo(() => {
     let result = products;
-    if (activeArtisan) {
+    if (activeBusinessSlug) {
+      result = result.filter((p) => p.businessSlug === activeBusinessSlug);
+    } else if (activeArtisan) {
       result = result.filter((p) => p.artisan === activeArtisan);
     }
     if (activeCategory !== "All") {
@@ -62,6 +101,7 @@ function ShopContent() {
           p.name.toLowerCase().includes(q) ||
           p.description.toLowerCase().includes(q) ||
           p.artisan.toLowerCase().includes(q) ||
+          p.businessName.toLowerCase().includes(q) ||
           p.country.toLowerCase().includes(q)
       );
     }
@@ -115,16 +155,17 @@ function ShopContent() {
             </div>
           </div>
 
-          {activeArtisan && (
+          {(activeArtisan || activeBusinessSlug) && (
             <div className="mb-8 flex items-center gap-3 rounded-xl bg-green/5 border border-green/10 px-5 py-3">
               <svg className="h-5 w-5 text-green flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
               </svg>
               <p className="text-sm text-charcoal/70 flex-1">
-                Showing products by <strong className="text-charcoal">{activeArtisan}</strong>
+                Showing products from <strong className="text-charcoal">{filterLabel}</strong>
               </p>
               <button
-                onClick={() => setActiveArtisan("")}
+                type="button"
+                onClick={clearMakerFilter}
                 className="text-xs font-medium text-green hover:text-green-dark transition-colors"
               >
                 Show all
@@ -193,10 +234,15 @@ function ShopContent() {
                         <p className="text-xs text-charcoal/50 mt-0.5">
                           {t("shop.by")}{" "}
                           <button
-                            onClick={(e) => { e.preventDefault(); setActiveArtisan(product.artisan); }}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (product.businessSlug) setBusinessFilter(product.businessSlug);
+                              else setArtisanFilter(product.artisan);
+                            }}
                             className="font-medium text-charcoal/70 hover:text-green transition-colors"
                           >
-                            {product.artisan}
+                            {product.businessName}
                           </button>
                           {" "}&middot; {product.country}
                         </p>

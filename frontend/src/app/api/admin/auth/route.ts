@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       email: session.email,
       role: session.role,
       name: session.name,
+      userId: session.userId,
     });
   } catch {
     return NextResponse.json({ error: "Authentication failed." }, { status: 500 });
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
     email: session.email,
     role: session.role,
     name: session.name,
+    userId: session.userId,
   });
 }
 

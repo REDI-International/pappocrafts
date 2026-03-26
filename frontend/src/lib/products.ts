@@ -7,6 +7,10 @@ export interface Product {
   currency: string;
   category: string;
   artisan: string;
+  /** Public shop label (business or maker). */
+  businessName: string;
+  /** Stable filter for “all products from this business” when set. */
+  businessSlug: string;
   country: string;
   image: string;
   tags: string[];
@@ -36,6 +40,10 @@ export const categories = [
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapSupabaseProduct(row: any): Product {
+  const artisan = row.artisan || "";
+  const businessName =
+    (typeof row.business_name === "string" && row.business_name.trim()) ? row.business_name.trim() : artisan;
+  const businessSlug = typeof row.business_slug === "string" ? row.business_slug.trim() : "";
   return {
     id: row.id,
     name: row.name || "",
@@ -44,7 +52,9 @@ export function mapSupabaseProduct(row: any): Product {
     price: Number(row.price) || 0,
     currency: row.currency || "EUR",
     category: row.category || "",
-    artisan: row.artisan || "",
+    artisan,
+    businessName,
+    businessSlug,
     country: row.country || "",
     image: row.image || "",
     tags: Array.isArray(row.tags) ? row.tags : [],

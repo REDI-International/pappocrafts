@@ -25,6 +25,7 @@ async function getProduct(id: string): Promise<ProductData | null> {
       .from("products")
       .select("name, description, category, artisan, country, image, price, in_stock")
       .eq("id", id)
+      .eq("approval_status", "approved")
       .single();
     return data;
   } catch {

@@ -17,6 +17,40 @@ export interface ServiceProvider {
   available: boolean;
   responseTime: string;
   completedJobs: number;
+  /** Short pitch (listing / modal). */
+  summary?: string;
+  yearsExperience?: string;
+  languagesSpoken?: string;
+  /** Cal.com, Calendly, or similar booking URL. */
+  bookingCalendarUrl?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapSupabaseServiceRow(row: any): ServiceProvider {
+  return {
+    id: row.id,
+    name: String(row.provider_name || row.name || "").trim() || "Provider",
+    title: row.title || "",
+    description: row.description || "",
+    longDescription: row.long_description || "",
+    category: row.category || "",
+    hourlyRate: Number(row.hourly_rate) || 0,
+    fixedRateFrom: row.fixed_rate_from != null ? Number(row.fixed_rate_from) : null,
+    currency: row.currency || "EUR",
+    rating: Number(row.rating) || 0,
+    reviewCount: Number(row.review_count) || 0,
+    location: row.location || "",
+    country: row.country || "",
+    image: row.image || "",
+    badges: Array.isArray(row.badges) ? row.badges : [],
+    available: row.available !== false,
+    responseTime: row.response_time || "",
+    completedJobs: Number(row.completed_jobs) || 0,
+    summary: row.summary || row.description || "",
+    yearsExperience: row.years_experience || "",
+    languagesSpoken: row.languages_spoken || "",
+    bookingCalendarUrl: row.booking_calendar_url || "",
+  };
 }
 
 export const serviceCategories = [

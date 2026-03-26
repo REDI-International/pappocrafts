@@ -35,11 +35,15 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("admin-token", data.token);
-      localStorage.setItem("admin-user", JSON.stringify({
-        email: data.email,
-        role: data.role,
-        name: data.name,
-      }));
+      localStorage.setItem(
+        "admin-user",
+        JSON.stringify({
+          email: data.email,
+          role: data.role,
+          name: data.name,
+          userId: data.userId ?? null,
+        })
+      );
 
       if (data.role === "superadmin" || data.role === "admin") {
         router.push("/admin");
@@ -79,7 +83,7 @@ export default function LoginPage() {
             </Link>
             <h1 className="mt-6 text-2xl font-bold text-charcoal">Welcome back</h1>
             <p className="mt-2 text-sm text-charcoal/50">
-              Sign in to your PappoShop account
+              Sign in to your PappoShop account. Public registration is not available — entrepreneur access is issued by the team.
             </p>
           </div>
 

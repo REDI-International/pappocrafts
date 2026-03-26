@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-export type UserRole = "superadmin" | "admin" | "user";
+export type UserRole = "superadmin" | "admin" | "user" | "seller";
 
 export interface StoredOrder {
   id: string;
@@ -38,11 +38,12 @@ export interface StoredOrder {
   updatedAt: string;
 }
 
-interface Session {
+export interface Session {
   token: string;
   email: string;
   role: UserRole;
   name: string;
+  userId: string | null;
   createdAt: number;
 }
 
@@ -71,17 +72,22 @@ export async function authenticate(email: string, password: string): Promise<Ses
   const hash = sha256(password);
   const db = supabase();
 
-  let user: { email: string; role: UserRole; name: string } | null = null;
+  let user: { email: string; role: UserRole; name: string; userId: string | null } | null = null;
 
   if (db) {
     const { data } = await db
       .from("admin_users")
-      .select("email, role, name, password_hash")
+      .select("id, email, role, name, password_hash")
       .eq("email", email.toLowerCase())
       .single();
 
     if (data && data.password_hash === hash) {
-      user = { email: data.email, role: data.role as UserRole, name: data.name };
+      user = {
+        email: data.email,
+        role: data.role as UserRole,
+        name: data.name,
+        userId: typeof data.id === "string" ? data.id : String(data.id),
+      };
     }
   }
 
@@ -89,13 +95,20 @@ export async function authenticate(email: string, password: string): Promise<Ses
     const fallback = FALLBACK_USERS.find(
       (u) => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === hash
     );
-    if (fallback) user = { email: fallback.email, role: fallback.role, name: fallback.name };
+    if (fallback) user = { email: fallback.email, role: fallback.role, name: fallback.name, userId: null };
   }
 
   if (!user) return null;
 
   const token = randomBytes(32).toString("hex");
-  const session: Session = { token, email: user.email, role: user.role, name: user.name, createdAt: Date.now() };
+  const session: Session = {
+    token,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+    userId: user.userId,
+    createdAt: Date.now(),
+  };
   sessions.set(token, session);
 
   if (db) {
@@ -121,6 +134,15 @@ export function validateSession(token: string): Session | null {
     return null;
   }
   return session;
+}
+
+/** When session.userId is missing (e.g. legacy token), resolve from DB by email. */
+export async function resolveUserIdFromEmail(email: string): Promise<string | null> {
+  const db = supabase();
+  if (!db) return null;
+  const { data } = await db.from("admin_users").select("id").eq("email", email.toLowerCase()).single();
+  if (!data?.id) return null;
+  return typeof data.id === "string" ? data.id : String(data.id);
 }
 
 export function logout(token: string): void {

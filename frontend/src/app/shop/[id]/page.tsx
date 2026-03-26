@@ -146,10 +146,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <p className="mt-2 text-charcoal/60">
                 {t("product.handcraftedBy")}{" "}
                 <Link
-                  href={`/shop?artisan=${encodeURIComponent(product.artisan)}`}
+                  href={
+                    product.businessSlug
+                      ? `/shop?business=${encodeURIComponent(product.businessSlug)}`
+                      : `/shop?artisan=${encodeURIComponent(product.artisan)}`
+                  }
                   className="font-bold text-charcoal hover:text-green transition-colors"
                 >
-                  {product.artisan}
+                  {product.businessName}
                 </Link>
               </p>
 
@@ -228,7 +232,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors">{p.name}</h3>
-                      <p className="text-xs text-charcoal/50 mt-0.5">{t("shop.by")} {p.artisan} · {p.country}</p>
+                      <p className="text-xs text-charcoal/50 mt-0.5">{t("shop.by")} {p.businessName} · {p.country}</p>
                       <p className="mt-2 text-lg font-bold text-green">{formatRegionalPrice(p.price)}</p>
                     </div>
                   </Link>

@@ -30,8 +30,11 @@ export default function AdminLogin() {
       }
 
       localStorage.setItem("admin-token", data.token);
-      localStorage.setItem("admin-user", JSON.stringify({ email: data.email, role: data.role, name: data.name }));
-      if (data.role === "user") {
+      localStorage.setItem(
+        "admin-user",
+        JSON.stringify({ email: data.email, role: data.role, name: data.name, userId: data.userId ?? null })
+      );
+      if (data.role === "user" || data.role === "seller") {
         router.push("/account");
       } else {
         router.push("/admin");

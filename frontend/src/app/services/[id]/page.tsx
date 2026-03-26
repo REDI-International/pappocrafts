@@ -1,23 +1,60 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getServiceProvider, serviceProviders } from "@/lib/services";
+import { getServiceProvider, serviceProviders, mapSupabaseServiceRow, type ServiceProvider } from "@/lib/services";
 import { useLocale } from "@/lib/locale-context";
 
 export default function ServiceProviderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const provider = getServiceProvider(id);
+  const [provider, setProvider] = useState<ServiceProvider | null>(() => getServiceProvider(id) ?? null);
+  const [loading, setLoading] = useState(true);
   const [showBooking, setShowBooking] = useState(false);
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
   const [bookingMessage, setBookingMessage] = useState("");
   const [bookingStatus, setBookingStatus] = useState<"idle" | "sent">("idle");
   const { t, formatRegionalPrice } = useLocale();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/services?id=${encodeURIComponent(id)}`);
+        if (r.ok) {
+          const d = await r.json();
+          if (!cancelled && d?.id) {
+            setProvider(mapSupabaseServiceRow(d));
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        /* keep static fallback */
+      }
+      if (!cancelled) {
+        setProvider((p) => p ?? getServiceProvider(id) ?? null);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="pt-24 pb-24 px-4 text-center text-charcoal/40 text-sm">Loading…</main>
+        <Footer />
+      </>
+    );
+  }
 
   if (!provider) notFound();
 
@@ -81,8 +118,22 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
                 </div>
               </div>
 
+              {(provider.yearsExperience || provider.languagesSpoken) && (
+                <div className="mt-6 rounded-xl border border-charcoal/10 bg-light/60 p-4 text-sm text-charcoal/75 space-y-2">
+                  {provider.yearsExperience && (
+                    <p><span className="font-semibold text-charcoal">Experience:</span> {provider.yearsExperience}</p>
+                  )}
+                  {provider.languagesSpoken && (
+                    <p><span className="font-semibold text-charcoal">Languages:</span> {provider.languagesSpoken}</p>
+                  )}
+                </div>
+              )}
+
               <div className="prose prose-charcoal max-w-none">
                 <h2 className="font-serif text-xl font-bold text-charcoal mt-8 mb-3">{t("service.about")}</h2>
+                {provider.summary && provider.summary !== provider.description && (
+                  <p className="text-charcoal/80 font-medium mb-3">{provider.summary}</p>
+                )}
                 <p className="text-charcoal/70 leading-relaxed">{provider.longDescription}</p>
               </div>
 
@@ -120,9 +171,19 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
                   )}
                 </div>
 
-                {!showBooking ? (
+                {provider.bookingCalendarUrl ? (
+                  <a
+                    href={provider.bookingCalendarUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full rounded-full bg-green py-3 text-center text-sm font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all"
+                  >
+                    View availability & book
+                  </a>
+                ) : !showBooking ? (
                   <div className="space-y-3">
                     <button
+                      type="button"
                       onClick={() => setShowBooking(true)}
                       className="w-full rounded-full bg-green py-3 text-center text-sm font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all"
                     >

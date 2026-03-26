@@ -109,7 +109,7 @@ const en: Translations = {
   "mission.val4Desc": "We connect Balkans makers with a global audience, fostering understanding and appreciation across borders.",
   "waitlist.badge": "Stay Connected",
   "waitlist.title": "Join the PappoShop Community",
-  "waitlist.desc": "Whether you want to discover unique handmade products or sell your own creations, sign up to get updates and exclusive offers.",
+  "waitlist.desc": "Whether you want to discover unique handmade products or hear about seller opportunities, join the waitlist for updates. Shop accounts for entrepreneurs are created by our team — there is no public registration.",
   "waitlist.buyer": "I want to buy",
   "waitlist.seller": "I want to sell",
   "waitlist.placeholder": "Enter your email",

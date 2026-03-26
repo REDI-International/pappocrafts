@@ -20,13 +20,16 @@ async function getBaseUrl(): Promise<string> {
 
 async function getProductIds(): Promise<string[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/products?select=id,updated_at&order=created_at.desc`, {
-      headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ""}`,
-      },
-      next: { revalidate: 3600 },
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/products?select=id,updated_at&approval_status=eq.approved&order=created_at.desc`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ""}`,
+        },
+        next: { revalidate: 3600 },
+      }
+    );
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data.map((p: { id: string }) => p.id) : [];

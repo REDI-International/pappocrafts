@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         .from("products")
         .select("*")
         .eq("id", id)
+        .eq("approval_status", "approved")
         .single();
 
       if (error || !data) {
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
     let query = db
       .from("products")
       .select("*", { count: "exact" })
+      .eq("approval_status", "approved")
       .order("created_at", { ascending: false });
 
     if (category && category !== "all") {

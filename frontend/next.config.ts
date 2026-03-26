@@ -3,6 +3,12 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async rewrites() {
+    return [
+      { source: "/feedback-testing", destination: "/feedback-testing.html" },
+      { source: "/feedback-testing/", destination: "/feedback-testing.html" },
+    ];
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
