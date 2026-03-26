@@ -10,7 +10,23 @@ interface CachedRates {
 let cache: CachedRates | null = null;
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-async function fetchLiveRates(): Promise<Record<string, number>> {
+const FALLBACK_RATES: Record<string, number> = {
+  EUR: 1,
+  USD: 1.08,
+  GBP: 0.86,
+  RSD: 117.2,
+  ALL: 100.5,
+  BAM: 1.956,
+  MKD: 61.5,
+  TRY: 38.5,
+  CHF: 0.97,
+};
+
+function mergeRates(partial: Record<string, number>): Record<string, number> {
+  return { ...FALLBACK_RATES, ...partial, EUR: 1 };
+}
+
+async function fetchLiveRates(): Promise<{ rates: Record<string, number>; live: boolean }> {
   const symbols = SUPPORTED_CURRENCIES.join(",");
 
   // Primary: Frankfurter API (ECB data, free, no key required)
@@ -21,7 +37,11 @@ async function fetchLiveRates(): Promise<Record<string, number>> {
     );
     if (res.ok) {
       const data = await res.json();
-      if (data.rates) return { EUR: 1, ...data.rates };
+      if (data.rates && typeof data.rates === "object") {
+        const merged = mergeRates(data.rates);
+        const hasAny = Object.keys(data.rates as object).length > 0;
+        return { rates: merged, live: hasAny };
+      }
     }
   } catch {
     // fall through to fallback
@@ -36,31 +56,20 @@ async function fetchLiveRates(): Promise<Record<string, number>> {
     if (res.ok) {
       const data = await res.json();
       if (data.rates) {
-        const filtered: Record<string, number> = { EUR: 1 };
+        const filtered: Record<string, number> = {};
         for (const code of SUPPORTED_CURRENCIES) {
-          if (data.rates[code]) filtered[code] = data.rates[code];
+          const v = data.rates[code];
+          if (typeof v === "number" && v > 0) filtered[code] = v;
         }
-        return filtered;
+        return { rates: mergeRates(filtered), live: Object.keys(filtered).length > 0 };
       }
     }
   } catch {
     // fall through to hardcoded
   }
 
-  return FALLBACK_RATES;
+  return { rates: { ...FALLBACK_RATES }, live: false };
 }
-
-const FALLBACK_RATES: Record<string, number> = {
-  EUR: 1,
-  USD: 1.08,
-  GBP: 0.86,
-  RSD: 117.2,
-  ALL: 100.5,
-  BAM: 1.956,
-  MKD: 61.5,
-  TRY: 38.5,
-  CHF: 0.97,
-};
 
 export async function GET() {
   const now = Date.now();
@@ -72,13 +81,12 @@ export async function GET() {
     );
   }
 
-  const rates = await fetchLiveRates();
-  const isLive = rates !== FALLBACK_RATES;
+  const { rates, live } = await fetchLiveRates();
 
   cache = { rates, fetchedAt: now };
 
   return NextResponse.json(
-    { rates, source: isLive ? "live" : "fallback", updated_at: new Date(now).toISOString() },
+    { rates, source: live ? "live" : "fallback", updated_at: new Date(now).toISOString() },
     { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" } }
   );
 }

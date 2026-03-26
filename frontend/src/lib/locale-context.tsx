@@ -7,7 +7,6 @@ import {
   getShippingZoneForLocale,
   getRegionConfig,
   getShippingRate,
-  getRegionalPrice,
   calculateShipping,
   type PricingRegion,
   type ShippingZone,
@@ -104,7 +103,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         if (!res.ok) throw new Error("Failed");
         const data = await res.json();
         if (!cancelled && data.rates) {
-          setExchangeRates(data.rates);
+          setExchangeRates({ ...FALLBACK_RATES, ...data.rates, EUR: 1 });
           setRatesSource(data.source === "live" ? "live" : data.source === "cached" ? "cached" : "fallback");
         }
       } catch {
@@ -138,11 +137,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback((code: Locale) => {
     setLocaleState(code);
-    const lc = locales.find((l) => l.code === code);
-    if (lc) setCurrencyState(lc.defaultCurrency);
     if (typeof window !== "undefined") {
       localStorage.setItem("papposhop-locale", code);
-      if (lc) localStorage.setItem("papposhop-currency", lc.defaultCurrency);
       document.documentElement.lang = code === "cnr" ? "sr-ME" : code;
     }
   }, []);
@@ -179,17 +175,12 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const formatPrice = formatCurrency;
 
-  const getRegionalEurPrice = useCallback(
-    (eurBasePrice: number): number => getRegionalPrice(eurBasePrice, region),
-    [region]
-  );
+  /** List/catalog prices: base EUR from the database × selected currency only (language does not change the number). */
+  const getRegionalEurPrice = useCallback((eurBasePrice: number): number => eurBasePrice, []);
 
   const formatRegionalPrice = useCallback(
-    (eurBasePrice: number): string => {
-      const regionalEur = getRegionalPrice(eurBasePrice, region);
-      return formatCurrency(regionalEur);
-    },
-    [region, formatCurrency]
+    (eurBasePrice: number): string => formatCurrency(eurBasePrice),
+    [formatCurrency]
   );
 
   const getShippingCost = useCallback(
