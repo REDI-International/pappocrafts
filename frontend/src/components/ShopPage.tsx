@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { categories, type Product, mapSupabaseProduct } from "@/lib/products";
+import { categories, type Product, mapSupabaseProduct, shopCategoryChips } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
@@ -31,6 +31,7 @@ function ShopContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [preview, setPreview] = useState<Product | null>(null);
   const { addItem } = useCart();
   const { t, formatRegionalPrice } = useLocale();
 
@@ -61,6 +62,16 @@ function ShopContent() {
     const cat = searchParams.get("category");
     if (cat && categories.includes(cat)) setActiveCategory(cat);
   }, [searchParams]);
+
+  const closePreview = useCallback(() => setPreview(null), []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") closePreview();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [closePreview]);
 
   const countryOptions = useMemo(() => {
     const set = new Set<string>();
@@ -97,6 +108,12 @@ function ShopContent() {
     setActiveBusinessSlug("");
     const cat = activeCategory !== "All" ? `?category=${encodeURIComponent(activeCategory)}` : "";
     router.replace(`${listingBase}${cat}`);
+  };
+
+  const filterByMakerFromPreview = (p: Product) => {
+    closePreview();
+    if (p.businessSlug) setBusinessFilter(p.businessSlug);
+    else setArtisanFilter(p.artisan);
   };
 
   const filtered = useMemo(() => {
@@ -142,7 +159,7 @@ function ShopContent() {
       <main className="pt-20 pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center max-w-3xl mx-auto">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center max-w-3xl mx-auto">
             <div className="relative flex-1 min-w-[200px] max-w-sm mx-auto sm:mx-0">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-charcoal/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -191,23 +208,26 @@ function ShopContent() {
             </label>
           </div>
 
-          <div className="relative mb-10 rounded-2xl border border-charcoal/5 bg-light/40 px-3 py-4 sm:px-5">
-            <p className="text-center text-[11px] font-semibold uppercase tracking-wider text-charcoal/40 mb-3">
-              {t("cat.title")}
+          <div className="mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <p className="text-center text-[11px] font-semibold uppercase tracking-wider text-charcoal/40 mb-2">
+              {t("cat.badge")}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-2 justify-items-stretch">
-              {categories.map((cat) => (
+            <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory sm:flex-wrap sm:justify-center sm:overflow-visible">
+              {shopCategoryChips.map((cat) => (
                 <button
-                  key={cat}
+                  key={cat.name}
                   type="button"
-                  onClick={() => setActiveCategory(cat)}
-                  className={`rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-colors text-center leading-snug min-h-[2.5rem] flex items-center justify-center ${
-                    activeCategory === cat
-                      ? "bg-green text-white shadow-sm"
-                      : "bg-white text-charcoal/65 border border-charcoal/10 hover:border-green/30 hover:text-green"
+                  onClick={() => setActiveCategory(cat.name)}
+                  className={`flex flex-col items-center gap-1 rounded-xl p-2.5 min-w-[5.5rem] sm:min-w-0 flex-shrink-0 snap-start text-center transition-all ${
+                    activeCategory === cat.name
+                      ? "bg-green text-white shadow-md"
+                      : "bg-white text-charcoal/70 border border-charcoal/5 hover:border-green/20 hover:shadow-sm"
                   }`}
                 >
-                  {translateShopCategory(cat, t)}
+                  <span className="text-xl sm:text-2xl">{cat.icon}</span>
+                  <span className="text-[10px] sm:text-xs font-medium leading-tight max-w-[5rem]">
+                    {translateShopCategory(cat.name, t)}
+                  </span>
                 </button>
               ))}
             </div>
@@ -232,16 +252,18 @@ function ShopContent() {
           )}
 
           {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-2xl bg-white border border-charcoal/5 overflow-hidden animate-pulse">
-                  <div className="aspect-square bg-charcoal/5" />
-                  <div className="p-4 space-y-3">
-                    <div className="h-4 bg-charcoal/5 rounded w-3/4" />
-                    <div className="h-3 bg-charcoal/5 rounded w-1/2" />
-                    <div className="h-3 bg-charcoal/5 rounded w-full" />
-                    <div className="h-10 bg-charcoal/5 rounded-full" />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-2xl bg-white border border-charcoal/5 overflow-hidden animate-pulse p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="h-16 w-16 flex-shrink-0 rounded-xl bg-charcoal/5" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-charcoal/5 rounded w-3/4" />
+                      <div className="h-3 bg-charcoal/5 rounded w-1/2" />
+                      <div className="h-3 bg-charcoal/5 rounded w-full" />
+                    </div>
                   </div>
+                  <div className="mt-3 h-8 bg-charcoal/5 rounded w-full" />
                 </div>
               ))}
             </div>
@@ -273,69 +295,143 @@ function ShopContent() {
               </button>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {sortedProducts.map((product) => (
-                <div key={product.id} className="group rounded-2xl bg-white border border-charcoal/5 overflow-hidden hover:shadow-lg hover:border-green/20 transition-all">
-                  <Link href={`/shop/${product.id}`} className="block">
-                    <div className="relative aspect-square overflow-hidden bg-light">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        unoptimized
-                      />
-                    </div>
-                  </Link>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <Link href={`/shop/${product.id}`}>
-                          <h3 className="font-semibold text-charcoal truncate group-hover:text-green transition-colors">
+                <button
+                  key={product.id}
+                  type="button"
+                  onClick={() => setPreview(product)}
+                  className="group text-left rounded-2xl bg-white border border-charcoal/5 overflow-hidden hover:shadow-lg hover:border-green/20 transition-all"
+                >
+                  <div className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-light">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors truncate">
                             {product.name}
                           </h3>
-                        </Link>
-                        <p className="text-xs text-charcoal/50 mt-0.5">
-                          {t("shop.by")}{" "}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (product.businessSlug) setBusinessFilter(product.businessSlug);
-                              else setArtisanFilter(product.artisan);
-                            }}
-                            className="font-medium text-charcoal/70 hover:text-green transition-colors"
-                          >
-                            {product.businessName}
-                          </button>
-                          {" "}&middot; {product.country}
+                          {!product.inStock && (
+                            <span className="flex-shrink-0 rounded-full bg-charcoal/10 px-2 py-0.5 text-[10px] font-bold text-charcoal/50">
+                              OUT
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-charcoal/60 truncate">
+                          {translateShopCategory(product.category, t)}
                         </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-charcoal/50">
+                          <span className="truncate max-w-[140px]">{product.businessName}</span>
+                          <span>{product.country}</span>
+                        </div>
                       </div>
-                      <p className="text-lg font-bold text-green whitespace-nowrap">
-                        {formatRegionalPrice(product.price)}
-                      </p>
                     </div>
-                    <p className="mt-2 text-sm text-charcoal/60 line-clamp-2">{product.description}</p>
-                    {product.inStock ? (
-                      <button
-                        onClick={() => { addItem(product); trackAddToCart({ id: product.id, name: product.name, price: product.price }); }}
-                        className="mt-3 w-full rounded-full bg-green/10 py-2 text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
-                      >
-                        {t("shop.addToCart")}
-                      </button>
-                    ) : (
-                      <div className="mt-3 w-full rounded-full bg-charcoal/5 py-2 text-sm font-semibold text-charcoal/40 text-center">
-                        Out of Stock
+                    <p className="mt-3 text-sm text-charcoal/60 line-clamp-2">{product.description}</p>
+                    <div className="mt-4 flex items-center justify-between gap-2">
+                      <span className="text-sm font-bold text-green">{formatRegionalPrice(product.price)}</span>
+                      <div className="flex items-center gap-1 text-xs text-charcoal/40">
+                        <span className={`h-2 w-2 rounded-full ${product.inStock ? "bg-green" : "bg-charcoal/25"}`} />
+                        {product.inStock ? "In stock" : "Out of stock"}
                       </div>
-                    )}
+                    </div>
+                    <p className="mt-3 text-xs font-medium text-green">Quick preview — click for details</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
       </main>
+
+      {preview && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="product-preview-title"
+          onClick={closePreview}
+        >
+          <div
+            className="relative max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-charcoal/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closePreview}
+              className="absolute right-4 top-4 rounded-full p-2 text-charcoal/40 hover:bg-charcoal/5 hover:text-charcoal z-10"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="p-6 pt-10">
+              <div className="relative mx-auto w-full max-w-[280px] aspect-square overflow-hidden rounded-2xl bg-light">
+                <Image src={preview.image} alt={preview.name} fill className="object-cover" sizes="280px" unoptimized />
+              </div>
+              <div className="mt-5 text-center sm:text-left">
+                <h2 id="product-preview-title" className="font-serif text-2xl font-bold text-charcoal pr-8">
+                  {preview.name}
+                </h2>
+                <p className="text-sm text-charcoal/60 mt-0.5">{translateShopCategory(preview.category, t)}</p>
+                <p className="text-xs text-charcoal/45 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => filterByMakerFromPreview(preview)}
+                    className="font-medium text-charcoal/70 hover:text-green transition-colors"
+                  >
+                    {preview.businessName}
+                  </button>
+                  {" · "}
+                  {preview.country}
+                </p>
+              </div>
+              <p className="mt-4 text-sm text-charcoal/70 leading-relaxed">{preview.description}</p>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <span className="font-bold text-green text-lg">{formatRegionalPrice(preview.price)}</span>
+                <span className="text-xs text-charcoal/45 flex items-center gap-1">
+                  <span className={`h-2 w-2 rounded-full ${preview.inStock ? "bg-green" : "bg-charcoal/25"}`} />
+                  {preview.inStock ? "In stock" : "Out of stock"}
+                </span>
+              </div>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                {preview.inStock ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addItem(preview);
+                      trackAddToCart({ id: preview.id, name: preview.name, price: preview.price });
+                    }}
+                    className="flex-1 rounded-xl bg-green py-3 text-center text-sm font-semibold text-white hover:bg-green-dark transition-colors"
+                  >
+                    {t("shop.addToCart")}
+                  </button>
+                ) : (
+                  <span className="flex-1 rounded-xl border border-charcoal/10 py-3 text-center text-xs text-charcoal/45">
+                    Currently unavailable
+                  </span>
+                )}
+                <Link
+                  href={`/shop/${preview.id}`}
+                  className="flex-1 rounded-xl border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
+                >
+                  Full product page
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );

@@ -39,6 +39,33 @@ export const categories = [
   "Other",
 ];
 
+/** Emoji per category for the same horizontal chip strip pattern as the services page. */
+const SHOP_CATEGORY_ICONS: Partial<Record<string, string>> = {
+  All: "🔍",
+  "Pottery & Ceramics": "🏺",
+  "Textiles & Weaving": "🧶",
+  "Jewelry & Metalwork": "💍",
+  "Woodwork & Carving": "🪵",
+  "Leather Goods": "👜",
+  "Traditional Clothing": "👗",
+  "Handmade Accessories": "🎀",
+  "Art & Paintings": "🖼️",
+  "Home Decor": "🏡",
+  Furniture: "🪑",
+  "Food & Spices": "🫙",
+  "Eco Products": "♻️",
+  "Natural Products": "🌿",
+  "Agricultural Products": "🌾",
+  "Beauty & Personal Care": "✨",
+  Machines: "⚙️",
+  Other: "📦",
+};
+
+export const shopCategoryChips = categories.map((name) => ({
+  name,
+  icon: SHOP_CATEGORY_ICONS[name] ?? "📦",
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapSupabaseProduct(row: any): Product {
   const artisan = row.artisan || "";
