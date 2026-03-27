@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "575453af6f248f4a14600340505f54dff796623a",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-27T06:43:43+02:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "heuristic",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 0.95
+  },
+  "stats": {
+    "total_additions": 521,
+    "total_deletions": 454,
+    "ai_additions": 521,
+    "ai_deletions": 454,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/src/app/account/page.tsx": {
+      "ai_additions": 3,
+      "human_additions": 0,
+      "ai_deletions": 3,
+      "human_deletions": 0
+    },
+    "frontend/src/app/admin/sellers/page.tsx": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/app/checkout/cancel/page.tsx": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/app/checkout/page.tsx": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/app/checkout/success/page.tsx": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/app/landing/layout.tsx": {
+      "ai_additions": 18,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/app/landing/page.tsx": {
+      "ai_additions": 25,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/app/page.tsx": {
+      "ai_additions": 8,
+      "human_additions": 0,
+      "ai_deletions": 22,
+      "human_deletions": 0
+    },
+    "frontend/src/app/shop/[id]/page.tsx": {
+      "ai_additions": 5,
+      "human_additions": 0,
+      "ai_deletions": 5,
+      "human_deletions": 0
+    },
+    "frontend/src/app/shop/layout.tsx": {
+      "ai_additions": 0,
+      "human_additions": 0,
+      "ai_deletions": 43,
+      "human_deletions": 0
+    },
+    "frontend/src/app/shop/page.tsx": {
+      "ai_additions": 21,
+      "human_additions": 0,
+      "ai_deletions": 354,
+      "human_deletions": 0
+    },
+    "frontend/src/app/sitemap.ts": {
+      "ai_additions": 3,
+      "human_additions": 0,
+      "ai_deletions": 3,
+      "human_deletions": 0
+    },
+    "frontend/src/components/CartSidebar.tsx": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/components/Categories.tsx": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/components/Footer.tsx": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/components/Hero.tsx": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/components/Navbar.tsx": {
+      "ai_additions": 4,
+      "human_additions": 0,
+      "ai_deletions": 10,
+      "human_deletions": 0
+    },
+    "frontend/src/components/ShopPage.tsx": {
+      "ai_additions": 358,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/components/StructuredData.tsx": {
+      "ai_additions": 3,
+      "human_additions": 0,
+      "ai_deletions": 3,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/shop-listing-metadata.ts": {
+      "ai_additions": 62,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    }
+  }
+}
