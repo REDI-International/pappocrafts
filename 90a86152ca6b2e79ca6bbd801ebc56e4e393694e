@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "90a86152ca6b2e79ca6bbd801ebc56e4e393694e",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-28T15:37:37+02:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "heuristic",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 0.95
+  },
+  "stats": {
+    "total_additions": 367,
+    "total_deletions": 93,
+    "ai_additions": 367,
+    "ai_deletions": 93,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/src/app/api/admin/analytics/route.ts": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/auth/route.ts": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/bookings/route.ts": {
+      "ai_additions": 3,
+      "human_additions": 0,
+      "ai_deletions": 3,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/feedback/route.ts": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/orders/route.ts": {
+      "ai_additions": 4,
+      "human_additions": 0,
+      "ai_deletions": 4,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/product-approvals/route.ts": {
+      "ai_additions": 5,
+      "human_additions": 0,
+      "ai_deletions": 5,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/products/route.ts": {
+      "ai_additions": 5,
+      "human_additions": 0,
+      "ai_deletions": 5,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/sellers/route.ts": {
+      "ai_additions": 7,
+      "human_additions": 0,
+      "ai_deletions": 7,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/service-listing-requests/route.ts": {
+      "ai_additions": 5,
+      "human_additions": 0,
+      "ai_deletions": 5,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/services/route.ts": {
+      "ai_additions": 5,
+      "human_additions": 0,
+      "ai_deletions": 5,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/settings/route.ts": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/stats/route.ts": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/upload/route.ts": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/waitlist/convert/route.ts": {
+      "ai_additions": 4,
+      "human_additions": 0,
+      "ai_deletions": 4,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/admin/waitlist/route.ts": {
+      "ai_additions": 3,
+      "human_additions": 0,
+      "ai_deletions": 3,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/seller/me/route.ts": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/seller/products/route.ts": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/components/FeedbackForm.tsx": {
+      "ai_additions": 54,
+      "human_additions": 0,
+      "ai_deletions": 33,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/admin-store.ts": {
+      "ai_additions": 59,
+      "human_additions": 0,
+      "ai_deletions": 6,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/translations.ts": {
+      "ai_additions": 200,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    }
+  }
+}
