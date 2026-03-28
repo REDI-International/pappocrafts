@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { useLocale, locales, currencies } from "@/lib/locale-context";
 import { useSiteSettings } from "@/lib/site-settings-context";
@@ -140,12 +141,14 @@ function CurrencySelector({ variant }: { variant: "desktop" | "mobile" }) {
 }
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [listingModalOpen, setListingModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
   const { t } = useLocale();
   const { logo_url } = useSiteSettings();
   const loggedIn = useLoggedIn();
+  const supportHref = `${pathname === "/" ? "/" : pathname}#contact`;
 
   return (
     <>
@@ -166,12 +169,12 @@ export default function Navbar() {
               <Link href="/landing#how-it-works" className="text-sm font-medium text-charcoal/70 hover:text-green transition-colors">
                 {t("nav.howItWorks")}
               </Link>
-              <a
-                href={`mailto:${t("footer.supportEmail")}`}
+              <Link
+                href={supportHref}
                 className="text-sm font-medium text-charcoal/70 hover:text-green transition-colors"
               >
                 {t("nav.support")}
-              </a>
+              </Link>
 
               <div className="flex items-center gap-1.5">
                 <CurrencySelector variant="desktop" />
@@ -262,13 +265,13 @@ export default function Navbar() {
               <Link href="/landing#how-it-works" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-charcoal/70 hover:bg-light-dark hover:text-green transition-colors">
                 {t("nav.howItWorks")}
               </Link>
-              <a
-                href={`mailto:${t("footer.supportEmail")}`}
+              <Link
+                href={supportHref}
                 onClick={() => setMobileOpen(false)}
                 className="rounded-lg px-3 py-2 text-sm font-medium text-charcoal/70 hover:bg-light-dark hover:text-green transition-colors"
               >
                 {t("nav.support")}
-              </a>
+              </Link>
               <button
                 type="button"
                 onClick={() => {

@@ -27,20 +27,17 @@ export default function Footer() {
             <p className="mt-3 text-sm text-white/50 leading-relaxed max-w-xs">
               {footer_description || t("footer.desc")}
             </p>
-            <div className="mt-6 rounded-xl border border-white/10 bg-charcoal-light/30 p-4">
+            <div id="contact" className="mt-6 scroll-mt-24 rounded-xl border border-white/10 bg-charcoal-light/30 p-4">
               <h3 className="text-xs font-semibold text-white/80 uppercase tracking-wide">{t("footer.contact")}</h3>
               <p className="mt-2 text-sm text-white/55">{t("footer.managersReach")}</p>
-              <a
-                href={`mailto:${t("footer.supportEmail")}`}
-                className="mt-2 inline-block text-sm font-medium text-green-light hover:text-green transition-colors"
-              >
+              <p className="mt-2 text-sm font-medium text-green-light select-all" translate="no">
                 {t("footer.supportEmail")}
-              </a>
+              </p>
               <p className="mt-3 text-xs text-white/40">
                 {t("footer.techIssues")}{" "}
-                <a href={`mailto:${t("footer.supportEmail")}`} className="text-white/60 hover:text-green-light">
+                <span className="text-white/60 select-all" translate="no">
                   {t("footer.supportEmail")}
-                </a>
+                </span>
               </p>
             </div>
           </div>
@@ -101,9 +98,9 @@ export default function Footer() {
           <div className="flex flex-wrap gap-6 justify-center">
             <Link href="/privacy" className="text-xs text-white/40 hover:text-white/60 transition-colors">{t("footer.privacy")}</Link>
             <Link href="/terms" className="text-xs text-white/40 hover:text-white/60 transition-colors">{t("footer.terms")}</Link>
-            <a href={`mailto:${t("footer.supportEmail")}`} className="text-xs text-white/40 hover:text-green-light transition-colors">
+            <span className="text-xs text-white/40 select-all" translate="no">
               {t("footer.supportEmail")}
-            </a>
+            </span>
           </div>
         </div>
       </div>
