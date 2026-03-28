@@ -60,6 +60,9 @@ const FALLBACK_USERS = [
 
 const sessions: Map<string, Session> = new Map();
 
+/** Admin tokens last this long; must match DB-backed checks below. */
+export const ADMIN_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
 function supabase() {
   try {
     return createAdminClient();
@@ -125,14 +128,64 @@ export async function authenticate(email: string, password: string): Promise<Ses
   return session;
 }
 
-export function validateSession(token: string): Session | null {
-  const session = sessions.get(token);
-  if (!session) return null;
-  const maxAge = 24 * 60 * 60 * 1000;
-  if (Date.now() - session.createdAt > maxAge) {
-    sessions.delete(token);
+/**
+ * Validates admin/seller bearer token. Uses in-memory cache when present, otherwise
+ * loads from `admin_sessions` so sessions survive serverless cold starts and load balancing.
+ */
+export async function validateSession(token: string): Promise<Session | null> {
+  const cached = sessions.get(token);
+  if (cached) {
+    if (Date.now() - cached.createdAt > ADMIN_SESSION_MAX_AGE_MS) {
+      sessions.delete(token);
+      const dbExpired = supabase();
+      if (dbExpired) {
+        try {
+          await dbExpired.from("admin_sessions").delete().eq("token", token);
+        } catch {
+          /* ignore */
+        }
+      }
+      return null;
+    }
+    return cached;
+  }
+
+  const db = supabase();
+  if (!db) return null;
+
+  const { data, error } = await db
+    .from("admin_sessions")
+    .select("token, email, role, name, created_at")
+    .eq("token", token)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const createdAt = new Date(data.created_at as string).getTime();
+  if (Number.isNaN(createdAt) || Date.now() - createdAt > ADMIN_SESSION_MAX_AGE_MS) {
+    await db.from("admin_sessions").delete().eq("token", token);
     return null;
   }
+
+  let userId: string | null = null;
+  const { data: userRow } = await db
+    .from("admin_users")
+    .select("id")
+    .eq("email", String(data.email).toLowerCase())
+    .maybeSingle();
+  if (userRow?.id != null) {
+    userId = typeof userRow.id === "string" ? userRow.id : String(userRow.id);
+  }
+
+  const session: Session = {
+    token: data.token as string,
+    email: data.email as string,
+    role: data.role as UserRole,
+    name: data.name as string,
+    userId,
+    createdAt,
+  };
+  sessions.set(token, session);
   return session;
 }
 

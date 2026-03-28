@@ -35,9 +35,9 @@ export default function FeedbackForm() {
         setDone(true);
         return;
       }
-      setError(typeof data.error === "string" ? data.error : "Submission failed.");
+      setError(typeof data.error === "string" ? data.error : t("feedback.errorFailed"));
     } catch {
-      setError("Submission failed.");
+      setError(t("feedback.errorFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -54,7 +54,7 @@ export default function FeedbackForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label className={labelClass}>Report type *</label>
+        <label className={labelClass}>{t("feedback.reportType")}</label>
         <select
           name="report_type"
           required
@@ -62,61 +62,78 @@ export default function FeedbackForm() {
           onChange={(e) => setReportType(e.target.value)}
           className={inputClass}
         >
-          <option value="">— Select —</option>
-          <option value="bug">Bug / technical error</option>
-          <option value="feedback">General feedback</option>
-          <option value="suggestion">Improvement suggestion</option>
+          <option value="">{t("feedback.selectPlaceholder")}</option>
+          <option value="bug">{t("feedback.typeBug")}</option>
+          <option value="feedback">{t("feedback.typeFeedback")}</option>
+          <option value="suggestion">{t("feedback.typeSuggestion")}</option>
         </select>
       </div>
 
       <div>
-        <label className={labelClass}>Email (optional)</label>
-        <input type="email" name="email" className={inputClass} placeholder="For follow-up" autoComplete="email" />
+        <label className={labelClass}>{t("feedback.emailOptional")}</label>
+        <input
+          type="email"
+          name="email"
+          className={inputClass}
+          placeholder={t("feedback.emailFollowupPlaceholder")}
+          autoComplete="email"
+        />
       </div>
 
       {showBug && (
         <div className={sectionClass}>
           <div>
-            <label className={labelClass}>Short title *</label>
-            <input type="text" name="title" className={inputClass} required={showBug} placeholder="e.g. Save button does not work" />
+            <label className={labelClass}>{t("feedback.shortTitle")}</label>
+            <input
+              type="text"
+              name="title"
+              className={inputClass}
+              required={showBug}
+              placeholder={t("feedback.titleExamplePlaceholder")}
+            />
           </div>
           <div>
-            <label className={labelClass}>What were you doing when this happened? *</label>
+            <label className={labelClass}>{t("feedback.whatDoing")}</label>
             <textarea name="what_you_were_doing" className={`${inputClass} min-h-[80px]`} required={showBug} />
           </div>
           <div>
-            <label className={labelClass}>What did you expect?</label>
+            <label className={labelClass}>{t("feedback.whatExpected")}</label>
             <textarea name="expected_behavior" className={`${inputClass} min-h-[64px]`} />
           </div>
           <div>
-            <label className={labelClass}>What actually happened? *</label>
+            <label className={labelClass}>{t("feedback.whatHappened")}</label>
             <textarea name="actual_behavior" className={`${inputClass} min-h-[80px]`} required={showBug} />
           </div>
           <div>
-            <label className={labelClass}>Page URL</label>
-            <input type="text" name="url" className={inputClass} placeholder="https://…" />
+            <label className={labelClass}>{t("feedback.pageUrl")}</label>
+            <input type="text" name="url" className={inputClass} placeholder={t("feedback.urlHttpsPlaceholder")} />
           </div>
           <div>
-            <label className={labelClass}>Severity</label>
+            <label className={labelClass}>{t("feedback.severity")}</label>
             <select name="severity" className={inputClass}>
-              <option value="blocking">Blocking (cannot continue)</option>
-              <option value="major">Major (feature broken)</option>
-              <option value="minor">Minor (inconvenience)</option>
+              <option value="blocking">{t("feedback.sevBlocking")}</option>
+              <option value="major">{t("feedback.sevMajor")}</option>
+              <option value="minor">{t("feedback.sevMinor")}</option>
             </select>
           </div>
           <div>
-            <label className={labelClass}>Browser</label>
+            <label className={labelClass}>{t("feedback.browserLabel")}</label>
             <select name="browser" className={inputClass}>
               <option value="chrome">Chrome</option>
               <option value="edge">Edge</option>
               <option value="firefox">Firefox</option>
               <option value="safari">Safari</option>
-              <option value="other">Other</option>
+              <option value="other">{t("feedback.browserOther")}</option>
             </select>
           </div>
           <div>
-            <label className={labelClass}>Device</label>
-            <input type="text" name="device" className={inputClass} placeholder="e.g. Windows laptop, iPhone" />
+            <label className={labelClass}>{t("feedback.deviceLabel")}</label>
+            <input
+              type="text"
+              name="device"
+              className={inputClass}
+              placeholder={t("feedback.deviceExamplePlaceholder")}
+            />
           </div>
         </div>
       )}
@@ -124,34 +141,38 @@ export default function FeedbackForm() {
       {showFeedback && (
         <div className={sectionClass}>
           <div>
-            <label className={labelClass}>What did you like?</label>
+            <label className={labelClass}>{t("feedback.liked")}</label>
             <textarea name="what_you_liked" className={`${inputClass} min-h-[64px]`} />
           </div>
           <div>
-            <label className={labelClass}>What was confusing or frustrating?</label>
+            <label className={labelClass}>{t("feedback.confusing")}</label>
             <textarea name="what_was_confusing" className={`${inputClass} min-h-[64px]`} />
           </div>
           <div>
-            <label className={labelClass}>Improvement suggestions</label>
+            <label className={labelClass}>{t("feedback.suggestionsLabel")}</label>
             <textarea name="suggestions" className={`${inputClass} min-h-[64px]`} />
           </div>
           <div>
-            <label className={labelClass}>Easy to use? (1–5)</label>
+            <label className={labelClass}>{t("feedback.easeLabel")}</label>
             <select name="ease_of_use" className={inputClass}>
-              <option value="">—</option>
-              <option value="1">1 — Very difficult</option>
+              <option value="">{t("feedback.easeDash")}</option>
+              <option value="1">{t("feedback.ease1")}</option>
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>
-              <option value="5">5 — Very easy</option>
+              <option value="5">{t("feedback.ease5")}</option>
             </select>
           </div>
         </div>
       )}
 
       <div className={sectionClass}>
-        <label className={labelClass}>Comment / additional details</label>
-        <textarea name="comment" className={`${inputClass} min-h-[80px]`} placeholder="Anything else" />
+        <label className={labelClass}>{t("feedback.commentLabel")}</label>
+        <textarea
+          name="comment"
+          className={`${inputClass} min-h-[80px]`}
+          placeholder={t("feedback.commentPlaceholder")}
+        />
       </div>
 
       {error && (

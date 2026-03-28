@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   if (!token) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
-  const session = validateSession(token);
+  const session = await validateSession(token);
   if (!session) {
     return NextResponse.json({ error: "Session expired." }, { status: 401 });
   }

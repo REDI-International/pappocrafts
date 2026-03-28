@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateSession } from "@/lib/admin-store";
+import { validateSession, type Session } from "@/lib/admin-store";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-function getSession(request: NextRequest) {
+async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   return validateSession(token);
 }
 
-function isStaff(s: ReturnType<typeof validateSession>) {
+function isStaff(s: Session | null) {
   return s && (s.role === "superadmin" || s.role === "admin");
 }
 
@@ -16,7 +16,7 @@ const MS_24H = 24 * 60 * 60 * 1000;
 
 /** Pending products for moderation; includes SLA hint (review within 24h). */
 export async function GET(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!isStaff(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = createAdminClient();
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!isStaff(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {

@@ -3,14 +3,14 @@ import { resolveUserIdFromEmail, validateSession } from "@/lib/admin-store";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
 
-function getSession(request: NextRequest) {
+async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   return validateSession(token);
 }
 
 async function requireSeller(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session || session.role !== "seller") return null;
   let userId = session.userId;
   if (!userId) userId = await resolveUserIdFromEmail(session.email);

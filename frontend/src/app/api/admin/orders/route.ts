@@ -9,14 +9,14 @@ import {
   type OrderStatus,
 } from "@/lib/admin-store";
 
-function getSession(request: NextRequest) {
+async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   return validateSession(token);
 }
 
 export async function GET(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -63,7 +63,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session || session.role !== "superadmin") {
     return NextResponse.json({ error: "Superadmin access required" }, { status: 403 });
   }

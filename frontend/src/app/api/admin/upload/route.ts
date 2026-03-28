@@ -7,7 +7,7 @@ const BUCKET = "product-images";
 export async function POST(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const session = validateSession(token);
+  const session = await validateSession(token);
   if (!session || (session.role !== "superadmin" && session.role !== "admin")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

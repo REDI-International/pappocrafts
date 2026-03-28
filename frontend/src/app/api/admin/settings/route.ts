@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-function getSession(request: NextRequest) {
+async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   return validateSession(token);
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session || (session.role !== "superadmin" && session.role !== "admin")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

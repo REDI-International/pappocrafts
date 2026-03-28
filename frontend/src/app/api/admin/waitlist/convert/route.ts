@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateSession } from "@/lib/admin-store";
+import { validateSession, type Session } from "@/lib/admin-store";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ALLOWED_SELLER_COUNTRIES,
@@ -7,13 +7,13 @@ import {
   insertSellerUser,
 } from "@/lib/admin-user-provision";
 
-function getSession(request: NextRequest) {
+async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   return validateSession(token);
 }
 
-function isStaff(s: ReturnType<typeof validateSession>) {
+function isStaff(s: Session | null) {
   return s && (s.role === "superadmin" || s.role === "admin");
 }
 
@@ -24,7 +24,7 @@ type ConvertAction =
   | "dismiss";
 
 export async function POST(request: NextRequest) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!isStaff(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
