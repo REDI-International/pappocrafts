@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { serviceProviders, serviceCategories, mapSupabaseServiceRow, type ServiceProvider } from "@/lib/services";
 import { useLocale } from "@/lib/locale-context";
-import { Suspense } from "react";
+
+const SERVICES_PER_PAGE = 12;
+const SERVICES_LISTING_BASE = "/services";
 
 function ServicesContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "All";
   const [activeCategory, setActiveCategory] = useState(initialCategory);
@@ -77,6 +80,64 @@ function ServicesContent() {
     else copy.sort((a, b) => b.rating - a.rating);
     return copy;
   }, [filtered, sortMode]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedProviders.length / SERVICES_PER_PAGE));
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const rawPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+  const currentPage = Math.min(rawPage, totalPages);
+
+  const paginatedProviders = useMemo(
+    () =>
+      sortedProviders.slice(
+        (currentPage - 1) * SERVICES_PER_PAGE,
+        currentPage * SERVICES_PER_PAGE
+      ),
+    [sortedProviders, currentPage]
+  );
+
+  const filterKey = `${activeCategory}|${search}|${countryFilter}|${sortMode}`;
+  const prevFilterKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (prevFilterKeyRef.current === null) {
+      prevFilterKeyRef.current = filterKey;
+      return;
+    }
+    if (prevFilterKeyRef.current !== filterKey) {
+      prevFilterKeyRef.current = filterKey;
+      if (searchParams.get("page")) {
+        const u = new URLSearchParams(searchParams.toString());
+        u.delete("page");
+        const q = u.toString();
+        router.replace(q ? `${SERVICES_LISTING_BASE}?${q}` : SERVICES_LISTING_BASE, { scroll: false });
+      }
+    }
+  }, [filterKey, router, searchParams]);
+
+  useEffect(() => {
+    if (sortedProviders.length === 0) return;
+    if (rawPage <= totalPages) return;
+    const u = new URLSearchParams(searchParams.toString());
+    if (totalPages <= 1) u.delete("page");
+    else u.set("page", String(totalPages));
+    const q = u.toString();
+    router.replace(q ? `${SERVICES_LISTING_BASE}?${q}` : SERVICES_LISTING_BASE, { scroll: false });
+  }, [rawPage, totalPages, sortedProviders.length, router, searchParams]);
+
+  const goToPage = useCallback(
+    (next: number) => {
+      const u = new URLSearchParams(searchParams.toString());
+      if (next <= 1) u.delete("page");
+      else u.set("page", String(next));
+      const q = u.toString();
+      router.replace(q ? `${SERVICES_LISTING_BASE}?${q}` : SERVICES_LISTING_BASE);
+    },
+    [router, searchParams]
+  );
+
+  const paginationInfo = t("shop.paginationInfo")
+    .replace("{current}", String(currentPage))
+    .replace("{total}", String(totalPages));
 
   const closePreview = useCallback(() => setPreview(null), []);
 
@@ -176,69 +237,95 @@ function ServicesContent() {
               </button>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {sortedProviders.map((provider) => (
-                <button
-                  key={provider.id}
-                  type="button"
-                  onClick={() => setPreview(provider)}
-                  className="group text-left rounded-2xl bg-white border border-charcoal/5 overflow-hidden hover:shadow-lg hover:border-green/20 transition-all"
-                >
-                  <div className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full bg-light">
-                        <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="64px" unoptimized />
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {paginatedProviders.map((provider) => (
+                  <button
+                    key={provider.id}
+                    type="button"
+                    onClick={() => setPreview(provider)}
+                    className="group text-left rounded-2xl bg-white border border-charcoal/5 overflow-hidden hover:shadow-lg hover:border-green/20 transition-all"
+                  >
+                    <div className="p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full bg-light">
+                          <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="64px" unoptimized />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors truncate">
+                              {provider.name}
+                            </h3>
+                            {provider.badges.includes("Top Rated") && (
+                              <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green">TOP</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-charcoal/60">{provider.title}</p>
+                          <div className="mt-1 flex items-center gap-3 text-xs text-charcoal/50">
+                            <span className="flex items-center gap-1">
+                              <svg className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clipRule="evenodd" />
+                              </svg>
+                              {provider.rating} ({provider.reviewCount})
+                            </span>
+                            <span>{provider.location}, {provider.country}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors truncate">
-                            {provider.name}
-                          </h3>
-                          {provider.badges.includes("Top Rated") && (
-                            <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green">TOP</span>
+                      <p className="mt-3 text-sm text-charcoal/60 line-clamp-2">{provider.summary || provider.description}</p>
+                      {(provider.yearsExperience || provider.languagesSpoken) && (
+                        <p className="mt-2 text-xs text-charcoal/45 line-clamp-2">
+                          {provider.yearsExperience && <span>{provider.yearsExperience}</span>}
+                          {provider.yearsExperience && provider.languagesSpoken && <span> · </span>}
+                          {provider.languagesSpoken && <span>{provider.languagesSpoken}</span>}
+                        </p>
+                      )}
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="text-sm">
+                          {provider.hourlyRate > 0 && (
+                            <span className="font-bold text-green">{formatRegionalPrice(provider.hourlyRate)}{t("services.perHour")}</span>
+                          )}
+                          {provider.fixedRateFrom != null && provider.fixedRateFrom > 0 && (
+                            <span className={`text-charcoal/50 ${provider.hourlyRate > 0 ? "ml-2" : ""}`}>
+                              {provider.hourlyRate > 0 ? `${t("services.from")} ` : `${t("services.from")} `}{formatRegionalPrice(provider.fixedRateFrom)}
+                            </span>
                           )}
                         </div>
-                        <p className="text-sm text-charcoal/60">{provider.title}</p>
-                        <div className="mt-1 flex items-center gap-3 text-xs text-charcoal/50">
-                          <span className="flex items-center gap-1">
-                            <svg className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clipRule="evenodd" />
-                            </svg>
-                            {provider.rating} ({provider.reviewCount})
-                          </span>
-                          <span>{provider.location}, {provider.country}</span>
+                        <div className="flex items-center gap-1 text-xs text-charcoal/40">
+                          <span className="h-2 w-2 rounded-full bg-green" />
+                          {provider.responseTime}
                         </div>
                       </div>
+                      <p className="mt-3 text-xs font-medium text-green">Quick preview — click for details</p>
                     </div>
-                    <p className="mt-3 text-sm text-charcoal/60 line-clamp-2">{provider.summary || provider.description}</p>
-                    {(provider.yearsExperience || provider.languagesSpoken) && (
-                      <p className="mt-2 text-xs text-charcoal/45 line-clamp-2">
-                        {provider.yearsExperience && <span>{provider.yearsExperience}</span>}
-                        {provider.yearsExperience && provider.languagesSpoken && <span> · </span>}
-                        {provider.languagesSpoken && <span>{provider.languagesSpoken}</span>}
-                      </p>
-                    )}
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="text-sm">
-                        {provider.hourlyRate > 0 && (
-                          <span className="font-bold text-green">{formatRegionalPrice(provider.hourlyRate)}{t("services.perHour")}</span>
-                        )}
-                        {provider.fixedRateFrom != null && provider.fixedRateFrom > 0 && (
-                          <span className={`text-charcoal/50 ${provider.hourlyRate > 0 ? "ml-2" : ""}`}>
-                            {provider.hourlyRate > 0 ? `${t("services.from")} ` : `${t("services.from")} `}{formatRegionalPrice(provider.fixedRateFrom)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-charcoal/40">
-                        <span className="h-2 w-2 rounded-full bg-green" />
-                        {provider.responseTime}
-                      </div>
-                    </div>
-                    <p className="mt-3 text-xs font-medium text-green">Quick preview — click for details</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </button>
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <nav
+                  className="mt-10 flex flex-wrap items-center justify-center gap-3"
+                  aria-label={paginationInfo}
+                >
+                  <button
+                    type="button"
+                    disabled={currentPage <= 1}
+                    onClick={() => goToPage(currentPage - 1)}
+                    className="rounded-full border border-charcoal/15 bg-white px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:border-green/30 hover:text-green disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    {t("shop.paginationPrev")}
+                  </button>
+                  <p className="min-w-[8rem] text-center text-sm text-charcoal/60 tabular-nums">{paginationInfo}</p>
+                  <button
+                    type="button"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => goToPage(currentPage + 1)}
+                    className="rounded-full border border-charcoal/15 bg-white px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:border-green/30 hover:text-green disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    {t("shop.paginationNext")}
+                  </button>
+                </nav>
+              )}
+            </>
           )}
         </div>
       </main>
@@ -307,14 +394,10 @@ function ServicesContent() {
                   >
                     Book a time slot
                   </a>
-                ) : (
-                  <span className="flex-1 rounded-xl border border-charcoal/10 py-3 text-center text-xs text-charcoal/45">
-                    Booking calendar can be linked by the team (Cal.com / Calendly).
-                  </span>
-                )}
+                ) : null}
                 <Link
                   href={`/services/${preview.id}`}
-                  className="flex-1 rounded-xl border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
+                  className={`rounded-xl border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors ${preview.bookingCalendarUrl ? "flex-1" : "w-full"}`}
                 >
                   Full profile page
                 </Link>

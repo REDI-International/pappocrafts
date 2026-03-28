@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
     if (description.length < 10) {
       return NextResponse.json({ error: "Please add a short description (at least 10 characters)." }, { status: 400 });
     }
-    if (!isValidEmail(contactEmail)) {
-      return NextResponse.json({ error: "A valid contact email is required." }, { status: 400 });
+    if (contactEmail && !isValidEmail(contactEmail)) {
+      return NextResponse.json({ error: "If provided, contact email must be valid." }, { status: 400 });
     }
     if (!artisan || artisan.length < 2) {
       return NextResponse.json({ error: "Maker or business name is required." }, { status: 400 });
@@ -62,13 +62,13 @@ export async function POST(request: NextRequest) {
       country,
       image: image || "",
       tags: [] as string[],
-      in_stock: false,
+      in_stock: true,
       seller_id: null as string | null,
       business_name: artisan,
       business_slug,
       approval_status: "pending",
       submitted_at: new Date().toISOString(),
-      submitter_email: contactEmail,
+      submitter_email: contactEmail || null,
       submitter_phone: contactPhone,
       phone: contactPhone,
     };

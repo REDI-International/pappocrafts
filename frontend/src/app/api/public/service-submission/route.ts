@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
     if (contactName.length < 2) {
       return NextResponse.json({ error: "Your name is required." }, { status: 400 });
     }
-    if (!isValidEmail(contactEmail)) {
-      return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
+    if (contactEmail && !isValidEmail(contactEmail)) {
+      return NextResponse.json({ error: "If provided, email must be valid." }, { status: 400 });
     }
     if (!isValidListingPhone(contactPhone)) {
       return NextResponse.json({ error: "A valid contact phone number is required." }, { status: 400 });
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const payload = {
       status: "pending",
       contact_name: contactName,
-      contact_email: contactEmail,
+      contact_email: contactEmail || "",
       contact_phone: contactPhone,
       service_title: serviceTitle,
       service_category: serviceCategory,

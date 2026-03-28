@@ -7,10 +7,8 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { categories, type Product, mapSupabaseProduct, shopCategoryChips } from "@/lib/products";
-import { useCart } from "@/lib/cart-context";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
-import { trackAddToCart } from "@/components/Analytics";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -34,7 +32,6 @@ function ShopContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [preview, setPreview] = useState<Product | null>(null);
-  const { addItem } = useCart();
   const { t, formatRegionalPrice } = useLocale();
 
   const loadProducts = useCallback(async () => {
@@ -498,26 +495,10 @@ function ShopContent() {
                   {preview.inStock ? "In stock" : "Out of stock"}
                 </span>
               </div>
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                {preview.inStock ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      addItem(preview);
-                      trackAddToCart({ id: preview.id, name: preview.name, price: preview.price });
-                    }}
-                    className="flex-1 rounded-xl bg-green py-3 text-center text-sm font-semibold text-white hover:bg-green-dark transition-colors"
-                  >
-                    {t("shop.addToCart")}
-                  </button>
-                ) : (
-                  <span className="flex-1 rounded-xl border border-charcoal/10 py-3 text-center text-xs text-charcoal/45">
-                    Currently unavailable
-                  </span>
-                )}
+              <div className="mt-6">
                 <Link
                   href={`/shop/${preview.id}`}
-                  className="flex-1 rounded-xl border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
+                  className="block w-full rounded-xl border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
                 >
                   Full product page
                 </Link>

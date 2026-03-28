@@ -4,7 +4,6 @@ import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { serviceCategories } from "@/lib/services";
-import { DEFAULT_LISTING_PHONE } from "@/lib/listing-phone";
 
 interface DBService {
   id: string;
@@ -38,7 +37,7 @@ const emptyService: EditableService = {
   category: serviceCategories.find((c) => c.name === "Home Repair")?.name ?? "Home Repair",
   hourly_rate: 0, fixed_rate_from: null,
   currency: "EUR", rating: 5, review_count: 0, location: "", country: "",
-  phone: DEFAULT_LISTING_PHONE,
+  phone: "",
   image: "",
   badges: [], available: true, response_time: "Under 1 hour", completed_jobs: 0,
   seller_id: null,
@@ -375,7 +374,7 @@ function AdminServicesInner() {
                       currency: provider.currency, rating: Number(provider.rating),
                       review_count: provider.review_count, location: provider.location,
                       country: provider.country,
-                      phone: (provider as DBService).phone || DEFAULT_LISTING_PHONE,
+                      phone: (provider as DBService).phone ?? "",
                       image: provider.image, badges: provider.badges,
                       available: provider.available, response_time: provider.response_time,
                       completed_jobs: provider.completed_jobs,

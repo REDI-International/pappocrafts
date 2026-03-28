@@ -113,8 +113,8 @@ export default function ListingOfferModal({
           artisan: productArtisan,
           country: productCountry,
           image: productImage,
-          contactEmail: productEmail,
-          contactPhone: productPhone || undefined,
+          contactEmail: productEmail.trim() || undefined,
+          contactPhone: productPhone,
         }),
       });
       const data = await res.json();
@@ -140,8 +140,8 @@ export default function ListingOfferModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contactName: svcName,
-          contactEmail: svcEmail,
-          contactPhone: svcPhone || undefined,
+          contactEmail: svcEmail.trim() || undefined,
+          contactPhone: svcPhone,
           serviceTitle: svcTitle,
           serviceCategory: svcCategory,
           serviceDescription: svcDesc,
@@ -334,13 +334,12 @@ export default function ListingOfferModal({
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>{t("listing.contactEmail")} *</label>
+                    <label className={labelClass}>{t("listing.contactEmail")}</label>
                     <input
                       type="email"
                       className={inputClass}
                       value={productEmail}
                       onChange={(e) => setProductEmail(e.target.value)}
-                      required
                       autoComplete="email"
                     />
                   </div>
@@ -371,13 +370,12 @@ export default function ListingOfferModal({
                     <input className={inputClass} value={svcName} onChange={(e) => setSvcName(e.target.value)} required maxLength={120} />
                   </div>
                   <div>
-                    <label className={labelClass}>{t("listing.contactEmail")} *</label>
+                    <label className={labelClass}>{t("listing.contactEmail")}</label>
                     <input
                       type="email"
                       className={inputClass}
                       value={svcEmail}
                       onChange={(e) => setSvcEmail(e.target.value)}
-                      required
                       autoComplete="email"
                     />
                   </div>
