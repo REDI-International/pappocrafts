@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "baa13b392b4e9784d4cb76fdf0cb226146492396",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-28T15:09:06+02:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "heuristic",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 0.95
+  },
+  "stats": {
+    "total_additions": 274,
+    "total_deletions": 1,
+    "ai_additions": 274,
+    "ai_deletions": 1,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/src/app/feedback/FeedbackPageHeader.tsx": {
+      "ai_additions": 17,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/app/feedback/layout.tsx": {
+      "ai_additions": 10,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/app/feedback/page.tsx": {
+      "ai_additions": 19,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/components/FeedbackForm.tsx": {
+      "ai_additions": 176,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/components/Footer.tsx": {
+      "ai_additions": 8,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/translations.ts": {
+      "ai_additions": 44,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    }
+  }
+}
