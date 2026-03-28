@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "ceb5da77a29724e993551aaf020b040e504a460c",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-28T14:09:03+02:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "heuristic",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 0.95
+  },
+  "stats": {
+    "total_additions": 165,
+    "total_deletions": 53,
+    "ai_additions": 165,
+    "ai_deletions": 53,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/src/app/services/page.tsx": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 4,
+      "human_deletions": 0
+    },
+    "frontend/src/components/ShopPage.tsx": {
+      "ai_additions": 144,
+      "human_additions": 0,
+      "ai_deletions": 49,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/translations.ts": {
+      "ai_additions": 19,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    }
+  }
+}
