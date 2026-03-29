@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { categories } from "@/lib/products";
+import { MAX_PRODUCT_IMAGES, normalizeProductImageUrls } from "@/lib/product-images";
 import { useLocale } from "@/lib/locale-context";
 import { DEFAULT_LISTING_PHONE } from "@/lib/listing-phone";
 
@@ -34,7 +35,7 @@ function SellerDashboard() {
     description: "",
     price: "",
     category: "Pottery & Ceramics",
-    image: "",
+    images: Array(MAX_PRODUCT_IMAGES).fill("") as string[],
     country: "North Macedonia" as (typeof SELLER_COUNTRIES)[number],
     artisan: "",
     phone: DEFAULT_LISTING_PHONE,
@@ -71,7 +72,7 @@ function SellerDashboard() {
         price: parseFloat(form.price) || 0,
         currency,
         category: form.category,
-        image: form.image || "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&h=600&fit=crop",
+        images: normalizeProductImageUrls(form.images),
         country: form.country,
         artisan: form.artisan || undefined,
         phone: form.phone.trim(),
@@ -88,7 +89,7 @@ function SellerDashboard() {
       name: "",
       description: "",
       price: "",
-      image: "",
+      images: Array(MAX_PRODUCT_IMAGES).fill(""),
       artisan: "",
       phone: f.phone,
     }));
@@ -208,14 +209,28 @@ function SellerDashboard() {
                 ))}
             </select>
           </div>
-          <div>
-            <label className="text-xs text-charcoal/50">Image URL</label>
-            <input
-              value={form.image}
-              onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-              placeholder="https://…"
-              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
-            />
+          <div className="space-y-2">
+            <p className="text-xs text-charcoal/50">{t("listing.productPhotosHelp")}</p>
+            {form.images.map((url, i) => (
+              <div key={i}>
+                <label className="text-xs text-charcoal/50">
+                  {t("listing.photoNumber").replace("{n}", String(i + 1))}
+                </label>
+                <input
+                  value={url}
+                  onChange={(e) =>
+                    setForm((f) => {
+                      const next = [...f.images];
+                      next[i] = e.target.value;
+                      return { ...f, images: next };
+                    })
+                  }
+                  placeholder="https://…"
+                  type="url"
+                  className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+                />
+              </div>
+            ))}
           </div>
           <div>
             <label className="text-xs text-charcoal/50">Maker / contact name on listing (optional)</label>

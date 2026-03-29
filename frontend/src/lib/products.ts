@@ -1,3 +1,5 @@
+import { galleryFromProductRow } from "@/lib/product-images";
+
 export interface Product {
   id: string;
   name: string;
@@ -14,7 +16,10 @@ export interface Product {
   country: string;
   /** Listing contact phone (E.164 or local format). */
   phone: string;
+  /** Primary image (first in `images`). */
   image: string;
+  /** Gallery URLs in order (max 5). */
+  images: string[];
   tags: string[];
   inStock: boolean;
 }
@@ -76,6 +81,8 @@ export function mapSupabaseProduct(row: any): Product {
   const businessName =
     (typeof row.business_name === "string" && row.business_name.trim()) ? row.business_name.trim() : artisan;
   const businessSlug = typeof row.business_slug === "string" ? row.business_slug.trim() : "";
+  const images = galleryFromProductRow(row);
+  const image = images[0] || String(row.image || "").trim() || "";
   return {
     id: row.id,
     name: row.name || "",
@@ -89,7 +96,8 @@ export function mapSupabaseProduct(row: any): Product {
     businessSlug,
     country: row.country || "",
     phone: typeof row.phone === "string" && row.phone.trim() ? row.phone.trim() : "",
-    image: row.image || "",
+    image,
+    images: images.length ? images : image ? [image] : [],
     tags: Array.isArray(row.tags) ? row.tags : [],
     inStock: row.in_stock !== false,
   };

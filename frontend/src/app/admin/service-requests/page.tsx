@@ -12,9 +12,12 @@ type Row = {
   service_title: string;
   service_category: string;
   service_description: string;
+  hourly_rate?: number | null;
+  currency?: string | null;
   location: string;
   country: string;
   notes: string | null;
+  image_url?: string | null;
 };
 
 export default function AdminServiceRequestsPage() {
@@ -101,6 +104,9 @@ export default function AdminServiceRequestsPage() {
                   <p className="text-xs text-white/45 mt-1">
                     {r.service_category} · {r.contact_name} · {r.contact_email}
                     {r.contact_phone ? ` · ${r.contact_phone}` : ""}
+                    {r.hourly_rate != null && r.currency
+                      ? ` · ${r.hourly_rate} ${r.currency}/hr`
+                      : ""}
                   </p>
                   <p className="text-xs text-white/35 mt-1">
                     {r.location || "—"}
@@ -121,6 +127,14 @@ export default function AdminServiceRequestsPage() {
                 </span>
               </div>
               <p className="text-sm text-white/70 whitespace-pre-wrap">{r.service_description}</p>
+              {r.image_url ? (
+                <p className="text-xs text-white/45 mt-2">
+                  Photo:{" "}
+                  <a href={r.image_url} target="_blank" rel="noopener noreferrer" className="text-[#4A9B3F] hover:underline break-all">
+                    {r.image_url}
+                  </a>
+                </p>
+              ) : null}
               {r.notes && <p className="text-xs text-white/40">Notes: {r.notes}</p>}
               {r.status === "pending" && (
                 <div className="flex gap-2 pt-1">

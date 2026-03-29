@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import posthog from "posthog-js";
 import type { Product } from "./products";
+import { amountInListingCurrencyToEur } from "./eur-fallback-rates";
 
 export interface CartItem {
   product: Product;
@@ -71,7 +72,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) =>
+      sum +
+      amountInListingCurrencyToEur(item.product.price, item.product.currency) * item.quantity,
     0
   );
 

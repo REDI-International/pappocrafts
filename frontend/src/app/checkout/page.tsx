@@ -15,9 +15,9 @@ type PaymentMethod = "online" | "later";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, updateQuantity, removeItem, totalPrice, clearCart } = useCart();
+  const { items, updateQuantity, removeItem, clearCart } = useCart();
   const {
-    t, formatPrice, formatRegionalPrice, getRegionalEurPrice,
+    t, formatPrice, formatRegionalPrice, formatProductRegionalPrice, getProductEurEquivalent,
     getShippingCost, shippingEstimate, regionLabel, region, shippingZone, currency,
   } = useLocale();
 
@@ -38,7 +38,8 @@ export default function CheckoutPage() {
   const markTouched = (field: string) => setTouched((p) => ({ ...p, [field]: true }));
 
   const regionalTotal = items.reduce(
-    (sum, item) => sum + getRegionalEurPrice(item.product.price) * item.quantity,
+    (sum, item) =>
+      sum + getProductEurEquivalent(item.product.price, item.product.currency) * item.quantity,
     0
   );
   const shipping = getShippingCost(regionalTotal);
@@ -57,7 +58,7 @@ export default function CheckoutPage() {
       items: items.map((item) => ({
         id: item.product.id,
         name: item.product.name,
-        price: getRegionalEurPrice(item.product.price),
+        price: getProductEurEquivalent(item.product.price, item.product.currency),
         quantity: item.quantity,
         artisan: item.product.artisan,
         country: item.product.country,
@@ -96,7 +97,7 @@ export default function CheckoutPage() {
             items: items.map((item) => ({
               id: item.product.id,
               name: item.product.name,
-              price: getRegionalEurPrice(item.product.price),
+              price: getProductEurEquivalent(item.product.price, item.product.currency),
               quantity: item.quantity,
               image: item.product.image,
             })),
@@ -117,7 +118,7 @@ export default function CheckoutPage() {
         items: items.map((item) => ({
           id: item.product.id,
           name: item.product.name,
-          price: getRegionalEurPrice(item.product.price),
+          price: getProductEurEquivalent(item.product.price, item.product.currency),
           quantity: item.quantity,
         })),
       });
@@ -203,7 +204,12 @@ export default function CheckoutPage() {
                                 <button type="button" onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="h-6 w-6 rounded border border-charcoal/10 flex items-center justify-center text-xs text-charcoal/60 hover:border-green hover:text-green transition-colors">+</button>
                                 <button type="button" onClick={() => removeItem(item.product.id)} className="ml-2 text-xs text-charcoal/30 hover:text-red-500 transition-colors">{t("checkout.remove")}</button>
                               </div>
-                              <p className="text-sm font-bold text-green">{formatRegionalPrice(item.product.price * item.quantity)}</p>
+                              <p className="text-sm font-bold text-green">
+                                {formatProductRegionalPrice(
+                                  item.product.price * item.quantity,
+                                  item.product.currency
+                                )}
+                              </p>
                             </div>
                           </div>
                         </div>

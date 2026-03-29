@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateSession } from "@/lib/admin-store";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
+import { productImageDbPayload } from "@/lib/product-images";
 
 async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -39,6 +40,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "phone is required (min 6 characters)." }, { status: 400 });
     }
     const db = createAdminClient();
+    const { image, images } = productImageDbPayload(
+      body.images !== undefined ? body.images : body.image ? [body.image] : []
+    );
     const { data, error } = await db.from("products").insert({
       id: body.id || `product-${Date.now()}`,
       name: body.name,
@@ -50,7 +54,8 @@ export async function POST(request: NextRequest) {
       artisan: body.artisan || "",
       country: body.country || "",
       phone,
-      image: body.image || "",
+      image,
+      images,
       tags: body.tags || [],
       in_stock: body.inStock ?? body.in_stock ?? true,
       business_name: body.businessName ?? body.business_name ?? body.artisan ?? "",
@@ -85,7 +90,15 @@ export async function PATCH(request: NextRequest) {
     if (body.category !== undefined) updates.category = body.category;
     if (body.artisan !== undefined) updates.artisan = body.artisan;
     if (body.country !== undefined) updates.country = body.country;
-    if (body.image !== undefined) updates.image = body.image;
+    if (body.images !== undefined) {
+      const { image, images } = productImageDbPayload(body.images);
+      updates.image = image;
+      updates.images = images;
+    } else if (body.image !== undefined) {
+      const { image, images } = productImageDbPayload([body.image]);
+      updates.image = image;
+      updates.images = images;
+    }
     if (body.tags !== undefined) updates.tags = body.tags;
     if (body.inStock !== undefined) updates.in_stock = body.inStock;
     if (body.in_stock !== undefined) updates.in_stock = body.in_stock;

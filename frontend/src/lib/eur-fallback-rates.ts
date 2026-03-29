@@ -17,7 +17,7 @@ export function isListingCurrency(code: string): boolean {
   return ALLOWED.has(code.trim().toUpperCase());
 }
 
-/** Amount user entered in `currencyCode` → EUR for database storage. */
+/** Amount in `currencyCode` → EUR (for cart totals, Stripe, shipping). */
 export function convertListedPriceToEur(amount: number, currencyCode: string): number {
   const c = currencyCode.trim().toUpperCase();
   if (!Number.isFinite(amount) || amount < 0) return 0;
@@ -27,6 +27,22 @@ export function convertListedPriceToEur(amount: number, currencyCode: string): n
     throw new Error(`Unsupported currency: ${currencyCode}`);
   }
   return round2(amount / unitsPerEur);
+}
+
+/**
+ * Catalogue row: `amount` stored in `currencyCode` → EUR equivalent.
+ * Unknown currency is treated as EUR (legacy rows).
+ */
+export function amountInListingCurrencyToEur(amount: number, currencyCode: string | null | undefined): number {
+  if (!Number.isFinite(amount) || amount < 0) return 0;
+  const c = (String(currencyCode || "EUR").trim().toUpperCase() || "EUR");
+  if (c === "EUR") return round2(amount);
+  if (!isListingCurrency(c)) return round2(amount);
+  try {
+    return convertListedPriceToEur(amount, c);
+  } catch {
+    return round2(amount);
+  }
 }
 
 function round2(n: number) {

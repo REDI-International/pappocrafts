@@ -15,6 +15,7 @@ interface ProductData {
   country: string;
   image: string | null;
   price: number;
+  currency: string | null;
   in_stock: boolean;
 }
 
@@ -23,7 +24,7 @@ async function getProduct(id: string): Promise<ProductData | null> {
     const db = createAdminClient();
     const { data } = await db
       .from("products")
-      .select("name, description, category, artisan, country, image, price, in_stock")
+      .select("name, description, category, artisan, country, image, price, currency, in_stock")
       .eq("id", id)
       .eq("approval_status", "approved")
       .single();
@@ -114,43 +115,46 @@ export default async function ProductLayout({
           { "@type": "DefinedRegion", addressCountry: "ME" },
         ];
 
-  const jsonLd = product
-    ? JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Product",
-        name: product.name,
-        description:
-          product.description ||
-          `Handmade ${product.category?.toLowerCase()} by ${product.artisan} from ${product.country}`,
-        image: product.image || undefined,
-        brand: { "@type": "Brand", name: product.artisan },
-        manufacturer: {
-          "@type": "Organization",
-          name: product.artisan,
-          address: { "@type": "PostalAddress", addressCountry: product.country },
-        },
-        category: product.category || undefined,
+  let jsonLd: string | null = null;
+  if (product) {
+    const offerCurrency = (product.currency || "EUR").trim().toUpperCase() || "EUR";
+    const offerDecimals = ["ALL", "MKD", "RSD"].includes(offerCurrency) ? 0 : 2;
+    jsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      description:
+        product.description ||
+        `Handmade ${product.category?.toLowerCase()} by ${product.artisan} from ${product.country}`,
+      image: product.image || undefined,
+      brand: { "@type": "Brand", name: product.artisan },
+      manufacturer: {
+        "@type": "Organization",
+        name: product.artisan,
+        address: { "@type": "PostalAddress", addressCountry: product.country },
+      },
+      category: product.category || undefined,
+      url: `${cfg.baseUrl}/shop/${id}`,
+      offers: {
+        "@type": "Offer",
         url: `${cfg.baseUrl}/shop/${id}`,
-        offers: {
-          "@type": "Offer",
-          url: `${cfg.baseUrl}/shop/${id}`,
-          priceCurrency: "EUR",
-          price: product.price.toFixed(2),
-          availability: product.in_stock
-            ? "https://schema.org/InStock"
-            : "https://schema.org/OutOfStock",
-          seller: {
-            "@type": "Organization",
-            name: "PappoShop",
-            url: cfg.baseUrl,
-          },
-          shippingDetails: {
-            "@type": "OfferShippingDetails",
-            shippingDestination: shippingDest,
-          },
+        priceCurrency: offerCurrency,
+        price: product.price.toFixed(offerDecimals),
+        availability: product.in_stock
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+        seller: {
+          "@type": "Organization",
+          name: "PappoShop",
+          url: cfg.baseUrl,
         },
-      })
-    : null;
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingDestination: shippingDest,
+        },
+      },
+    });
+  }
 
   return (
     <>

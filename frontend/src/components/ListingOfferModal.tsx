@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "@/lib/locale-context";
 import {
   translateServiceCategory,
@@ -9,6 +9,8 @@ import {
 } from "@/lib/translations";
 import { categories } from "@/lib/products";
 import { serviceCategoryNames } from "@/lib/services";
+import { MAX_PRODUCT_IMAGES, normalizeProductImageUrls } from "@/lib/product-images";
+import ListingTurnstile, { isListingTurnstileConfigured } from "@/components/ListingTurnstile";
 
 /** Matches seller regions; values align with product `country` field (full MK name). */
 const LISTING_COUNTRIES = ["Albania", "Serbia", "North Macedonia"] as const;
@@ -42,7 +44,7 @@ export default function ListingOfferModal({
   const [productCategory, setProductCategory] = useState(categories[1] ?? "Pottery & Ceramics");
   const [productArtisan, setProductArtisan] = useState("");
   const [productCountry, setProductCountry] = useState<string>(LISTING_COUNTRIES[2]);
-  const [productImage, setProductImage] = useState("");
+  const [productImages, setProductImages] = useState<string[]>(() => Array(MAX_PRODUCT_IMAGES).fill(""));
   const [productEmail, setProductEmail] = useState("");
   const [productPhone, setProductPhone] = useState("");
 
@@ -54,9 +56,17 @@ export default function ListingOfferModal({
     serviceCategoryNames.find((c) => c !== "All") ?? "Plumbing"
   );
   const [svcDesc, setSvcDesc] = useState("");
+  const [svcHourlyRate, setSvcHourlyRate] = useState("");
   const [svcLocation, setSvcLocation] = useState("");
   const [svcCountry, setSvcCountry] = useState<string>(LISTING_COUNTRIES[2]);
   const [svcNotes, setSvcNotes] = useState("");
+  const [svcImageUrl, setSvcImageUrl] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const captchaRequired = isListingTurnstileConfigured();
+  const onCaptchaToken = useCallback((token: string | null) => {
+    setCaptchaToken(token);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -75,6 +85,11 @@ export default function ListingOfferModal({
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    setCaptchaToken(null);
+  }, [open, tab]);
+
   function resetAll() {
     setDone(null);
     setError("");
@@ -85,7 +100,7 @@ export default function ListingOfferModal({
     setProductCategory(categories[1] ?? "Pottery & Ceramics");
     setProductArtisan("");
     setProductCountry(LISTING_COUNTRIES[2]);
-    setProductImage("");
+    setProductImages(Array(MAX_PRODUCT_IMAGES).fill(""));
     setProductEmail("");
     setProductPhone("");
     setSvcName("");
@@ -94,9 +109,12 @@ export default function ListingOfferModal({
     setSvcTitle("");
     setSvcCategory(serviceCategoryNames.find((c) => c !== "All") ?? "Plumbing");
     setSvcDesc("");
+    setSvcHourlyRate("");
     setSvcLocation("");
     setSvcCountry(LISTING_COUNTRIES[2]);
     setSvcNotes("");
+    setSvcImageUrl("");
+    setCaptchaToken(null);
   }
 
   if (!open) return null;
@@ -119,9 +137,10 @@ export default function ListingOfferModal({
           category: productCategory,
           artisan: productArtisan,
           country: productCountry,
-          image: productImage,
+          images: normalizeProductImageUrls(productImages),
           contactEmail: productEmail.trim() || undefined,
           contactPhone: productPhone,
+          captchaToken: captchaToken || undefined,
         }),
       });
       const data = await res.json();
@@ -142,6 +161,7 @@ export default function ListingOfferModal({
     setError("");
     setSubmitting(true);
     try {
+      const hourly = parseFloat(svcHourlyRate.replace(",", "."));
       const res = await fetch("/api/public/service-submission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,9 +172,13 @@ export default function ListingOfferModal({
           serviceTitle: svcTitle,
           serviceCategory: svcCategory,
           serviceDescription: svcDesc,
+          hourlyRate: Number.isFinite(hourly) ? hourly : 0,
+          currency,
           location: svcLocation,
           country: svcCountry,
           notes: svcNotes || undefined,
+          imageUrl: svcImageUrl.trim() || undefined,
+          captchaToken: captchaToken || undefined,
         }),
       });
       const data = await res.json();
@@ -282,6 +306,13 @@ export default function ListingOfferModal({
                 </p>
               )}
 
+              {captchaRequired && (
+                <div className="mt-4 space-y-2 rounded-xl border border-charcoal/10 bg-charcoal/[0.02] px-3 py-3">
+                  <p className="text-[11px] text-charcoal/50 leading-snug">{t("listing.captchaHint")}</p>
+                  <ListingTurnstile key={tab} onToken={onCaptchaToken} />
+                </div>
+              )}
+
               {tab === "product" ? (
                 <form onSubmit={submitProduct} className="mt-5 space-y-3">
                   <p className="text-xs text-charcoal/50 leading-snug">{t("listing.requiredLegend")}</p>
@@ -388,18 +419,33 @@ export default function ListingOfferModal({
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className={labelClass}>{t("listing.imageUrl")}</label>
-                    <input
-                      type="url"
-                      className={inputClass}
-                      value={productImage}
-                      onChange={(e) => setProductImage(e.target.value)}
-                      onInvalid={handleFieldInvalid}
-                      onInput={clearFieldValidity}
-                      placeholder="https://"
-                      maxLength={2000}
-                    />
+                  <div className="space-y-2">
+                    <p className={labelClass}>{t("listing.productPhotosHelp")}</p>
+                    {Array.from({ length: MAX_PRODUCT_IMAGES }, (_, i) => (
+                      <div key={i}>
+                        <label className={labelClass}>
+                          {t("listing.photoNumber").replace("{n}", String(i + 1))}
+                        </label>
+                        <input
+                          type="url"
+                          className={inputClass}
+                          value={productImages[i] ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setProductImages((prev) => {
+                              const next = [...prev];
+                              while (next.length < MAX_PRODUCT_IMAGES) next.push("");
+                              next[i] = v;
+                              return next;
+                            });
+                          }}
+                          onInvalid={handleFieldInvalid}
+                          onInput={clearFieldValidity}
+                          placeholder="https://"
+                          maxLength={2000}
+                        />
+                      </div>
+                    ))}
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.contactEmail")}</label>
@@ -429,7 +475,7 @@ export default function ListingOfferModal({
                   </div>
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || (captchaRequired && !captchaToken)}
                     className="mt-2 w-full rounded-full bg-green py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-dark disabled:opacity-60"
                   >
                     {submitting ? t("listing.submitting") : t("listing.submitProduct")}
@@ -477,6 +523,19 @@ export default function ListingOfferModal({
                     />
                   </div>
                   <div>
+                    <label className={labelClass}>{t("listing.servicePhotoUrl")}</label>
+                    <input
+                      type="url"
+                      className={inputClass}
+                      value={svcImageUrl}
+                      onChange={(e) => setSvcImageUrl(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
+                      placeholder="https://"
+                      maxLength={2000}
+                    />
+                  </div>
+                  <div>
                     <label className={labelClass}>{t("listing.serviceTitle")} *</label>
                     <input
                       className={inputClass}
@@ -508,6 +567,25 @@ export default function ListingOfferModal({
                           </option>
                         ))}
                     </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>
+                      {t("listing.hourlyRate")} ({currency}) *
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      className={inputClass}
+                      value={svcHourlyRate}
+                      onChange={(e) => setSvcHourlyRate(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
+                      required
+                      placeholder="0"
+                    />
+                    <p className="mt-1 text-[11px] text-charcoal/45 leading-snug">
+                      {t("listing.hourlyRateCurrencyNote")}
+                    </p>
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.serviceDesc")} *</label>
@@ -551,7 +629,7 @@ export default function ListingOfferModal({
                   </div>
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || (captchaRequired && !captchaToken)}
                     className="mt-2 w-full rounded-full bg-blue py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-dark disabled:opacity-60"
                   >
                     {submitting ? t("listing.submitting") : t("listing.submitService")}

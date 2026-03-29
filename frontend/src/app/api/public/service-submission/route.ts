@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
+import { isListingCurrency } from "@/lib/eur-fallback-rates";
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -10,6 +12,10 @@ function isValidEmail(s: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const captcha = await verifyTurnstileFromRequest(body.captchaToken ?? body.turnstileToken, request);
+    if (!captcha.ok) {
+      return NextResponse.json({ error: captcha.error }, { status: 400 });
+    }
     const contactName = String(body.contactName || body.name || "").trim();
     const contactEmail = String(body.contactEmail || body.email || "").trim().toLowerCase();
     const contactPhone = normalizeListingPhone(body.contactPhone || body.phone);
@@ -19,6 +25,10 @@ export async function POST(request: NextRequest) {
     const location = String(body.location || "").trim();
     const country = String(body.country || "").trim() || "North Macedonia";
     const notes = String(body.notes || "").trim() || null;
+    const hourlyRaw = body.hourlyRate ?? body.hourly_rate;
+    const hourlyRate = typeof hourlyRaw === "number" ? hourlyRaw : Number(String(hourlyRaw ?? "").replace(",", "."));
+    const currency = String(body.currency || "EUR").trim().toUpperCase() || "EUR";
+    const imageUrl = String(body.imageUrl || body.image_url || body.photoUrl || "").trim();
 
     if (contactName.length < 2) {
       return NextResponse.json({ error: "Your name is required." }, { status: 400 });
@@ -41,6 +51,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!Number.isFinite(hourlyRate) || hourlyRate < 0) {
+      return NextResponse.json({ error: "Hourly rate must be zero or greater." }, { status: 400 });
+    }
+    if (!isListingCurrency(currency)) {
+      return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
+    }
+    if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+      return NextResponse.json({ error: "If provided, photo must be a valid http(s) URL." }, { status: 400 });
+    }
 
     const db = createAdminClient();
     const payload = {
@@ -54,6 +73,9 @@ export async function POST(request: NextRequest) {
       location,
       country,
       notes,
+      hourly_rate: Math.round(hourlyRate * 100) / 100,
+      currency,
+      image_url: imageUrl,
     };
 
     const { error } = await db.from("service_listing_requests").insert(payload);

@@ -12,7 +12,7 @@ import { trackViewContent } from "@/components/Analytics";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { t, formatRegionalPrice } = useLocale();
+  const { t, formatProductRegionalPrice } = useLocale();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
@@ -23,6 +23,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [revealCount, setRevealCount] = useState<number | null>(null);
   const [revealLoading, setRevealLoading] = useState(false);
   const [revealError, setRevealError] = useState("");
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,6 +40,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         const mapped = mapSupabaseProduct(data);
         setProduct(mapped);
+        setGalleryIndex(0);
         trackViewContent({ id: mapped.id, name: mapped.name, price: mapped.price, category: mapped.category });
 
         const relRes = await fetch(`/api/products?category=${encodeURIComponent(mapped.category)}`);
@@ -113,6 +115,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }
 
+  const galleryImages =
+    product && product.images.length > 0
+      ? product.images
+      : product?.image
+        ? [product.image]
+        : [];
+  const mainImage = galleryImages[galleryIndex] || product?.image || "";
+
   if (notFound || !product) {
     return (
       <>
@@ -147,16 +157,36 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </nav>
 
           <div className="grid gap-12 lg:grid-cols-2">
-            <div className="relative aspect-square overflow-hidden rounded-2xl bg-light">
-              <Image
-                src={product.image}
-                alt={product.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-                unoptimized
-              />
+            <div className="space-y-3">
+              <div className="relative aspect-square overflow-hidden rounded-2xl bg-light">
+                {mainImage ? (
+                  <Image
+                    src={mainImage}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    priority
+                    unoptimized
+                  />
+                ) : null}
+              </div>
+              {galleryImages.length > 1 && (
+                <div className="flex flex-wrap gap-2">
+                  {galleryImages.map((src, i) => (
+                    <button
+                      key={`${src}-${i}`}
+                      type="button"
+                      onClick={() => setGalleryIndex(i)}
+                      className={`relative h-16 w-16 overflow-hidden rounded-lg border-2 transition-colors ${
+                        i === galleryIndex ? "border-green ring-2 ring-green/30" : "border-charcoal/10 hover:border-charcoal/25"
+                      }`}
+                    >
+                      <Image src={src} alt="" fill className="object-cover" sizes="64px" unoptimized />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col">
@@ -192,7 +222,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </Link>
               </p>
 
-              <p className="mt-6 text-3xl font-bold text-green">{formatRegionalPrice(product.price)}</p>
+              <p className="mt-6 text-3xl font-bold text-green">
+                {formatProductRegionalPrice(product.price, product.currency)}
+              </p>
 
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
@@ -272,7 +304,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <div className="p-4">
                       <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors">{p.name}</h3>
                       <p className="text-xs text-charcoal/50 mt-0.5">{t("shop.by")} {p.businessName} · {p.country}</p>
-                      <p className="mt-2 text-lg font-bold text-green">{formatRegionalPrice(p.price)}</p>
+                      <p className="mt-2 text-lg font-bold text-green">
+                        {formatProductRegionalPrice(p.price, p.currency)}
+                      </p>
                     </div>
                   </Link>
                 ))}

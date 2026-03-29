@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
 import { slugifyBusinessName } from "@/lib/slug";
-import { convertListedPriceToEur, isListingCurrency } from "@/lib/eur-fallback-rates";
+import { isListingCurrency } from "@/lib/eur-fallback-rates";
+import { normalizeProductImageUrls, productImageDbPayload } from "@/lib/product-images";
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -12,6 +14,10 @@ function isValidEmail(s: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const captcha = await verifyTurnstileFromRequest(body.captchaToken ?? body.turnstileToken, request);
+    if (!captcha.ok) {
+      return NextResponse.json({ error: captcha.error }, { status: 400 });
+    }
     const name = String(body.name || "").trim();
     const description = String(body.description || "").trim();
     const longDescription = String(body.longDescription || body.long_description || "").trim();
@@ -20,7 +26,11 @@ export async function POST(request: NextRequest) {
     const contactPhone = normalizeListingPhone(body.contactPhone || body.phone);
     const category = String(body.category || "").trim();
     const country = String(body.country || "").trim() || "North Macedonia";
-    const image = String(body.image || body.imageUrl || "").trim();
+    const fromGallery = normalizeProductImageUrls(body.images);
+    const legacySingle = String(body.image || body.imageUrl || "").trim();
+    const { image, images } = productImageDbPayload(
+      fromGallery.length ? fromGallery : legacySingle ? [legacySingle] : []
+    );
     const price = Number(body.price);
     const currency = String(body.currency || "EUR").trim().toUpperCase() || "EUR";
 
@@ -45,12 +55,6 @@ export async function POST(request: NextRequest) {
     if (!isListingCurrency(currency)) {
       return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
     }
-    let priceEur: number;
-    try {
-      priceEur = convertListedPriceToEur(price, currency);
-    } catch {
-      return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
-    }
     if (!isValidListingPhone(contactPhone)) {
       return NextResponse.json({ error: "A valid contact phone number is required." }, { status: 400 });
     }
@@ -65,12 +69,13 @@ export async function POST(request: NextRequest) {
       name,
       description,
       long_description: longDescription,
-      price: priceEur,
-      currency: "EUR",
+      price: Math.round(price * 100) / 100,
+      currency,
       category,
       artisan,
       country,
-      image: image || "",
+      image,
+      images,
       tags: [] as string[],
       in_stock: true,
       seller_id: null as string | null,

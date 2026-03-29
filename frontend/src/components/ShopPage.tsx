@@ -7,8 +7,10 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { categories, type Product, mapSupabaseProduct, shopCategoryChips } from "@/lib/products";
+import { amountInListingCurrencyToEur } from "@/lib/eur-fallback-rates";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
+import { hasFeaturedMarker } from "@/lib/listing-featured";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -32,7 +34,7 @@ function ShopContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [preview, setPreview] = useState<Product | null>(null);
-  const { t, formatRegionalPrice } = useLocale();
+  const { t, formatProductRegionalPrice } = useLocale();
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -147,8 +149,22 @@ function ShopContent() {
 
   const sortedProducts = useMemo(() => {
     const copy = [...filtered];
-    if (sortMode === "price-asc") copy.sort((a, b) => a.price - b.price);
-    else if (sortMode === "price-desc") copy.sort((a, b) => b.price - a.price);
+    copy.sort((a, b) => {
+      const af = hasFeaturedMarker(a.tags);
+      const bf = hasFeaturedMarker(b.tags);
+      if (af !== bf) return af ? -1 : 1;
+      if (sortMode === "price-asc")
+        return (
+          amountInListingCurrencyToEur(a.price, a.currency) -
+          amountInListingCurrencyToEur(b.price, b.currency)
+        );
+      if (sortMode === "price-desc")
+        return (
+          amountInListingCurrencyToEur(b.price, b.currency) -
+          amountInListingCurrencyToEur(a.price, a.currency)
+        );
+      return 0;
+    });
     return copy;
   }, [filtered, sortMode]);
 
@@ -363,12 +379,21 @@ function ShopContent() {
           ) : (
             <>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {paginatedProducts.map((product) => (
+                {paginatedProducts.map((product, pageIdx) => {
+                  const isFirstOnPage = pageIdx === 0;
+                  const isFeatured = hasFeaturedMarker(product.tags);
+                  return (
                   <button
                     key={product.id}
                     type="button"
                     onClick={() => setPreview(product)}
-                    className="group text-left rounded-2xl bg-white border border-charcoal/5 overflow-hidden hover:shadow-lg hover:border-green/20 transition-all"
+                    className={`group text-left rounded-2xl bg-white overflow-hidden transition-all border ${
+                      isFirstOnPage
+                        ? "ring-2 ring-green/30 ring-offset-2 ring-offset-white border-green/35 shadow-md hover:shadow-lg"
+                        : isFeatured
+                          ? "border-green/25 hover:shadow-lg hover:border-green/35"
+                          : "border-charcoal/5 hover:shadow-lg hover:border-green/20"
+                    }`}
                   >
                     <div className="p-5">
                       <div className="flex items-start gap-4">
@@ -387,6 +412,11 @@ function ShopContent() {
                             <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors truncate">
                               {product.name}
                             </h3>
+                            {isFeatured && (
+                              <span className="flex-shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                {t("shop.sortFeatured")}
+                              </span>
+                            )}
                             {!product.inStock && (
                               <span className="flex-shrink-0 rounded-full bg-charcoal/10 px-2 py-0.5 text-[10px] font-bold text-charcoal/50">
                                 OUT
@@ -404,7 +434,9 @@ function ShopContent() {
                       </div>
                       <p className="mt-3 text-sm text-charcoal/60 line-clamp-2">{product.description}</p>
                       <div className="mt-4 flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold text-green">{formatRegionalPrice(product.price)}</span>
+                        <span className="text-sm font-bold text-green">
+                          {formatProductRegionalPrice(product.price, product.currency)}
+                        </span>
                         <div className="flex items-center gap-1 text-xs text-charcoal/40">
                           <span className={`h-2 w-2 rounded-full ${product.inStock ? "bg-green" : "bg-charcoal/25"}`} />
                           {product.inStock ? "In stock" : "Out of stock"}
@@ -413,7 +445,8 @@ function ShopContent() {
                       <p className="mt-3 text-xs font-medium text-green">Quick preview — click for details</p>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
               {totalPages > 1 && (
                 <nav
@@ -489,7 +522,9 @@ function ShopContent() {
               </div>
               <p className="mt-4 text-sm text-charcoal/70 leading-relaxed">{preview.description}</p>
               <div className="mt-5 flex flex-wrap items-center gap-3">
-                <span className="font-bold text-green text-lg">{formatRegionalPrice(preview.price)}</span>
+                <span className="font-bold text-green text-lg">
+                  {formatProductRegionalPrice(preview.price, preview.currency)}
+                </span>
                 <span className="text-xs text-charcoal/45 flex items-center gap-1">
                   <span className={`h-2 w-2 rounded-full ${preview.inStock ? "bg-green" : "bg-charcoal/25"}`} />
                   {preview.inStock ? "In stock" : "Out of stock"}

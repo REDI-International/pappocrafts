@@ -20,7 +20,7 @@ import {
   type PricingRegion,
   type ShippingZone,
 } from "./pricing";
-import { UNITS_PER_ONE_EUR } from "./eur-fallback-rates";
+import { UNITS_PER_ONE_EUR, amountInListingCurrencyToEur } from "./eur-fallback-rates";
 
 export type CurrencyCode = "EUR" | "RSD" | "ALL" | "BAM" | "MKD" | "TRY";
 
@@ -73,6 +73,10 @@ interface LocaleContextValue {
   ratesSource: "loading" | "live" | "fallback" | "cached";
   formatPrice: (eurPrice: number) => string;
   formatRegionalPrice: (eurBasePrice: number) => string;
+  /** Price stored in DB with `storedCurrency` → formatted in the visitor’s selected currency. */
+  formatProductRegionalPrice: (amount: number, storedCurrency?: string | null) => string;
+  /** EUR equivalent for cart, checkout, and Stripe (listing currency → EUR). */
+  getProductEurEquivalent: (amount: number, storedCurrency?: string | null) => number;
   getRegionalEurPrice: (eurBasePrice: number) => number;
   currencySymbol: string;
   region: PricingRegion;
@@ -231,12 +235,24 @@ export function LocaleProvider({
 
   const formatPrice = formatCurrency;
 
-  /** List/catalog prices: base EUR from the database × selected currency only (language does not change the number). */
+  /** Services / legacy EUR-stored amounts: value is already EUR before applying the visitor’s currency. */
   const getRegionalEurPrice = useCallback((eurBasePrice: number): number => eurBasePrice, []);
 
   const formatRegionalPrice = useCallback(
     (eurBasePrice: number): string => formatCurrency(eurBasePrice),
     [formatCurrency]
+  );
+
+  const formatProductRegionalPrice = useCallback(
+    (amount: number, storedCurrency?: string | null): string =>
+      formatCurrency(amountInListingCurrencyToEur(amount, storedCurrency)),
+    [formatCurrency]
+  );
+
+  const getProductEurEquivalent = useCallback(
+    (amount: number, storedCurrency?: string | null): number =>
+      amountInListingCurrencyToEur(amount, storedCurrency),
+    []
   );
 
   const getShippingCost = useCallback(
@@ -258,6 +274,8 @@ export function LocaleProvider({
       ratesSource,
       formatPrice,
       formatRegionalPrice,
+      formatProductRegionalPrice,
+      getProductEurEquivalent,
       getRegionalEurPrice,
       currencySymbol: currencyConfig.symbol,
       region,
@@ -266,7 +284,7 @@ export function LocaleProvider({
       getShippingCost,
       shippingEstimate: shippingRate.estimatedDays,
     }),
-    [locale, localeConfig, setLocale, t, currency, currencyConfig, setCurrency, exchangeRates, ratesSource, formatPrice, formatRegionalPrice, getRegionalEurPrice, region, shippingZone, regionConfig, getShippingCost, shippingRate]
+    [locale, localeConfig, setLocale, t, currency, currencyConfig, setCurrency, exchangeRates, ratesSource, formatPrice, formatRegionalPrice, formatProductRegionalPrice, getProductEurEquivalent, getRegionalEurPrice, region, shippingZone, regionConfig, getShippingCost, shippingRate]
   );
 
   return (

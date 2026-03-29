@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { serviceProviders, serviceCategories, mapSupabaseServiceRow, type ServiceProvider } from "@/lib/services";
 import { useLocale } from "@/lib/locale-context";
 import { translateServiceCategory } from "@/lib/translations";
+import { hasFeaturedMarker } from "@/lib/listing-featured";
 
 const SERVICES_PER_PAGE = 12;
 const SERVICES_LISTING_BASE = "/services";
@@ -75,10 +76,15 @@ function ServicesContent() {
 
   const sortedProviders = useMemo(() => {
     const copy = [...filtered];
-    if (sortMode === "price-asc") copy.sort((a, b) => (a.hourlyRate || 0) - (b.hourlyRate || 0));
-    else if (sortMode === "price-desc") copy.sort((a, b) => (b.hourlyRate || 0) - (a.hourlyRate || 0));
-    else if (sortMode === "reviews") copy.sort((a, b) => b.reviewCount - a.reviewCount);
-    else copy.sort((a, b) => b.rating - a.rating);
+    copy.sort((a, b) => {
+      const af = hasFeaturedMarker(a.badges);
+      const bf = hasFeaturedMarker(b.badges);
+      if (af !== bf) return af ? -1 : 1;
+      if (sortMode === "price-asc") return (a.hourlyRate || 0) - (b.hourlyRate || 0);
+      if (sortMode === "price-desc") return (b.hourlyRate || 0) - (a.hourlyRate || 0);
+      if (sortMode === "reviews") return b.reviewCount - a.reviewCount;
+      return b.rating - a.rating;
+    });
     return copy;
   }, [filtered, sortMode]);
 
@@ -242,12 +248,21 @@ function ServicesContent() {
           ) : (
             <>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {paginatedProviders.map((provider) => (
+                {paginatedProviders.map((provider, pageIdx) => {
+                  const isFirstOnPage = pageIdx === 0;
+                  const isFeatured = hasFeaturedMarker(provider.badges);
+                  return (
                   <button
                     key={provider.id}
                     type="button"
                     onClick={() => setPreview(provider)}
-                    className="group text-left rounded-2xl bg-white border border-charcoal/5 overflow-hidden hover:shadow-lg hover:border-green/20 transition-all"
+                    className={`group text-left rounded-2xl bg-white overflow-hidden transition-all border ${
+                      isFirstOnPage
+                        ? "ring-2 ring-green/30 ring-offset-2 ring-offset-white border-green/35 shadow-md hover:shadow-lg"
+                        : isFeatured
+                          ? "border-green/25 hover:shadow-lg hover:border-green/35"
+                          : "border-charcoal/5 hover:shadow-lg hover:border-green/20"
+                    }`}
                   >
                     <div className="p-5">
                       <div className="flex items-start gap-4">
@@ -255,10 +270,15 @@ function ServicesContent() {
                           <Image src={provider.image} alt={provider.name} fill className="object-cover" sizes="64px" unoptimized />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors truncate">
                               {provider.name}
                             </h3>
+                            {isFeatured && (
+                              <span className="flex-shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                {t("shop.sortFeatured")}
+                              </span>
+                            )}
                             {provider.badges.includes("Top Rated") && (
                               <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green">TOP</span>
                             )}
@@ -302,7 +322,8 @@ function ServicesContent() {
                       <p className="mt-3 text-xs font-medium text-green">Quick preview — click for details</p>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
               {totalPages > 1 && (
                 <nav

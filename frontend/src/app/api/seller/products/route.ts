@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveUserIdFromEmail, validateSession } from "@/lib/admin-store";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
-import { convertListedPriceToEur, isListingCurrency } from "@/lib/eur-fallback-rates";
+import { isListingCurrency } from "@/lib/eur-fallback-rates";
+import { normalizeProductImageUrls, productImageDbPayload } from "@/lib/product-images";
 
 async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -63,24 +64,28 @@ export async function POST(request: NextRequest) {
     if (!isListingCurrency(listingCurrency)) {
       return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
     }
-    let priceEur: number;
-    try {
-      priceEur = convertListedPriceToEur(priceRaw, listingCurrency);
-    } catch {
-      return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
+    if (!Number.isFinite(priceRaw) || priceRaw < 0) {
+      return NextResponse.json({ error: "Invalid price." }, { status: 400 });
     }
+
+    const fromGallery = normalizeProductImageUrls(body.images);
+    const legacy = String(body.image || "").trim();
+    const { image, images } = productImageDbPayload(
+      fromGallery.length ? fromGallery : legacy ? [legacy] : []
+    );
 
     const row = {
       id,
       name: body.name,
       description: body.description || "",
       long_description: body.longDescription || body.long_description || "",
-      price: priceEur,
-      currency: "EUR",
+      price: Math.round(priceRaw * 100) / 100,
+      currency: listingCurrency,
       category: body.category || "",
       artisan,
       country: String(body.country || profile.base_country || "").trim() || "North Macedonia",
-      image: body.image || "",
+      image,
+      images,
       tags: body.tags || [],
       in_stock: body.inStock ?? body.in_stock ?? true,
       seller_id: ctx.userId,
@@ -126,19 +131,27 @@ export async function PATCH(request: NextRequest) {
       if (!isListingCurrency(listingCurrency)) {
         return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
       }
-      try {
-        updates.price = convertListedPriceToEur(Number(body.price), listingCurrency);
-        updates.currency = "EUR";
-      } catch {
-        return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
+      const raw = Number(body.price);
+      if (!Number.isFinite(raw) || raw < 0) {
+        return NextResponse.json({ error: "Invalid price." }, { status: 400 });
       }
+      updates.price = Math.round(raw * 100) / 100;
+      updates.currency = listingCurrency;
     } else if (body.currency !== undefined) {
       updates.currency = body.currency;
     }
     if (body.category !== undefined) updates.category = body.category;
     if (body.artisan !== undefined) updates.artisan = body.artisan;
     if (body.country !== undefined) updates.country = body.country;
-    if (body.image !== undefined) updates.image = body.image;
+    if (body.images !== undefined) {
+      const { image, images } = productImageDbPayload(body.images);
+      updates.image = image;
+      updates.images = images;
+    } else if (body.image !== undefined) {
+      const s = String(body.image || "").trim();
+      updates.image = s;
+      updates.images = s ? [s] : [];
+    }
     if (body.tags !== undefined) updates.tags = body.tags;
     if (body.inStock !== undefined) updates.in_stock = body.inStock;
     if (body.in_stock !== undefined) updates.in_stock = body.in_stock;
