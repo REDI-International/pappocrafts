@@ -122,7 +122,7 @@ export const serviceProviders: ServiceProvider[] = [
     country: "Kosovo",
     phone: DEFAULT_LISTING_PHONE,
     image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop",
-    badges: ["Verified", "Top Rated"],
+    badges: ["featured", "Verified", "Top Rated"],
     available: true,
     responseTime: "Under 30 min",
     completedJobs: 198,

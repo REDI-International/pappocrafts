@@ -275,12 +275,14 @@ function ServicesContent() {
                               {provider.name}
                             </h3>
                             {isFeatured && (
-                              <span className="flex-shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                                {t("shop.sortFeatured")}
+                              <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green uppercase tracking-wide">
+                                {t("listing.featuredBadge")}
                               </span>
                             )}
                             {provider.badges.includes("Top Rated") && (
-                              <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green">TOP</span>
+                              <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green uppercase tracking-wide">
+                                TOP
+                              </span>
                             )}
                           </div>
                           <p className="text-sm text-charcoal/60">{provider.title}</p>

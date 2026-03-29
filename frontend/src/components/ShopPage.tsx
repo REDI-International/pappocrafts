@@ -413,8 +413,8 @@ function ShopContent() {
                               {product.name}
                             </h3>
                             {isFeatured && (
-                              <span className="flex-shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                                {t("shop.sortFeatured")}
+                              <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green uppercase tracking-wide">
+                                {t("listing.featuredBadge")}
                               </span>
                             )}
                             {!product.inStock && (
