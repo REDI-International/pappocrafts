@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "4ea12082473560f2d78f6c9ea27b91e1d9c3ee68",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-29T20:01:55+03:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "heuristic",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 0.95
+  },
+  "stats": {
+    "total_additions": 96,
+    "total_deletions": 14,
+    "ai_additions": 96,
+    "ai_deletions": 14,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/src/app/api/public/product-submission/route.ts": {
+      "ai_additions": 27,
+      "human_additions": 0,
+      "ai_deletions": 5,
+      "human_deletions": 0
+    },
+    "frontend/src/app/api/public/service-submission/route.ts": {
+      "ai_additions": 40,
+      "human_additions": 0,
+      "ai_deletions": 6,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/supabase/admin.ts": {
+      "ai_additions": 29,
+      "human_additions": 0,
+      "ai_deletions": 3,
+      "human_deletions": 0
+    }
+  }
+}
