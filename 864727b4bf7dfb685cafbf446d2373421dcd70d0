@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "864727b4bf7dfb685cafbf446d2373421dcd70d0",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-29T19:11:11+03:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "heuristic",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 0.95
+  },
+  "stats": {
+    "total_additions": 24,
+    "total_deletions": 9,
+    "ai_additions": 24,
+    "ai_deletions": 9,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/src/app/services/page.tsx": {
+      "ai_additions": 5,
+      "human_additions": 0,
+      "ai_deletions": 3,
+      "human_deletions": 0
+    },
+    "frontend/src/components/ShopPage.tsx": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/services.ts": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "frontend/src/lib/translations.ts": {
+      "ai_additions": 8,
+      "human_additions": 0,
+      "ai_deletions": 2,
+      "human_deletions": 0
+    },
+    "supabase/migrations/002_seed_data.sql": {
+      "ai_additions": 1,
+      "human_additions": 0,
+      "ai_deletions": 1,
+      "human_deletions": 0
+    },
+    "supabase/migrations/034_services_featured_badge_fatima.sql": {
+      "ai_additions": 7,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0
+    }
+  }
+}
