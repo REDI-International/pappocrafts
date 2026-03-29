@@ -1,7 +1,16 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from "react";
-import { translations, type Locale, type TranslationKey } from "./translations";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  type ReactNode,
+} from "react";
+import { translations, isSupportedLocale, type Locale, type TranslationKey } from "./translations";
 import {
   getRegionForLocale,
   getShippingZoneForLocale,
@@ -83,6 +92,14 @@ function writeLocaleCookie(code: Locale) {
   document.cookie = `${LOCALE_COOKIE}=${code};path=/;max-age=${LOCALE_COOKIE_MAX_AGE};SameSite=Lax`;
 }
 
+/** Client-only: cookie may exist when localStorage was cleared (e.g. Safari ITP) or cache served HTML without reading the cookie on the server. */
+function readLocaleFromDocumentCookie(): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const row = document.cookie.split("; ").find((r) => r.startsWith(`${LOCALE_COOKIE}=`));
+  const raw = row?.slice(LOCALE_COOKIE.length + 1)?.trim();
+  return raw || undefined;
+}
+
 export function LocaleProvider({
   children,
   initialLocale: initialLocaleProp,
@@ -131,39 +148,47 @@ export function LocaleProvider({
     return () => { cancelled = true; };
   }, []);
 
-  // Sync cookie → localStorage, or migrate localStorage → cookie; set default currency when needed
+  // Before paint: align React locale with the browser cookie (not only localStorage). Fixes “How it works” staying English when LS was cleared or HTML was cached without server cookie.
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    setLocaleState((current) => {
+      const fromCookieRaw = readLocaleFromDocumentCookie();
+      if (isSupportedLocale(fromCookieRaw)) {
+        const next = fromCookieRaw;
+        localStorage.setItem("papposhop-locale", next);
+        document.documentElement.lang = next === "cnr" ? "sr-ME" : next;
+        return next;
+      }
+      if (initialLocaleProp && locales.some((l) => l.code === initialLocaleProp)) {
+        localStorage.setItem("papposhop-locale", initialLocaleProp);
+        document.documentElement.lang = initialLocaleProp === "cnr" ? "sr-ME" : initialLocaleProp;
+        return initialLocaleProp;
+      }
+      const ls = (localStorage.getItem("papposhop-locale") || localStorage.getItem("pappocrafts-locale")) as Locale | null;
+      const localeOk = ls && locales.some((l) => l.code === ls);
+      if (localeOk) {
+        writeLocaleCookie(ls);
+        document.documentElement.lang = ls === "cnr" ? "sr-ME" : ls;
+        return ls;
+      }
+      return current;
+    });
+  }, [initialLocaleProp]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    let currencyLocale: Locale = "en";
-
-    if (initialLocaleProp && locales.some((l) => l.code === initialLocaleProp)) {
-      localStorage.setItem("papposhop-locale", initialLocaleProp);
-      document.documentElement.lang = initialLocaleProp === "cnr" ? "sr-ME" : initialLocaleProp;
-      currencyLocale = initialLocaleProp;
-    } else {
-      const savedLocale = (localStorage.getItem("papposhop-locale") || localStorage.getItem("pappocrafts-locale")) as Locale | null;
-      const localeOk = savedLocale && locales.some((l) => l.code === savedLocale);
-      if (localeOk) {
-        setLocaleState(savedLocale);
-        writeLocaleCookie(savedLocale);
-        document.documentElement.lang = savedLocale === "cnr" ? "sr-ME" : savedLocale;
-        currencyLocale = savedLocale;
-      }
-    }
-
     const savedCurrency = (localStorage.getItem("papposhop-currency") || localStorage.getItem("pappocrafts-currency")) as CurrencyCode | null;
     const currencyOk = savedCurrency && currencies.some((c) => c.code === savedCurrency);
     if (currencyOk) {
       setCurrencyState(savedCurrency);
     } else {
-      const lc = locales.find((l) => l.code === currencyLocale);
+      const lc = locales.find((l) => l.code === locale);
       if (lc) {
         setCurrencyState(lc.defaultCurrency);
         localStorage.setItem("papposhop-currency", lc.defaultCurrency);
       }
     }
-  }, [initialLocaleProp]);
+  }, [locale]);
 
   const setLocale = useCallback((code: Locale) => {
     setLocaleState(code);

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { getDomainConfig } from "@/lib/domain-config";
 
+/** Per-request HTML so `cookies().get("papposhop-locale")` in root layout is not served from a shared static cache. */
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getDomainConfig();
   return {

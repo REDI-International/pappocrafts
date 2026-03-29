@@ -40,7 +40,12 @@ export default function HowItWorks() {
   const { t, locale } = useLocale();
 
   return (
-    <section id="how-it-works" className="py-24 sm:py-32" key={locale}>
+    <section
+      id="how-it-works"
+      className="py-24 sm:py-32"
+      key={locale}
+      suppressHydrationWarning
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-sm font-semibold text-green uppercase tracking-wide">
