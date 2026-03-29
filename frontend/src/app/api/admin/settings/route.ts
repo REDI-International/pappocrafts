@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSession } from "@/lib/admin-store";
+import { SITE_LOGO_URL } from "@/lib/site-logo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -11,7 +12,7 @@ async function getSession(request: NextRequest) {
 }
 
 const DEFAULT_SETTINGS: Record<string, string> = {
-  logo_url: "/pappocrafts-logo.png",
+  logo_url: SITE_LOGO_URL,
   hero_badge: "Western Balkans Marketplace",
   hero_title1: "Handcrafted with",
   hero_title2: "Heart & Heritage",

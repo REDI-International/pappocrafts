@@ -1,5 +1,6 @@
 import Script from "next/script";
 import { getDomainConfig, type DomainConfig } from "@/lib/domain-config";
+import { SITE_LOGO_URL } from "@/lib/site-logo";
 
 function buildSchemas(cfg: DomainConfig) {
   const organizationSchema = {
@@ -8,7 +9,7 @@ function buildSchemas(cfg: DomainConfig) {
     name: "PappoShop",
     alternateName: ["Pappo Shop", "PappoShop.org"],
     url: cfg.baseUrl,
-    logo: `${cfg.baseUrl}/pappocrafts-logo.png`,
+    logo: SITE_LOGO_URL,
     description:
       cfg.region === "balkans"
         ? "PappoShop is a social enterprise marketplace connecting Roma artisans and entrepreneurs across the Western Balkans with customers who value authenticity, craftsmanship, and social impact."

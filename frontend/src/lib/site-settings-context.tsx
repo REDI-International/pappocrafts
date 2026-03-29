@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { SITE_LOGO_URL } from "@/lib/site-logo";
 
 export interface SiteSettings {
   logo_url: string;
@@ -17,7 +18,7 @@ export interface SiteSettings {
 }
 
 const DEFAULTS: SiteSettings = {
-  logo_url: "/pappocrafts-logo.png",
+  logo_url: SITE_LOGO_URL,
   hero_badge: "Western Balkans Marketplace",
   hero_title1: "Handcrafted with",
   hero_title2: "Heart & Heritage",
