@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full",
+  "commit_sha": "39e4727ad763ae69ba2f53b4bcdde7922cbefd47",
+  "author": "cboldis@yahoo.com",
+  "timestamp": "2026-03-29T14:26:32+03:00",
+  "detection": {
+    "ai_assisted": true,
+    "method": "editor_hook",
+    "tool": "cursor",
+    "model": "",
+    "confidence": 1.0
+  },
+  "stats": {
+    "total_additions": 16,
+    "total_deletions": 0,
+    "ai_additions": 16,
+    "ai_deletions": 0,
+    "human_additions": 0,
+    "human_deletions": 0
+  },
+  "files": {
+    "frontend/next.config.ts": {
+      "ai_additions": 4,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "30-33",
+      "human_lines": ""
+    },
+    "frontend/src/app/api/admin/settings/route.ts": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "3,15",
+      "human_lines": ""
+    },
+    "frontend/src/components/StructuredData.tsx": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "3,12",
+      "human_lines": ""
+    },
+    "frontend/src/lib/site-logo.ts": {
+      "ai_additions": 6,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "1-6",
+      "human_lines": ""
+    },
+    "frontend/src/lib/site-settings-context.tsx": {
+      "ai_additions": 2,
+      "human_additions": 0,
+      "ai_deletions": 0,
+      "human_deletions": 0,
+      "ai_lines": "4,21",
+      "human_lines": ""
+    }
+  }
+}
