@@ -293,7 +293,7 @@ export default function AccountPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen flex items-center justify-center pt-16">
+        <div className="min-h-screen flex items-center justify-center pt-20">
           <div className="text-charcoal/40 text-sm">Loading...</div>
         </div>
       </>

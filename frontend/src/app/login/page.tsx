@@ -74,9 +74,9 @@ export default function LoginPage() {
               <Image
                 src={logo_url}
                 alt="PappoShop"
-                width={180}
-                height={54}
-                className="h-12 w-auto mx-auto"
+                width={260}
+                height={78}
+                className="h-16 sm:h-[4.25rem] w-auto mx-auto"
                 priority
                 unoptimized
               />

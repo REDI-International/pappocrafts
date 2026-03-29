@@ -154,9 +154,17 @@ export default function Navbar() {
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-charcoal/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center">
-              <Image src={logo_url} alt="PappoShop" width={220} height={64} className="w-auto" style={{ height: "3.5rem" }} priority unoptimized />
+          <div className="flex h-20 items-center justify-between">
+            <Link href="/" className="flex shrink-0 items-center">
+              <Image
+                src={logo_url}
+                alt="PappoShop"
+                width={320}
+                height={96}
+                className="h-[4.5rem] w-auto max-w-[min(100%,18rem)] sm:max-w-none"
+                priority
+                unoptimized
+              />
             </Link>
 
             <div className="hidden md:flex items-center gap-5">
