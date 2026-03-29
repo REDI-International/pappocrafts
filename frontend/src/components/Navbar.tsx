@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCart } from "@/lib/cart-context";
 import { useLocale, locales, currencies } from "@/lib/locale-context";
 import { useSiteSettings } from "@/lib/site-settings-context";
 import CartSidebar from "./CartSidebar";
@@ -144,27 +143,28 @@ export default function Navbar() {
   const pathname = usePathname();
   const [listingModalOpen, setListingModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { totalItems, setIsCartOpen } = useCart();
   const { t } = useLocale();
   const { logo_url } = useSiteSettings();
   const loggedIn = useLoggedIn();
   const supportHref = `${pathname === "/" ? "/" : pathname}#contact`;
   const shopActive = pathname === "/" || pathname.startsWith("/shop");
   const servicesActive = pathname.startsWith("/services");
-  const showCartInNav = pathname !== "/";
 
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-charcoal/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-20 items-center justify-between">
-            <Link href="/" className="flex shrink-0 items-center">
+          <div className="flex h-20 items-center justify-between gap-2">
+            <Link
+              href="/"
+              className="flex min-w-0 flex-1 items-center md:flex-initial md:shrink-0"
+            >
               <Image
                 src={logo_url}
                 alt="PappoShop"
                 width={320}
                 height={96}
-                className="h-[4.5rem] w-auto max-w-[min(100%,18rem)] sm:max-w-none"
+                className="h-12 w-auto max-h-12 max-w-[min(42vw,11rem)] object-contain object-left sm:h-14 sm:max-h-14 sm:max-w-[min(48vw,13rem)] md:h-[4.5rem] md:max-h-none md:max-w-[min(100%,18rem)] lg:max-w-none"
                 priority
                 unoptimized
               />
@@ -218,22 +218,6 @@ export default function Navbar() {
                 </svg>
               </Link>
 
-              {showCartInNav && (
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative p-2 text-charcoal/70 hover:text-green transition-colors"
-                  aria-label="Shopping cart"
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                  </svg>
-                  {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green text-[10px] font-bold text-white">
-                      {totalItems}
-                    </span>
-                  )}
-                </button>
-              )}
               <button
                 type="button"
                 onClick={() => setListingModalOpen(true)}
@@ -243,34 +227,24 @@ export default function Navbar() {
               </button>
             </div>
 
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:hidden *:shrink-0">
               <CurrencySelector variant="mobile" />
               <LanguageSelector variant="mobile" />
-              <Link href={loggedIn ? "/account" : "/login"} className="p-2 text-charcoal" aria-label="Account">
+              <Link
+                href={loggedIn ? "/account" : "/login"}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-charcoal hover:bg-charcoal/5"
+                aria-label="Account"
+              >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                 </svg>
               </Link>
-              {showCartInNav && (
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative p-2 text-charcoal"
-                  aria-label="Shopping cart"
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                  </svg>
-                  {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green text-[10px] font-bold text-white">
-                      {totalItems}
-                    </span>
-                  )}
-                </button>
-              )}
               <button
+                type="button"
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="p-2 text-charcoal"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-charcoal/20 bg-charcoal/[0.03] text-charcoal shadow-sm hover:bg-charcoal/10"
                 aria-label="Toggle menu"
+                aria-expanded={mobileOpen}
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   {mobileOpen ? (
