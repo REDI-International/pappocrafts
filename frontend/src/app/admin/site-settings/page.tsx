@@ -248,7 +248,10 @@ export default function SiteSettingsPage() {
       </SectionCard>
 
       {/* Mission Section */}
-      <SectionCard title="Mission Section" description="Tell visitors about your mission and values.">
+      <SectionCard
+        title="Mission Section"
+        description="Leave fields empty to use the site’s translated mission text. Fill them only for a single-language override (e.g. a campaign)."
+      >
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldInput label="Badge Text" value={settings.mission_badge} onChange={(v) => updateField("mission_badge", v)} />

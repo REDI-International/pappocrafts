@@ -16,22 +16,27 @@ export default function Mission() {
   const { t } = useLocale();
   const siteSettings = useSiteSettings();
 
+  const badge = siteSettings.mission_badge.trim() || t("mission.badge");
+  const title = siteSettings.mission_title.trim() || t("mission.title");
+  const desc1 = siteSettings.mission_desc1.trim() || t("mission.desc1");
+  const desc2 = siteSettings.mission_desc2.trim() || t("mission.desc2");
+
   return (
     <section id="mission" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-2 lg:gap-24 items-center">
           <div>
             <p className="text-sm font-semibold text-green uppercase tracking-wide">
-              {siteSettings.mission_badge || t("mission.badge")}
+              {badge}
             </p>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-bold text-charcoal tracking-tight leading-tight">
-              {siteSettings.mission_title || t("mission.title")}
+              {title}
             </h2>
             <p className="mt-6 text-lg text-charcoal/70 leading-relaxed">
-              {siteSettings.mission_desc1 || t("mission.desc1")}
+              {desc1}
             </p>
             <p className="mt-4 text-lg text-charcoal/70 leading-relaxed">
-              {siteSettings.mission_desc2 || t("mission.desc2")}
+              {desc2}
             </p>
 
             <div className="mt-8 flex items-center gap-4">

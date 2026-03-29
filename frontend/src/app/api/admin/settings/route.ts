@@ -20,12 +20,10 @@ const DEFAULT_SETTINGS: Record<string, string> = {
     "Discover authentic handmade products and local services from Roma entrepreneurs across the Western Balkans. Every purchase supports livelihoods and preserves cultural traditions.",
   footer_description:
     "Authentic handmade products and services from Roma entrepreneurs across the Western Balkans.",
-  mission_badge: "Our Mission",
-  mission_title: "Empowering Roma Entrepreneurs Across the Balkans",
-  mission_desc1:
-    "PappoShop connects talented Roma entrepreneurs and service providers with customers who value authenticity and quality. And with every purchase, you directly support their path toward self-sustainability. By providing a platform for Roma entrepreneurs, we help preserve centuries-old craft traditions while also opening the door to a new world of digital opportunities. We believe that economic empowerment is the key to social inclusion.",
-  mission_desc2:
-    "We believe that economic empowerment is the most sustainable path to social inclusion. By providing a platform for Roma entrepreneurs, we help preserve centuries-old crafting traditions while creating new opportunities.",
+  mission_badge: "",
+  mission_title: "",
+  mission_desc1: "",
+  mission_desc2: "",
 };
 
 export async function GET(request: NextRequest) {

@@ -2,12 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useLocale } from "@/lib/locale-context";
-import { translateServiceCategory } from "@/lib/translations";
+import {
+  translateServiceCategory,
+  translateShopCategory,
+  type TranslationKey,
+} from "@/lib/translations";
 import { categories } from "@/lib/products";
 import { serviceCategoryNames } from "@/lib/services";
 
 /** Matches seller regions; values align with product `country` field (full MK name). */
 const LISTING_COUNTRIES = ["Albania", "Serbia", "North Macedonia"] as const;
+
+function listingCountryLabel(country: string, t: (key: TranslationKey) => string) {
+  if (country === "Albania") return t("listing.countryAlbania");
+  if (country === "Serbia") return t("listing.countrySerbia");
+  if (country === "North Macedonia") return t("listing.countryNorthMacedonia");
+  return country;
+}
 
 type Tab = "product" | "service";
 
@@ -163,6 +174,33 @@ export default function ListingOfferModal({
     "mt-1 w-full rounded-xl border border-charcoal/15 bg-white px-3 py-2 text-sm text-charcoal placeholder:text-charcoal/35 focus:border-green focus:outline-none focus:ring-1 focus:ring-green/30";
   const labelClass = "block text-xs font-medium text-charcoal/70";
 
+  function handleFieldInvalid(
+    e: React.InvalidEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) {
+    const el = e.currentTarget;
+    if (el.validity.valueMissing) {
+      el.setCustomValidity(t("listing.validationRequired"));
+    } else if (el.validity.tooShort && (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) {
+      el.setCustomValidity(
+        t("listing.validationMinLength")
+          .replace(/\{min\}/g, String(el.minLength))
+          .replace(/\{count\}/g, String(el.value.length))
+      );
+    } else if (el.validity.typeMismatch && el instanceof HTMLInputElement) {
+      if (el.type === "email") el.setCustomValidity(t("listing.validationEmail"));
+      else if (el.type === "url") el.setCustomValidity(t("listing.validationUrl"));
+      else el.setCustomValidity(t("listing.validationRequired"));
+    } else {
+      el.setCustomValidity(t("listing.validationRequired"));
+    }
+  }
+
+  function clearFieldValidity(e: {
+    currentTarget: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  }) {
+    e.currentTarget.setCustomValidity("");
+  }
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm"
@@ -246,12 +284,15 @@ export default function ListingOfferModal({
 
               {tab === "product" ? (
                 <form onSubmit={submitProduct} className="mt-5 space-y-3">
+                  <p className="text-xs text-charcoal/50 leading-snug">{t("listing.requiredLegend")}</p>
                   <div>
                     <label className={labelClass}>{t("listing.productName")} *</label>
                     <input
                       className={inputClass}
                       value={productName}
                       onChange={(e) => setProductName(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       required
                       maxLength={200}
                     />
@@ -262,6 +303,8 @@ export default function ListingOfferModal({
                       className={`${inputClass} min-h-[72px]`}
                       value={productDesc}
                       onChange={(e) => setProductDesc(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       required
                       minLength={10}
                       maxLength={2000}
@@ -287,6 +330,8 @@ export default function ListingOfferModal({
                         className={inputClass}
                         value={productPrice}
                         onChange={(e) => setProductPrice(e.target.value)}
+                        onInvalid={handleFieldInvalid}
+                        onInput={clearFieldValidity}
                         required
                         placeholder="0"
                       />
@@ -297,11 +342,16 @@ export default function ListingOfferModal({
                       <select
                         className={inputClass}
                         value={productCategory}
-                        onChange={(e) => setProductCategory(e.target.value)}
+                        onChange={(e) => {
+                          clearFieldValidity(e);
+                          setProductCategory(e.target.value);
+                        }}
+                        onInvalid={handleFieldInvalid}
+                        required
                       >
                         {categories.filter((c) => c !== "All").map((c) => (
                           <option key={c} value={c}>
-                            {c}
+                            {translateShopCategory(c, t)}
                           </option>
                         ))}
                       </select>
@@ -309,14 +359,31 @@ export default function ListingOfferModal({
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.artisan")} *</label>
-                    <input className={inputClass} value={productArtisan} onChange={(e) => setProductArtisan(e.target.value)} required maxLength={120} />
+                    <input
+                      className={inputClass}
+                      value={productArtisan}
+                      onChange={(e) => setProductArtisan(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
+                      required
+                      maxLength={120}
+                    />
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.country")} *</label>
-                    <select className={inputClass} value={productCountry} onChange={(e) => setProductCountry(e.target.value)}>
+                    <select
+                      className={inputClass}
+                      value={productCountry}
+                      onChange={(e) => {
+                        clearFieldValidity(e);
+                        setProductCountry(e.target.value);
+                      }}
+                      onInvalid={handleFieldInvalid}
+                      required
+                    >
                       {LISTING_COUNTRIES.map((c) => (
                         <option key={c} value={c}>
-                          {c}
+                          {listingCountryLabel(c, t)}
                         </option>
                       ))}
                     </select>
@@ -328,6 +395,8 @@ export default function ListingOfferModal({
                       className={inputClass}
                       value={productImage}
                       onChange={(e) => setProductImage(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       placeholder="https://"
                       maxLength={2000}
                     />
@@ -339,6 +408,8 @@ export default function ListingOfferModal({
                       className={inputClass}
                       value={productEmail}
                       onChange={(e) => setProductEmail(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       autoComplete="email"
                     />
                   </div>
@@ -349,6 +420,8 @@ export default function ListingOfferModal({
                       className={inputClass}
                       value={productPhone}
                       onChange={(e) => setProductPhone(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       required
                       minLength={6}
                       autoComplete="tel"
@@ -364,9 +437,18 @@ export default function ListingOfferModal({
                 </form>
               ) : (
                 <form onSubmit={submitService} className="mt-5 space-y-3">
+                  <p className="text-xs text-charcoal/50 leading-snug">{t("listing.requiredLegend")}</p>
                   <div>
                     <label className={labelClass}>{t("listing.contactName")} *</label>
-                    <input className={inputClass} value={svcName} onChange={(e) => setSvcName(e.target.value)} required maxLength={120} />
+                    <input
+                      className={inputClass}
+                      value={svcName}
+                      onChange={(e) => setSvcName(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
+                      required
+                      maxLength={120}
+                    />
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.contactEmail")}</label>
@@ -375,6 +457,8 @@ export default function ListingOfferModal({
                       className={inputClass}
                       value={svcEmail}
                       onChange={(e) => setSvcEmail(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       autoComplete="email"
                     />
                   </div>
@@ -385,6 +469,8 @@ export default function ListingOfferModal({
                       className={inputClass}
                       value={svcPhone}
                       onChange={(e) => setSvcPhone(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       required
                       minLength={6}
                       autoComplete="tel"
@@ -392,11 +478,28 @@ export default function ListingOfferModal({
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.serviceTitle")} *</label>
-                    <input className={inputClass} value={svcTitle} onChange={(e) => setSvcTitle(e.target.value)} required maxLength={200} />
+                    <input
+                      className={inputClass}
+                      value={svcTitle}
+                      onChange={(e) => setSvcTitle(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
+                      required
+                      maxLength={200}
+                    />
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.serviceCategory")} *</label>
-                    <select className={inputClass} value={svcCategory} onChange={(e) => setSvcCategory(e.target.value)}>
+                    <select
+                      className={inputClass}
+                      value={svcCategory}
+                      onChange={(e) => {
+                        clearFieldValidity(e);
+                        setSvcCategory(e.target.value);
+                      }}
+                      onInvalid={handleFieldInvalid}
+                      required
+                    >
                       {serviceCategoryNames
                         .filter((c) => c !== "All")
                         .map((c) => (
@@ -412,6 +515,8 @@ export default function ListingOfferModal({
                       className={`${inputClass} min-h-[100px]`}
                       value={svcDesc}
                       onChange={(e) => setSvcDesc(e.target.value)}
+                      onInvalid={handleFieldInvalid}
+                      onInput={clearFieldValidity}
                       required
                       minLength={20}
                       maxLength={4000}
@@ -423,10 +528,19 @@ export default function ListingOfferModal({
                   </div>
                   <div>
                     <label className={labelClass}>{t("listing.country")} *</label>
-                    <select className={inputClass} value={svcCountry} onChange={(e) => setSvcCountry(e.target.value)}>
+                    <select
+                      className={inputClass}
+                      value={svcCountry}
+                      onChange={(e) => {
+                        clearFieldValidity(e);
+                        setSvcCountry(e.target.value);
+                      }}
+                      onInvalid={handleFieldInvalid}
+                      required
+                    >
                       {LISTING_COUNTRIES.map((c) => (
                         <option key={c} value={c}>
-                          {c}
+                          {listingCountryLabel(c, t)}
                         </option>
                       ))}
                     </select>

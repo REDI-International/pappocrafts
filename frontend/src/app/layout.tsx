@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { LocaleProvider } from "@/lib/locale-context";
+import { isSupportedLocale, type Locale } from "@/lib/translations";
 import { SiteSettingsProvider } from "@/lib/site-settings-context";
 import PostHogProvider from "@/components/PostHogProvider";
 import Analytics from "@/components/Analytics";
@@ -84,19 +86,29 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const rawLocale = cookieStore.get("papposhop-locale")?.value;
+  const initialLocale: Locale | undefined = isSupportedLocale(rawLocale) ? rawLocale : undefined;
+  const htmlLang =
+    initialLocale === "cnr" ? "sr-ME" : initialLocale ?? "en";
+
   return (
-    <html lang="en">
+    <html lang={htmlLang} suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
         <StructuredData />
         <Analytics />
         <Suspense fallback={null}>
           <PostHogProvider>
-            <SiteSettingsProvider><LocaleProvider><CartProvider>{children}</CartProvider></LocaleProvider></SiteSettingsProvider>
+            <SiteSettingsProvider>
+              <LocaleProvider initialLocale={initialLocale}>
+                <CartProvider>{children}</CartProvider>
+              </LocaleProvider>
+            </SiteSettingsProvider>
           </PostHogProvider>
         </Suspense>
         <CookieConsent />
