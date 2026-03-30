@@ -1,5 +1,5 @@
 /** Fallback used in DB backfill and when legacy rows lack a number. */
-export const DEFAULT_LISTING_PHONE = "+38976622243";
+export const DEFAULT_LISTING_PHONE = "+38976805651";
 
 export function normalizeListingPhone(raw: unknown): string {
   return String(raw ?? "").trim();
