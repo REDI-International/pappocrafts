@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 
 const BUCKET = "product-images";
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
@@ -8,8 +9,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
-  "image/heic",
-  "image/heif",
 ]);
 
 function fileExtension(file: File): string {
@@ -19,8 +18,6 @@ function fileExtension(file: File): string {
   if (file.type === "image/png") return ".png";
   if (file.type === "image/webp") return ".webp";
   if (file.type === "image/gif") return ".gif";
-  if (file.type === "image/heic") return ".heic";
-  if (file.type === "image/heif") return ".heif";
   return ".jpg";
 }
 
@@ -31,6 +28,13 @@ function fileExtension(file: File): string {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
+    const captcha = await verifyTurnstileFromRequest(
+      formData.get("captchaToken") ?? formData.get("turnstileToken"),
+      request
+    );
+    if (!captcha.ok) {
+      return NextResponse.json({ error: captcha.error }, { status: 400 });
+    }
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
       return NextResponse.json({ error: "No image provided." }, { status: 400 });
@@ -40,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: "Unsupported image format. Use JPEG, PNG, WebP, GIF, HEIC, or HEIF." },
+        { error: "Unsupported image format. Use JPEG, PNG, WebP, or GIF." },
         { status: 400 }
       );
     }

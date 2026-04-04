@@ -248,15 +248,23 @@ export default function ListingOfferModal({
   async function uploadPublicListingImage(file: File): Promise<string> {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/public/upload", {
-      method: "POST",
-      body: formData,
-    });
-    const data = (await res.json().catch(() => ({}))) as { error?: unknown; url?: unknown };
-    if (!res.ok || typeof data.url !== "string") {
-      throw new Error(typeof data.error === "string" ? data.error : t("listing.error"));
+    if (captchaToken) formData.append("captchaToken", captchaToken);
+    try {
+      const res = await fetch("/api/public/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: unknown; url?: unknown };
+      if (!res.ok || typeof data.url !== "string") {
+        throw new Error(typeof data.error === "string" ? data.error : t("listing.error"));
+      }
+      return data.url;
+    } finally {
+      if (captchaRequired) {
+        setCaptchaToken(null);
+        setCaptchaRemountKey((k) => k + 1);
+      }
     }
-    return data.url;
   }
 
   function triggerProductImagePicker(index: number, source: "gallery" | "camera") {
