@@ -534,16 +534,39 @@ export default function ListingOfferModal({
                             type="button"
                             onClick={() => triggerProductImagePicker(i, "gallery")}
                             disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                            className="rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60"
                           >
+                            <svg
+                              className="h-3.5 w-3.5"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.7}
+                              aria-hidden="true"
+                            >
+                              <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+                              <circle cx="9" cy="10" r="1.5" />
+                              <path d="M4.5 16.5l5-4.5 3.5 3 3.5-3 3 2.5" />
+                            </svg>
                             Gallery
                           </button>
                           <button
                             type="button"
                             onClick={() => triggerProductImagePicker(i, "camera")}
                             disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                            className="rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60 sm:hidden"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60 sm:hidden"
                           >
+                            <svg
+                              className="h-3.5 w-3.5"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.7}
+                              aria-hidden="true"
+                            >
+                              <path d="M4 9.5h3l1.2-2h7.6l1.2 2h3v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+                              <circle cx="12" cy="13.5" r="3" />
+                            </svg>
                             Camera
                           </button>
                           {productUploadingIndex === i && (
@@ -658,16 +681,39 @@ export default function ListingOfferModal({
                         type="button"
                         onClick={() => triggerServiceImagePicker("gallery")}
                         disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                        className="rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60"
                       >
+                        <svg
+                          className="h-3.5 w-3.5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={1.7}
+                          aria-hidden="true"
+                        >
+                          <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+                          <circle cx="9" cy="10" r="1.5" />
+                          <path d="M4.5 16.5l5-4.5 3.5 3 3.5-3 3 2.5" />
+                        </svg>
                         Gallery
                       </button>
                       <button
                         type="button"
                         onClick={() => triggerServiceImagePicker("camera")}
                         disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                        className="rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60 sm:hidden"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60 sm:hidden"
                       >
+                        <svg
+                          className="h-3.5 w-3.5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={1.7}
+                          aria-hidden="true"
+                        >
+                          <path d="M4 9.5h3l1.2-2h7.6l1.2 2h3v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+                          <circle cx="12" cy="13.5" r="3" />
+                        </svg>
                         Camera
                       </button>
                       {serviceUploading && <span className="text-[11px] text-charcoal/45">Uploading…</span>}
