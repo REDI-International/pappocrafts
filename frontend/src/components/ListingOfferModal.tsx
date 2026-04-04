@@ -534,7 +534,7 @@ export default function ListingOfferModal({
                             type="button"
                             onClick={() => triggerProductImagePicker(i, "gallery")}
                             disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-green/35 bg-green/10 px-2.5 py-1 text-[11px] font-semibold text-green-dark shadow-sm shadow-green/10 hover:bg-green/15 hover:border-green/50 disabled:opacity-60"
                           >
                             <svg
                               className="h-3.5 w-3.5"
@@ -554,7 +554,7 @@ export default function ListingOfferModal({
                             type="button"
                             onClick={() => triggerProductImagePicker(i, "camera")}
                             disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60 sm:hidden"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-blue/35 bg-blue/10 px-2.5 py-1 text-[11px] font-semibold text-blue-dark shadow-sm shadow-blue/10 hover:bg-blue/15 hover:border-blue/50 disabled:opacity-60 sm:hidden"
                           >
                             <svg
                               className="h-3.5 w-3.5"
@@ -681,7 +681,7 @@ export default function ListingOfferModal({
                         type="button"
                         onClick={() => triggerServiceImagePicker("gallery")}
                         disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-green/35 bg-green/10 px-2.5 py-1 text-[11px] font-semibold text-green-dark shadow-sm shadow-green/10 hover:bg-green/15 hover:border-green/50 disabled:opacity-60"
                       >
                         <svg
                           className="h-3.5 w-3.5"
@@ -701,7 +701,7 @@ export default function ListingOfferModal({
                         type="button"
                         onClick={() => triggerServiceImagePicker("camera")}
                         disabled={submitting || productUploadingIndex !== null || serviceUploading}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-charcoal/15 px-2.5 py-1 text-[11px] font-medium text-charcoal/70 hover:bg-charcoal/5 disabled:opacity-60 sm:hidden"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-blue/35 bg-blue/10 px-2.5 py-1 text-[11px] font-semibold text-blue-dark shadow-sm shadow-blue/10 hover:bg-blue/15 hover:border-blue/50 disabled:opacity-60 sm:hidden"
                       >
                         <svg
                           className="h-3.5 w-3.5"

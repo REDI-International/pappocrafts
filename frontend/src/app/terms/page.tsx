@@ -17,77 +17,171 @@ export default function TermsPage() {
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <Link href="/" className="text-sm text-charcoal/50 hover:text-green transition-colors">&larr; Back to Home</Link>
         <h1 className="mt-6 font-serif text-4xl font-bold text-charcoal tracking-tight">Terms of Service</h1>
-        <p className="mt-2 text-charcoal/50 text-sm">Last updated: March 2026</p>
+        <p className="mt-2 text-charcoal/50 text-sm">Last updated: April 2026</p>
 
         <div className="mt-10 prose prose-charcoal max-w-none text-charcoal/80 text-sm leading-relaxed space-y-6">
           <section>
             <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">1. Acceptance of Terms</h2>
-            <p>By accessing and using PappoShop (pappo.org and papposhop.org), you agree to these Terms of Service. If you do not agree, please do not use our platform.</p>
+            <p>
+              By accessing and using PappoShop (pappo.com and papposhop.org), you agree to comply with and be
+              bound by these Terms of Service. If you do not agree, please do not use the platform.
+            </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">2. About PappoShop</h2>
-            <p>PappoShop is an online marketplace operated by REDI International that connects Roma artisans and entrepreneurs in the Western Balkans with customers. We facilitate the sale of handmade products and local services.</p>
+            <p>
+              PappoShop is an online marketplace operated by REDI International that connects independent Roma
+              Entrepreneurs and Service Providers from the Western Balkans with customers. The platform facilitates
+              the sale of handmade products, products and local services.
+            </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">3. Products &amp; Services</h2>
-            <p>All products are handmade by independent artisans. While we strive for accuracy, slight variations in colour, size, and finish are natural characteristics of handcrafted items and do not constitute defects.</p>
-            <p>Prices are displayed in Euros (EUR) and may be shown in other currencies for convenience. The final charge is always in EUR.</p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">3. Nature of the Platform</h2>
+            <p>
+              PappoShop acts as an intermediary between buyers and independent sellers. We do not produce, store,
+              or directly sell the products listed on the platform. Sellers are solely responsible for their
+              products, including descriptions, pricing, quality, and delivery.
+            </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">4. Orders &amp; Payment</h2>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">4. Products and Services</h2>
+            <p>
+              Products offered on the platform are provided by independent sellers and may include a variety of
+              goods and services. Product descriptions, specifications, and images are provided by sellers.
+            </p>
+            <p>
+              While we encourage accuracy, we do not guarantee that all information is complete, reliable, or
+              error-free. We strive to ensure accuracy in product descriptions, but we do not guarantee that all
+              information is complete, reliable, or error-free.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">5. Orders and Payment</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Orders are confirmed upon receipt of your order confirmation email</li>
-              <li>Online payments are processed securely through Stripe</li>
-              <li>&ldquo;Pay Later&rdquo; orders are confirmed upon receiving payment via bank transfer or cash on delivery</li>
-              <li>We reserve the right to cancel orders due to stock issues, pricing errors, or suspected fraud</li>
+              <li>Orders are confirmed upon receipt of an order confirmation email.</li>
+              <li>Payment is made exclusively upon delivery (Cash on Delivery).</li>
+              <li>Customers are required to pay the full amount in cash at the time of delivery.</li>
+              <li>Orders may be cancelled if the customer refuses to accept or pay for the delivery.</li>
+              <li>
+                We reserve the right to cancel or refuse any order due to stock issues, pricing errors, or
+                suspected fraudulent activity.
+              </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">5. Shipping &amp; Delivery</h2>
-            <p>Delivery times vary by region:</p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">6. Shipping and Delivery</h2>
+            <p>Shipping is available only within the following countries: Albania, Serbia, and North Macedonia.</p>
+            <p>Estimated delivery times:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Western Balkans:</strong> 3–7 business days</li>
-              <li><strong>European Union:</strong> 7–14 business days</li>
-              <li><strong>International:</strong> 14–21 business days</li>
+              <li>Domestic deliveries (within the same country): 1-3 business days</li>
+              <li>Cross-border deliveries (Albania, Serbia, North Macedonia): 2-5 business days</li>
             </ul>
-            <p>Free shipping is available for orders above the specified threshold for your region. Shipping costs are calculated at checkout.</p>
+            <p>
+              Delivery times may vary depending on the courier service and location. We work with regional
+              logistics providers, including Eco Logistic Service (ELS), to ensure reliable delivery.
+            </p>
+            <p>
+              Shipping costs are calculated at checkout. Free shipping may be available for orders above a specified
+              threshold, which is clearly indicated on the platform.
+            </p>
+            <p>
+              PappoShop is not responsible for delays caused by courier services, customs procedures (if
+              applicable), or other external factors.
+            </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">6. Returns &amp; Refunds</h2>
-            <p>We accept returns within 14 days of delivery for items in their original condition. Custom or personalised items cannot be returned unless defective. To initiate a return, contact us at <a href="mailto:petrica@redi-ngo.eu" className="text-green font-medium hover:underline">petrica@redi-ngo.eu</a> with your order number.</p>
-            <p>Refunds are processed to the original payment method within 10 business days of receiving the returned item.</p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">7. Returns and Refunds</h2>
+            <p>
+              Customers have the right to request a return or refund within 10 days of receiving the product, in
+              accordance with applicable consumer protection laws.
+            </p>
+            <p>To be eligible for a return:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>The item must be unused and in its original condition.</li>
+              <li>Proof of purchase must be provided.</li>
+              <li>
+                Return shipping costs may be the responsibility of the customer unless the product is defective or
+                incorrect.
+              </li>
+            </ul>
+            <p>Refunds are processed after the returned item is received and inspected.</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">7. User Accounts</h2>
-            <p>You are responsible for maintaining the confidentiality of your account credentials. You agree not to share your login details or use another person&apos;s account.</p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">8. User Responsibilities</h2>
+            <p>Users agree to:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Provide accurate and complete information.</li>
+              <li>Use the platform in compliance with applicable laws.</li>
+              <li>Not engage in fraudulent, abusive, or harmful activities.</li>
+            </ul>
+            <p>Users are responsible for maintaining the confidentiality of their account information.</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">8. Intellectual Property</h2>
-            <p>All content on PappoShop — including logos, text, images, and design — is owned by REDI International or our artisan partners and is protected by copyright law. You may not reproduce, distribute, or use our content without written permission.</p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">9. Intellectual Property</h2>
+            <p>
+              All content on the platform, including logos, text, graphics, and design, is the property of
+              PappoShop or its licensors and is protected by intellectual property laws. Unauthorized use is
+              prohibited.
+            </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">9. Limitation of Liability</h2>
-            <p>PappoShop is provided &ldquo;as is.&rdquo; We are not liable for indirect, incidental, or consequential damages arising from your use of the platform. Our total liability is limited to the amount paid for the relevant order.</p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">10. Privacy and Data Protection</h2>
+            <p>
+              We are committed to protecting your personal data. Please refer to our Privacy Policy for detailed
+              information on how your data is collected, used, and protected, in accordance with GDPR and
+              applicable laws.
+            </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">10. Changes to Terms</h2>
-            <p>We may update these terms from time to time. Material changes will be notified via email or a notice on the website. Continued use after changes constitutes acceptance.</p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">11. Limitation of Liability</h2>
+            <p>To the fullest extent permitted by law, PappoShop shall not be liable for:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Indirect, incidental, or consequential damages.</li>
+              <li>Losses resulting from delays, delivery issues, or product defects.</li>
+              <li>Actions or omissions of third-party sellers or service providers.</li>
+            </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">11. Contact</h2>
-            <p>For questions about these terms:<br />
-            <strong>REDI International</strong><br />
-            Email: <a href="mailto:petrica@redi-ngo.eu" className="text-green font-medium hover:underline">petrica@redi-ngo.eu</a></p>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">12. Governing Law</h2>
+            <p>These Terms shall be governed by and interpreted in accordance with the laws of North Macedonia.</p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">13. Dispute Resolution</h2>
+            <p>
+              Any disputes arising from the use of the platform shall be resolved through amicable negotiation.
+              If no resolution is reached, disputes shall be subject to the jurisdiction of the competent courts in
+              North Macedonia.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">14. Changes to Terms</h2>
+            <p>
+              We reserve the right to update or modify these Terms at any time. Changes will be effective upon
+              posting on the platform. Continued use of the platform constitutes acceptance of the updated Terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">15. Contact Information</h2>
+            <p>
+              For any questions or concerns regarding these Terms, please contact us at:{" "}
+              <a href="mailto:papposhop@redi-ngo.eu" className="text-green font-medium hover:underline">
+                papposhop@redi-ngo.eu
+              </a>
+            </p>
           </section>
         </div>
       </div>
