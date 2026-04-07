@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { applyListingWatermark, getUploadContentType } from "@/lib/listing-watermark";
 
 const BUCKET = "product-images";
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
@@ -56,9 +57,11 @@ export async function POST(request: NextRequest) {
     const filePath = `public-listings/${datePrefix}/${baseName}-${crypto.randomUUID()}${ext}`;
 
     const supabase = createAdminClient();
-    const bytes = await file.arrayBuffer();
+    const originalBytes = await file.arrayBuffer();
+    const bytes = await applyListingWatermark(originalBytes);
+    const contentType = getUploadContentType(file.type);
     const { error: uploadError } = await supabase.storage.from(BUCKET).upload(filePath, bytes, {
-      contentType: file.type,
+      contentType,
       upsert: false,
     });
     if (uploadError) {

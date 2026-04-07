@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSession } from "@/lib/admin-store";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  watermarkListingImage,
+  watermarkOutputMimeForUpload,
+} from "@/lib/listing-watermark";
 
 const BUCKET = "product-images";
 
@@ -39,10 +43,12 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient();
 
     const bytes = await file.arrayBuffer();
+    const watermarked = await watermarkListingImage(Buffer.from(bytes), file.type);
+    const uploadMime = watermarkOutputMimeForUpload(file.type);
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(filePath, bytes, {
-        contentType: file.type,
+      .upload(filePath, watermarked, {
+        contentType: uploadMime,
         upsert: false,
       });
 
