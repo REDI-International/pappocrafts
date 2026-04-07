@@ -38,7 +38,6 @@ function ShopContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [preview, setPreview] = useState<Product | null>(null);
   const { t, formatProductRegionalPrice } = useLocale();
 
   const loadProducts = useCallback(async () => {
@@ -85,16 +84,6 @@ function ShopContent() {
     });
   }, [searchParams, listingBase]);
 
-  const closePreview = useCallback(() => setPreview(null), []);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") closePreview();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [closePreview]);
-
   const countryOptions = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => {
@@ -117,31 +106,11 @@ function ShopContent() {
     return p?.businessName || "";
   }, [activeBusinessSlug, products]);
 
-  const setBusinessFilter = (slug: string) => {
-    setActiveBusinessSlug(slug);
-    setActiveArtisan("");
-    const cat = activeCategory !== "All" ? `&category=${encodeURIComponent(activeCategory)}` : "";
-    router.replace(`${listingBase}?business=${encodeURIComponent(slug)}${cat}`);
-  };
-
-  const setArtisanFilter = (name: string) => {
-    setActiveArtisan(name);
-    setActiveBusinessSlug("");
-    const cat = activeCategory !== "All" ? `&category=${encodeURIComponent(activeCategory)}` : "";
-    router.replace(`${listingBase}?artisan=${encodeURIComponent(name)}${cat}`);
-  };
-
   const clearMakerFilter = () => {
     setActiveArtisan("");
     setActiveBusinessSlug("");
     const cat = activeCategory !== "All" ? `?category=${encodeURIComponent(activeCategory)}` : "";
     router.replace(`${listingBase}${cat}`);
-  };
-
-  const filterByMakerFromPreview = (p: Product) => {
-    closePreview();
-    if (p.businessSlug) setBusinessFilter(p.businessSlug);
-    else setArtisanFilter(p.artisan);
   };
 
   const filtered = useMemo(() => {
@@ -416,11 +385,10 @@ function ShopContent() {
                   const isFirstOnPage = pageIdx === 0;
                   const isFeatured = hasFeaturedMarker(product.tags);
                   return (
-                  <button
+                  <Link
                     key={product.id}
-                    type="button"
-                    onClick={() => setPreview(product)}
-                    className={`group text-left rounded-2xl bg-white overflow-hidden transition-all border ${
+                    href={`/shop/${product.id}`}
+                    className={`group block text-left rounded-2xl bg-white overflow-hidden transition-all border ${
                       isFirstOnPage
                         ? "ring-2 ring-green/30 ring-offset-2 ring-offset-white border-green/35 shadow-md hover:shadow-lg"
                         : isFeatured
@@ -475,9 +443,9 @@ function ShopContent() {
                           {product.inStock ? "In stock" : "Out of stock"}
                         </div>
                       </div>
-                      <p className="mt-3 text-xs font-medium text-green">Quick preview — click for details</p>
+                      <p className="mt-3 text-xs font-medium text-green">Open full product page</p>
                     </div>
-                  </button>
+                  </Link>
                   );
                 })}
               </div>
@@ -509,72 +477,6 @@ function ShopContent() {
           )}
         </div>
       </main>
-
-      {preview && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="product-preview-title"
-          onClick={closePreview}
-        >
-          <div
-            className="relative max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-charcoal/10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={closePreview}
-              className="absolute right-4 top-4 rounded-full p-2 text-charcoal/40 hover:bg-charcoal/5 hover:text-charcoal z-10"
-              aria-label="Close"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <div className="p-6 pt-10">
-              <div className="relative mx-auto w-full max-w-[280px] aspect-square overflow-hidden rounded-2xl bg-light">
-                <Image src={preview.image} alt={preview.name} fill className="object-cover" sizes="280px" unoptimized />
-              </div>
-              <div className="mt-5 text-center sm:text-left">
-                <h2 id="product-preview-title" className="font-serif text-2xl font-bold text-charcoal pr-8">
-                  {preview.name}
-                </h2>
-                <p className="text-sm text-charcoal/60 mt-0.5">{translateShopCategory(preview.category, t)}</p>
-                <p className="text-xs text-charcoal/45 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => filterByMakerFromPreview(preview)}
-                    className="font-medium text-charcoal/70 hover:text-green transition-colors"
-                  >
-                    {preview.businessName}
-                  </button>
-                  {" · "}
-                  {preview.country}
-                </p>
-              </div>
-              <p className="mt-4 text-sm text-charcoal/70 leading-relaxed">{preview.description}</p>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <span className="font-bold text-green text-lg">
-                  {formatProductRegionalPrice(preview.price, preview.currency)}
-                </span>
-                <span className="text-xs text-charcoal/45 flex items-center gap-1">
-                  <span className={`h-2 w-2 rounded-full ${preview.inStock ? "bg-green" : "bg-charcoal/25"}`} />
-                  {preview.inStock ? "In stock" : "Out of stock"}
-                </span>
-              </div>
-              <div className="mt-6">
-                <Link
-                  href={`/shop/${preview.id}`}
-                  className="block w-full rounded-xl border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors"
-                >
-                  Full product page
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </>
