@@ -27,6 +27,10 @@ export interface ServiceProvider {
   languagesSpoken?: string;
   /** Cal.com, Calendly, or similar booking URL. */
   bookingCalendarUrl?: string;
+  /** Optional seller details from admin profile. */
+  sellerName?: string;
+  sellerBiography?: string;
+  sellerLogoUrl?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +59,18 @@ export function mapSupabaseServiceRow(row: any): ServiceProvider {
     yearsExperience: row.years_experience || "",
     languagesSpoken: row.languages_spoken || "",
     bookingCalendarUrl: row.booking_calendar_url || "",
+    sellerName:
+      (typeof row.seller_name === "string" && row.seller_name.trim())
+        ? row.seller_name.trim()
+        : undefined,
+    sellerBiography:
+      (typeof row.seller_biography === "string" && row.seller_biography.trim())
+        ? row.seller_biography.trim()
+        : undefined,
+    sellerLogoUrl:
+      (typeof row.seller_logo_url === "string" && row.seller_logo_url.trim())
+        ? row.seller_logo_url.trim()
+        : undefined,
   };
 }
 

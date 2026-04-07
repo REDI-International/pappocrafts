@@ -20,6 +20,10 @@ export interface Product {
   image: string;
   /** Gallery URLs in order (max 5). */
   images: string[];
+  /** Optional seller details from admin profile. */
+  sellerName?: string;
+  sellerBiography?: string;
+  sellerLogoUrl?: string;
   tags: string[];
   inStock: boolean;
 }
@@ -98,6 +102,18 @@ export function mapSupabaseProduct(row: any): Product {
     phone: typeof row.phone === "string" && row.phone.trim() ? row.phone.trim() : "",
     image,
     images: images.length ? images : image ? [image] : [],
+    sellerName:
+      (typeof row.seller_name === "string" && row.seller_name.trim())
+        ? row.seller_name.trim()
+        : undefined,
+    sellerBiography:
+      (typeof row.seller_biography === "string" && row.seller_biography.trim())
+        ? row.seller_biography.trim()
+        : undefined,
+    sellerLogoUrl:
+      (typeof row.seller_logo_url === "string" && row.seller_logo_url.trim())
+        ? row.seller_logo_url.trim()
+        : undefined,
     tags: Array.isArray(row.tags) ? row.tags : [],
     inStock: row.in_stock !== false,
   };

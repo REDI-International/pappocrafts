@@ -46,7 +46,16 @@ function SellerDashboard() {
     business_name: string;
     business_slug: string;
     base_country: string | null;
+    biography?: string;
+    logo_url?: string;
   } | null>(null);
+  const [profileForm, setProfileForm] = useState({
+    biography: "",
+    logoUrl: "",
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState("");
+  const [profileErr, setProfileErr] = useState("");
   const [rows, setRows] = useState<SellerProductRow[]>([]);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -71,7 +80,13 @@ function SellerDashboard() {
     fetch("/api/seller/me", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => {
-        if (d.business_name) setProfile(d);
+        if (d.business_name) {
+          setProfile(d);
+          setProfileForm({
+            biography: typeof d.biography === "string" ? d.biography : "",
+            logoUrl: typeof d.logo_url === "string" ? d.logo_url : "",
+          });
+        }
       })
       .catch(() => {});
     fetch("/api/seller/products", { headers: { Authorization: `Bearer ${token}` } })
@@ -160,6 +175,47 @@ function SellerDashboard() {
     setErr("");
     setMsg("");
     resetForm();
+  }
+
+  async function saveSellerProfile(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setProfileSaving(true);
+    setProfileErr("");
+    setProfileMsg("");
+    try {
+      const res = await fetch("/api/seller/me", {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          biography: profileForm.biography,
+          logoUrl: profileForm.logoUrl,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setProfileErr(data.error || "Failed to save profile.");
+        return;
+      }
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              biography: typeof data.biography === "string" ? data.biography : profileForm.biography,
+              logo_url: typeof data.logo_url === "string" ? data.logo_url : profileForm.logoUrl,
+            }
+          : prev
+      );
+      setProfileForm({
+        biography: typeof data.biography === "string" ? data.biography : profileForm.biography,
+        logoUrl: typeof data.logo_url === "string" ? data.logo_url : profileForm.logoUrl,
+      });
+      setProfileMsg("Public profile saved.");
+    } catch {
+      setProfileErr("Failed to save profile.");
+    } finally {
+      setProfileSaving(false);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -257,6 +313,46 @@ function SellerDashboard() {
           </p>
         </div>
       )}
+
+      <div>
+        <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-4">Public profile</h2>
+        <form onSubmit={saveSellerProfile} className="space-y-4 max-w-lg">
+          <div>
+            <label className="text-xs text-charcoal/50">Seller biography (optional)</label>
+            <textarea
+              rows={4}
+              maxLength={1500}
+              value={profileForm.biography}
+              onChange={(e) => setProfileForm((f) => ({ ...f, biography: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              placeholder="Tell buyers about your story, craft, and work."
+            />
+            <p className="mt-1 text-[11px] text-charcoal/45">
+              {profileForm.biography.length}/1500
+            </p>
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Seller logo URL (optional)</label>
+            <input
+              type="url"
+              value={profileForm.logoUrl}
+              onChange={(e) => setProfileForm((f) => ({ ...f, logoUrl: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              placeholder="https://..."
+            />
+            <p className="mt-1 text-[11px] text-charcoal/45">Use a direct image URL (JPG/PNG/WebP).</p>
+          </div>
+          {profileErr && <p className="text-sm text-red-600">{profileErr}</p>}
+          {profileMsg && <p className="text-sm text-green">{profileMsg}</p>}
+          <button
+            type="submit"
+            disabled={profileSaving}
+            className="rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-dark disabled:opacity-60"
+          >
+            {profileSaving ? "Saving..." : "Save public profile"}
+          </button>
+        </form>
+      </div>
 
       <div>
         <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-3">Your products</h2>
