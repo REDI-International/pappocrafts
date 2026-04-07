@@ -105,6 +105,8 @@ function SellerDashboard() {
   const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : "";
   const productGalleryInputRef = useRef<HTMLInputElement>(null);
   const productCameraInputRef = useRef<HTMLInputElement>(null);
+  const serviceGalleryInputRef = useRef<HTMLInputElement>(null);
+  const serviceCameraInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<{
     business_name: string;
     business_slug: string;
@@ -130,6 +132,7 @@ function SellerDashboard() {
   const [serviceErr, setServiceErr] = useState("");
   const [productUploadTargetIndex, setProductUploadTargetIndex] = useState<number | null>(null);
   const [productUploadingIndex, setProductUploadingIndex] = useState<number | null>(null);
+  const [serviceUploading, setServiceUploading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
