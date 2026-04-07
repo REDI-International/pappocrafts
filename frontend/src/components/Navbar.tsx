@@ -221,9 +221,9 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setListingModalOpen(true)}
-                className="inline-flex items-center justify-center rounded-full bg-green px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-dark transition-colors"
+                className="inline-flex items-center justify-center rounded-full bg-green px-5 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-green-dark transition-colors"
               >
-                {t("nav.listOffer")}
+                ADD PRODUCT/SERVICE
               </button>
             </div>
 
@@ -293,16 +293,6 @@ export default function Navbar() {
               >
                 {t("nav.support")}
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  setListingModalOpen(true);
-                }}
-                className="mt-2 w-full inline-flex items-center justify-center rounded-full bg-green px-5 py-2 text-sm font-semibold text-white hover:bg-green-dark transition-colors"
-              >
-                {t("nav.listOffer")}
-              </button>
             </div>
           </div>
         )}

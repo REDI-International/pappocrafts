@@ -98,7 +98,7 @@ const en: Translations = {
   "nav.mission": "Our Mission",
   "nav.browseProducts": "Browse Products",
   "nav.support": "Support",
-  "nav.listOffer": "Add product or service",
+  "nav.listOffer": "ADD PRODUCT/SERVICE",
   "listing.title": "Add a product or offer a service",
   "listing.subtitle": "Our team reviews every submission. Nothing goes live on the shop until it is approved.",
   "listing.tabProduct": "List a product",
