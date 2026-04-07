@@ -58,6 +58,25 @@ interface SellerAnalytics {
     service: number;
     profile: number;
   };
+  viewsByDay: {
+    product: Record<string, number>;
+    service: Record<string, number>;
+    profile: Record<string, number>;
+  };
+  orders: {
+    total: number;
+    newLast7Days: number;
+    revenueEur: number;
+    statusCounts: Record<string, number>;
+    recent: Array<{
+      id: string;
+      status: string;
+      paymentStatus: string;
+      createdAt: string;
+      sellerItems: number;
+      sellerTotalEur: number;
+    }>;
+  };
 }
 
 function SellerDashboard() {
@@ -394,6 +413,107 @@ function SellerDashboard() {
             </div>
           </div>
         </div>
+        {analytics?.viewsByDay && (
+          <div className="mt-3 rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Views in last 14 days</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "Product", color: "bg-green/80", data: analytics.viewsByDay.product },
+                { label: "Service", color: "bg-blue/80", data: analytics.viewsByDay.service },
+                { label: "Profile", color: "bg-purple-500/80", data: analytics.viewsByDay.profile },
+              ].map((series) => {
+                const entries = Object.entries(series.data || {}).sort((a, b) =>
+                  a[0].localeCompare(b[0])
+                );
+                const max = Math.max(
+                  1,
+                  ...entries.map(([, value]) =>
+                    Number.isFinite(Number(value)) ? Number(value) : 0
+                  )
+                );
+                const total = entries.reduce(
+                  (sum, [, value]) => sum + (Number.isFinite(Number(value)) ? Number(value) : 0),
+                  0
+                );
+                return (
+                  <div key={series.label} className="rounded-lg border border-charcoal/8 p-3">
+                    <p className="text-xs font-semibold text-charcoal/70">
+                      {series.label} views: {total}
+                    </p>
+                    <div className="mt-2 flex h-12 items-end gap-1">
+                      {entries.map(([day, value]) => {
+                        const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
+                        const h = Math.max(8, Math.round((numeric / max) * 100));
+                        return (
+                          <div
+                            key={`${series.label}-${day}`}
+                            title={`${day}: ${numeric}`}
+                            className={`w-2 rounded-sm ${series.color}`}
+                            style={{ height: `${h}%` }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {analytics?.orders && (
+          <div className="mt-3 rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Order overview</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-charcoal/8 p-3">
+                <p className="text-xs text-charcoal/45">Total seller orders</p>
+                <p className="mt-1 text-xl font-bold text-charcoal">{analytics.orders.total}</p>
+              </div>
+              <div className="rounded-lg border border-charcoal/8 p-3">
+                <p className="text-xs text-charcoal/45">New in 7 days</p>
+                <p className="mt-1 text-xl font-bold text-charcoal">{analytics.orders.newLast7Days}</p>
+              </div>
+              <div className="rounded-lg border border-charcoal/8 p-3">
+                <p className="text-xs text-charcoal/45">Revenue share (EUR)</p>
+                <p className="mt-1 text-xl font-bold text-charcoal">€{analytics.orders.revenueEur.toFixed(2)}</p>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              <div className="rounded-lg border border-charcoal/8 p-3">
+                <p className="text-xs font-semibold text-charcoal/70">Order status markers</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {Object.entries(analytics.orders.statusCounts || {}).map(([status, count]) => (
+                    <span
+                      key={status}
+                      className="rounded-full border border-charcoal/12 px-2.5 py-1 text-[11px] font-semibold text-charcoal/70"
+                    >
+                      {status}: {count}
+                    </span>
+                  ))}
+                  {Object.keys(analytics.orders.statusCounts || {}).length === 0 && (
+                    <span className="text-xs text-charcoal/45">No seller orders yet</span>
+                  )}
+                </div>
+              </div>
+              <div className="rounded-lg border border-charcoal/8 p-3">
+                <p className="text-xs font-semibold text-charcoal/70">Recent seller orders</p>
+                {analytics.orders.recent.length === 0 ? (
+                  <p className="mt-2 text-xs text-charcoal/45">No seller orders yet</p>
+                ) : (
+                  <ul className="mt-2 space-y-1.5 text-xs text-charcoal/65">
+                    {analytics.orders.recent.slice(0, 5).map((order) => (
+                      <li key={order.id} className="flex items-center justify-between gap-2">
+                        <span className="truncate">
+                          {order.id} · {order.status} · {order.sellerItems} items
+                        </span>
+                        <span className="font-semibold text-charcoal">€{order.sellerTotalEur.toFixed(2)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
