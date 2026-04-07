@@ -9,8 +9,10 @@ import { categories } from "@/lib/products";
 import { serviceCategories } from "@/lib/services";
 import { MAX_PRODUCT_IMAGES, normalizeProductImageUrls } from "@/lib/product-images";
 import { useLocale } from "@/lib/locale-context";
+import type { CurrencyCode } from "@/lib/locale-context";
 import { DEFAULT_LISTING_PHONE } from "@/lib/listing-phone";
 import { currencyForListingCountry } from "@/lib/country-currency";
+import { isListingCurrency } from "@/lib/eur-fallback-rates";
 
 interface UserInfo {
   email: string;
@@ -235,10 +237,13 @@ function SellerDashboard() {
         : typeof row.price === "string"
           ? row.price
           : "";
-    const rowCurrency =
+    const rowCurrencyRaw =
       typeof row.currency === "string" && row.currency.trim()
         ? row.currency.trim().toUpperCase()
         : currencyForListingCountry(rowCountry);
+    const rowCurrency: CurrencyCode = isListingCurrency(rowCurrencyRaw)
+      ? (rowCurrencyRaw as CurrencyCode)
+      : currencyForListingCountry(rowCountry);
     const rowPhone =
       (typeof row.phone === "string" && row.phone.trim()) ||
       (typeof row.submitter_phone === "string" && row.submitter_phone.trim()) ||
@@ -307,10 +312,15 @@ function SellerDashboard() {
       category: rowCategory,
       hourlyRate: row.hourly_rate == null ? "" : String(row.hourly_rate),
       fixedRateFrom: row.fixed_rate_from == null ? "" : String(row.fixed_rate_from),
-      currency:
-        typeof row.currency === "string" && row.currency.trim()
-          ? row.currency.trim().toUpperCase()
-          : currencyForListingCountry(rowCountry),
+      currency: (() => {
+        const candidate =
+          typeof row.currency === "string" && row.currency.trim()
+            ? row.currency.trim().toUpperCase()
+            : currencyForListingCountry(rowCountry);
+        return isListingCurrency(candidate)
+          ? (candidate as CurrencyCode)
+          : currencyForListingCountry(rowCountry);
+      })(),
       location: row.location || "",
       country: rowCountry,
       phone: row.phone || DEFAULT_LISTING_PHONE,

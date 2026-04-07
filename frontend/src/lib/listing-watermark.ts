@@ -26,11 +26,12 @@ export function outputExtensionForWatermarkMime(mime: string): string {
 }
 
 export async function applyPappoListingWatermark(
-  source: ArrayBuffer,
+  source: ArrayBufferLike,
   inputMime: string
 ): Promise<{ bytes: Buffer; mime: string }> {
   const outputMime = normalizeOutputMime(inputMime);
-  const baseImage = sharp(Buffer.from(source), { failOn: "none" });
+  const sourceBuffer = Buffer.from(new Uint8Array(source));
+  const baseImage = sharp(sourceBuffer, { failOn: "none" });
   const meta = await baseImage.metadata();
   const width = meta.width ?? 0;
   const height = meta.height ?? 0;
@@ -74,7 +75,7 @@ export async function applyPappoListingWatermark(
     .toBuffer();
 
   const rendered = applyOutputFormat(
-    sharp(Buffer.from(source), { failOn: "none" }).composite([
+    sharp(sourceBuffer, { failOn: "none" }).composite([
       {
         input: watermarkLayer,
       },
@@ -83,4 +84,45 @@ export async function applyPappoListingWatermark(
   );
   const bytes = await rendered.toBuffer();
   return { bytes, mime: outputMime };
+}
+
+/**
+ * Backward-compatible helper used by existing upload routes.
+ */
+export function getUploadContentType(inputMime: string): string {
+  return normalizeOutputMime(inputMime);
+}
+
+/**
+ * Backward-compatible helper used by existing upload routes.
+ */
+export function watermarkOutputMimeForUpload(inputMime: string): string {
+  return normalizeOutputMime(inputMime);
+}
+
+/**
+ * Backward-compatible helper used by existing upload routes.
+ */
+export async function watermarkListingImage(
+  source: ArrayBuffer | Buffer,
+  inputMime: string
+): Promise<Buffer> {
+  const asArrayBuffer =
+    source instanceof ArrayBuffer
+      ? source
+      : source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength);
+  const normalizedArrayBuffer =
+    asArrayBuffer instanceof ArrayBuffer ? asArrayBuffer : new Uint8Array(asArrayBuffer).buffer;
+  const { bytes } = await applyPappoListingWatermark(normalizedArrayBuffer, inputMime);
+  return bytes;
+}
+
+/**
+ * Backward-compatible helper used by existing upload routes.
+ */
+export async function applyListingWatermark(
+  source: ArrayBuffer | Buffer,
+  inputMime = FALLBACK_MIME
+): Promise<Buffer> {
+  return watermarkListingImage(source, inputMime);
 }
