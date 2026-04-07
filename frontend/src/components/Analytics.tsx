@@ -206,3 +206,59 @@ export function trackViewContent(params: {
     });
   }
 }
+
+type MarketplaceEventType = "product_view" | "service_view" | "profile_visit";
+
+const MARKETPLACE_SESSION_KEY = "papposhop-analytics-session-id";
+
+function readOrCreateMarketplaceSessionId(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const existing = localStorage.getItem(MARKETPLACE_SESSION_KEY);
+    if (existing && existing.trim()) return existing.trim();
+    const created = crypto.randomUUID();
+    localStorage.setItem(MARKETPLACE_SESSION_KEY, created);
+    return created;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Track first-party marketplace events into Supabase analytics_events.
+ */
+export function trackMarketplaceEvent(params: {
+  eventType: MarketplaceEventType;
+  listingId?: string;
+  sellerSlug?: string;
+  sellerName?: string;
+  pagePath?: string;
+}) {
+  if (typeof window === "undefined") return;
+
+  const payload = {
+    eventType: params.eventType,
+    listingId: params.listingId,
+    sellerSlug: params.sellerSlug,
+    sellerName: params.sellerName,
+    pagePath: params.pagePath || window.location.pathname + window.location.search,
+    sessionId: readOrCreateMarketplaceSessionId(),
+  };
+
+  try {
+    if ("sendBeacon" in navigator) {
+      const body = new Blob([JSON.stringify(payload)], { type: "application/json" });
+      navigator.sendBeacon("/api/public/analytics-event", body);
+      return;
+    }
+  } catch {
+    // Fallback to fetch below.
+  }
+
+  fetch("/api/public/analytics-event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => {});
+}

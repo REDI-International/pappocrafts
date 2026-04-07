@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { type Product, mapSupabaseProduct } from "@/lib/products";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
-import { trackViewContent } from "@/components/Analytics";
+import { trackMarketplaceEvent, trackViewContent } from "@/components/Analytics";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -42,6 +42,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         setProduct(mapped);
         setGalleryIndex(0);
         trackViewContent({ id: mapped.id, name: mapped.name, price: mapped.price, category: mapped.category });
+        trackMarketplaceEvent({
+          eventType: "product_view",
+          listingId: mapped.id,
+          sellerSlug: mapped.businessSlug || undefined,
+          sellerName: mapped.businessName || mapped.artisan || undefined,
+          pagePath: `/shop/${mapped.id}`,
+        });
 
         const relRes = await fetch(`/api/products?category=${encodeURIComponent(mapped.category)}`);
         if (relRes.ok) {

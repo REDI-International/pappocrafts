@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { getServiceProvider, serviceProviders, mapSupabaseServiceRow, type ServiceProvider } from "@/lib/services";
 import { useLocale } from "@/lib/locale-context";
 import { translateServiceCategory } from "@/lib/translations";
+import { trackMarketplaceEvent } from "@/components/Analytics";
 
 export default function ServiceProviderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -30,7 +31,14 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
         if (r.ok) {
           const d = await r.json();
           if (!cancelled && d?.id) {
-            setProvider(mapSupabaseServiceRow(d));
+            const mapped = mapSupabaseServiceRow(d);
+            setProvider(mapped);
+            trackMarketplaceEvent({
+              eventType: "service_view",
+              listingId: mapped.id,
+              sellerName: mapped.sellerName || mapped.name || undefined,
+              pagePath: `/services/${mapped.id}`,
+            });
             setLoading(false);
             return;
           }

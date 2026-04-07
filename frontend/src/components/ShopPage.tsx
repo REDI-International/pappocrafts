@@ -11,6 +11,7 @@ import { amountInListingCurrencyToEur } from "@/lib/eur-fallback-rates";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
 import { hasFeaturedMarker } from "@/lib/listing-featured";
+import { trackMarketplaceEvent } from "@/components/Analytics";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -67,6 +68,22 @@ function ShopContent() {
     const cat = searchParams.get("category");
     if (cat && categories.includes(cat)) setActiveCategory(cat);
   }, [searchParams]);
+
+  const trackedProfileVisitKeyRef = useRef<string>("");
+  useEffect(() => {
+    const businessSlug = searchParams.get("business") || "";
+    const artisan = searchParams.get("artisan") || "";
+    if (!businessSlug && !artisan) return;
+    const visitKey = businessSlug ? `business:${businessSlug}` : `artisan:${artisan}`;
+    if (trackedProfileVisitKeyRef.current === visitKey) return;
+    trackedProfileVisitKeyRef.current = visitKey;
+    trackMarketplaceEvent({
+      eventType: "profile_visit",
+      sellerSlug: businessSlug || undefined,
+      sellerName: artisan || undefined,
+      pagePath: `${listingBase}${window.location.search}`,
+    });
+  }, [searchParams, listingBase]);
 
   const closePreview = useCallback(() => setPreview(null), []);
 

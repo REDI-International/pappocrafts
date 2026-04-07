@@ -21,6 +21,18 @@ export async function GET(request: NextRequest) {
   const { count: outOfStockCount } = await db.from("products").select("*", { count: "exact", head: true }).eq("in_stock", false);
   const { count: availableServiceCount } = await db.from("services").select("*", { count: "exact", head: true }).eq("available", true);
   const { count: waitlistCount } = await db.from("waitlist").select("*", { count: "exact", head: true });
+  const { count: productViewsCount } = await db
+    .from("analytics_events")
+    .select("*", { count: "exact", head: true })
+    .eq("event_type", "product_view");
+  const { count: serviceViewsCount } = await db
+    .from("analytics_events")
+    .select("*", { count: "exact", head: true })
+    .eq("event_type", "service_view");
+  const { count: profileVisitsCount } = await db
+    .from("analytics_events")
+    .select("*", { count: "exact", head: true })
+    .eq("event_type", "profile_visit");
 
   const { data: recentOrders } = await db
     .from("orders")
@@ -45,6 +57,9 @@ export async function GET(request: NextRequest) {
     outOfStockCount: outOfStockCount || 0,
     availableServiceCount: availableServiceCount || 0,
     waitlistCount: waitlistCount || 0,
+    productViewsCount: productViewsCount || 0,
+    serviceViewsCount: serviceViewsCount || 0,
+    profileVisitsCount: profileVisitsCount || 0,
     recentOrders: recentOrders || [],
     productsByCategory: categoryCounts,
   });

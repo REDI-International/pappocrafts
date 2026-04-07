@@ -27,6 +27,9 @@ interface AnalyticsData {
   outOfStockCount: number;
   availableServiceCount: number;
   waitlistCount: number;
+  productViewsCount: number;
+  serviceViewsCount: number;
+  profileVisitsCount: number;
   recentOrders: { id: string; customer_name: string; total: number; status: string; created_at: string }[];
   productsByCategory: Record<string, number>;
 }
@@ -61,7 +64,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const token = localStorage.getItem("admin-token");
     if (!token) {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 0);
       return;
     }
     fetch("/api/admin/analytics", { headers: { Authorization: `Bearer ${token}` } })
@@ -103,6 +106,20 @@ export default function AnalyticsPage() {
           { label: "Avg Order", value: s ? `€${s.avgOrderValue.toFixed(2)}` : "€0", color: "text-cyan-400" },
           { label: "Items Sold (30d)", value: s ? String(s.totalItemsSold30d) : "0", color: "text-purple-400" },
           { label: "Waitlist", value: s ? String(s.waitlistCount) : "0", color: "text-indigo-400" },
+        ].map((kpi) => (
+          <div key={kpi.label} className="rounded-2xl bg-[#1A1D27] border border-white/5 p-4">
+            <p className="text-[11px] text-white/30">{kpi.label}</p>
+            <p className={`text-xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Marketplace usage signals */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[
+          { label: "Product views", value: s ? String(s.productViewsCount) : "0", color: "text-emerald-400" },
+          { label: "Service views", value: s ? String(s.serviceViewsCount) : "0", color: "text-blue-400" },
+          { label: "Profile visits", value: s ? String(s.profileVisitsCount) : "0", color: "text-purple-400" },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl bg-[#1A1D27] border border-white/5 p-4">
             <p className="text-[11px] text-white/30">{kpi.label}</p>
