@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { categories } from "@/lib/products";
+import { serviceCategories } from "@/lib/services";
 import { MAX_PRODUCT_IMAGES, normalizeProductImageUrls } from "@/lib/product-images";
 import { useLocale } from "@/lib/locale-context";
 import { DEFAULT_LISTING_PHONE } from "@/lib/listing-phone";
@@ -20,6 +21,8 @@ interface UserInfo {
 
 const SELLER_COUNTRIES = ["North Macedonia", "Serbia", "Albania"] as const;
 const DEFAULT_PRODUCT_CATEGORY = categories[1] ?? "Pottery & Ceramics";
+const DEFAULT_SERVICE_CATEGORY =
+  serviceCategories.find((c) => c.name === "Home Repair")?.name || serviceCategories[1]?.name || "Home Repair";
 
 interface SellerProductRow {
   id: string;
@@ -36,6 +39,24 @@ interface SellerProductRow {
   images?: unknown;
   in_stock?: boolean;
   currency?: string;
+}
+
+interface SellerServiceRow {
+  id: string;
+  name?: string;
+  title?: string;
+  description?: string;
+  long_description?: string;
+  category?: string;
+  hourly_rate?: number | string;
+  fixed_rate_from?: number | string | null;
+  currency?: string;
+  location?: string;
+  country?: string;
+  phone?: string;
+  image?: string;
+  available?: boolean;
+  response_time?: string;
 }
 
 interface SellerAnalytics {
@@ -99,10 +120,14 @@ function SellerDashboard() {
   const [profileMsg, setProfileMsg] = useState("");
   const [profileErr, setProfileErr] = useState("");
   const [rows, setRows] = useState<SellerProductRow[]>([]);
+  const [serviceRows, setServiceRows] = useState<SellerServiceRow[]>([]);
   const [analytics, setAnalytics] = useState<SellerAnalytics | null>(null);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [serviceMsg, setServiceMsg] = useState("");
+  const [serviceErr, setServiceErr] = useState("");
   const [productUploadTargetIndex, setProductUploadTargetIndex] = useState<number | null>(null);
   const [productUploadingIndex, setProductUploadingIndex] = useState<number | null>(null);
   const [form, setForm] = useState({
@@ -116,6 +141,22 @@ function SellerDashboard() {
     phone: DEFAULT_LISTING_PHONE,
     currency: currencyForListingCountry("North Macedonia"),
     inStock: true,
+  });
+  const [serviceForm, setServiceForm] = useState({
+    name: "",
+    title: "",
+    description: "",
+    longDescription: "",
+    category: DEFAULT_SERVICE_CATEGORY,
+    hourlyRate: "",
+    fixedRateFrom: "",
+    currency: currencyForListingCountry("North Macedonia"),
+    location: "",
+    country: "North Macedonia" as (typeof SELLER_COUNTRIES)[number],
+    phone: DEFAULT_LISTING_PHONE,
+    image: "",
+    responseTime: "Within 24 hours",
+    available: true,
   });
 
   const load = useCallback(() => {
@@ -135,6 +176,10 @@ function SellerDashboard() {
     fetch("/api/seller/products", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setRows(Array.isArray(d.products) ? d.products : []))
+      .catch(() => {});
+    fetch("/api/seller/services", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => setServiceRows(Array.isArray(d.services) ? d.services : []))
       .catch(() => {});
     fetch("/api/seller/analytics", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
@@ -219,6 +264,126 @@ function SellerDashboard() {
     setErr("");
     setMsg("");
     resetForm();
+  }
+
+  function resetServiceForm() {
+    setServiceForm({
+      name: "",
+      title: "",
+      description: "",
+      longDescription: "",
+      category: DEFAULT_SERVICE_CATEGORY,
+      hourlyRate: "",
+      fixedRateFrom: "",
+      currency: currencyForListingCountry("North Macedonia"),
+      location: "",
+      country: "North Macedonia",
+      phone: DEFAULT_LISTING_PHONE,
+      image: "",
+      responseTime: "Within 24 hours",
+      available: true,
+    });
+  }
+
+  function startEditService(row: SellerServiceRow) {
+    const rowCountry = SELLER_COUNTRIES.includes((row.country || "") as (typeof SELLER_COUNTRIES)[number])
+      ? (row.country as (typeof SELLER_COUNTRIES)[number])
+      : "North Macedonia";
+    const rowCategory =
+      typeof row.category === "string" && serviceCategories.some((c) => c.name === row.category)
+        ? row.category
+        : DEFAULT_SERVICE_CATEGORY;
+    setServiceErr("");
+    setServiceMsg("");
+    setEditingServiceId(row.id);
+    setServiceForm({
+      name: row.name || "",
+      title: row.title || "",
+      description: row.description || "",
+      longDescription: row.long_description || "",
+      category: rowCategory,
+      hourlyRate: row.hourly_rate == null ? "" : String(row.hourly_rate),
+      fixedRateFrom: row.fixed_rate_from == null ? "" : String(row.fixed_rate_from),
+      currency:
+        typeof row.currency === "string" && row.currency.trim()
+          ? row.currency.trim().toUpperCase()
+          : currencyForListingCountry(rowCountry),
+      location: row.location || "",
+      country: rowCountry,
+      phone: row.phone || DEFAULT_LISTING_PHONE,
+      image: row.image || "",
+      responseTime: row.response_time || "Within 24 hours",
+      available: row.available !== false,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEditService() {
+    setEditingServiceId(null);
+    setServiceErr("");
+    setServiceMsg("");
+    resetServiceForm();
+  }
+
+  async function submitService(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setServiceMsg("");
+    setServiceErr("");
+    const isEditing = !!editingServiceId;
+    const res = await fetch("/api/seller/services", {
+      method: isEditing ? "PATCH" : "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editingServiceId || undefined,
+        name: serviceForm.name,
+        title: serviceForm.title,
+        description: serviceForm.description,
+        longDescription: serviceForm.longDescription || serviceForm.description,
+        category: serviceForm.category,
+        hourlyRate: parseFloat(serviceForm.hourlyRate) || 0,
+        fixedRateFrom: serviceForm.fixedRateFrom.trim() ? parseFloat(serviceForm.fixedRateFrom) : null,
+        currency: serviceForm.currency,
+        location: serviceForm.location,
+        country: serviceForm.country,
+        phone: serviceForm.phone.trim(),
+        image: serviceForm.image.trim(),
+        responseTime: serviceForm.responseTime,
+        available: serviceForm.available,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setServiceErr(typeof data?.error === "string" ? data.error : "Failed to save service.");
+      return;
+    }
+    setServiceMsg(isEditing ? "Service updated successfully." : "Service added successfully.");
+    setEditingServiceId(null);
+    resetServiceForm();
+    load();
+  }
+
+  async function removeService(id: string) {
+    if (!token) return;
+    const ok = window.confirm("Delete this service listing?");
+    if (!ok) return;
+    setServiceErr("");
+    setServiceMsg("");
+    const res = await fetch(`/api/seller/services?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setServiceErr(typeof data?.error === "string" ? data.error : "Failed to delete service.");
+      return;
+    }
+    if (editingServiceId === id) {
+      setEditingServiceId(null);
+      resetServiceForm();
+    }
+    setServiceMsg("Service deleted.");
+    load();
   }
 
   async function saveSellerProfile(e: React.FormEvent) {
@@ -596,7 +761,7 @@ function SellerDashboard() {
 
       <div>
         <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-4">
-          {editingProductId ? "Edit product post" : "Add product/service"}
+          {editingProductId ? "Edit product post" : "Add product"}
         </h2>
         <form onSubmit={submit} className="space-y-4 max-w-lg">
           <div>
@@ -781,6 +946,228 @@ function SellerDashboard() {
               <button
                 type="button"
                 onClick={cancelEdit}
+                className="rounded-xl border border-charcoal/20 px-5 py-2.5 text-sm font-semibold text-charcoal/70 hover:bg-charcoal/5"
+              >
+                Cancel edit
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-3">Your services</h2>
+        {serviceRows.length === 0 ? (
+          <p className="text-sm text-charcoal/45">No services yet. Add your first service below.</p>
+        ) : (
+          <ul className="space-y-2">
+            {serviceRows.map((s) => (
+              <li
+                key={String(s.id)}
+                className="flex items-center justify-between gap-3 rounded-xl border border-charcoal/8 px-4 py-3 text-sm"
+              >
+                <span className="font-medium text-charcoal truncate">
+                  {String(s.title || s.name || "Service")}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      s.available === false ? "bg-red-50 text-red-600" : "bg-green/10 text-green"
+                    }`}
+                  >
+                    {s.available === false ? "unavailable" : "available"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => startEditService(s)}
+                    className="rounded-lg border border-charcoal/15 px-2.5 py-1 text-xs font-semibold text-charcoal/70 hover:border-green/35 hover:text-green transition-colors"
+                  >
+                    Edit post
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeService(String(s.id))}
+                    className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-4">
+          {editingServiceId ? "Edit service post" : "Add service"}
+        </h2>
+        <form onSubmit={submitService} className="space-y-4 max-w-lg">
+          <div>
+            <label className="text-xs text-charcoal/50">Provider name</label>
+            <input
+              required
+              value={serviceForm.name}
+              onChange={(e) => setServiceForm((f) => ({ ...f, name: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Service title</label>
+            <input
+              required
+              value={serviceForm.title}
+              onChange={(e) => setServiceForm((f) => ({ ...f, title: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Description</label>
+            <textarea
+              required
+              rows={3}
+              value={serviceForm.description}
+              onChange={(e) => setServiceForm((f) => ({ ...f, description: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Long description (optional)</label>
+            <textarea
+              rows={4}
+              value={serviceForm.longDescription}
+              onChange={(e) => setServiceForm((f) => ({ ...f, longDescription: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Category</label>
+            <select
+              value={serviceForm.category}
+              onChange={(e) => setServiceForm((f) => ({ ...f, category: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+            >
+              {serviceCategories
+                .filter((c) => c.name !== "All")
+                .map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-charcoal/50">Hourly rate ({serviceForm.currency})</label>
+              <input
+                required
+                type="number"
+                min={0}
+                step="0.01"
+                value={serviceForm.hourlyRate}
+                onChange={(e) => setServiceForm((f) => ({ ...f, hourlyRate: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-charcoal/50">Fixed rate from (optional)</label>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={serviceForm.fixedRateFrom}
+                onChange={(e) => setServiceForm((f) => ({ ...f, fixedRateFrom: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-charcoal/50">Country (service)</label>
+              <select
+                value={serviceForm.country}
+                onChange={(e) =>
+                  setServiceForm((f) => {
+                    const nextCountry = e.target.value as (typeof SELLER_COUNTRIES)[number];
+                    return {
+                      ...f,
+                      country: nextCountry,
+                      currency: currencyForListingCountry(nextCountry),
+                    };
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              >
+                {SELLER_COUNTRIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-charcoal/50">City / location</label>
+              <input
+                value={serviceForm.location}
+                onChange={(e) => setServiceForm((f) => ({ ...f, location: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+                placeholder="e.g. Skopje"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Contact phone</label>
+            <input
+              required
+              type="tel"
+              minLength={6}
+              value={serviceForm.phone}
+              onChange={(e) => setServiceForm((f) => ({ ...f, phone: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              placeholder="+389…"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Image URL (optional)</label>
+            <input
+              type="url"
+              value={serviceForm.image}
+              onChange={(e) => setServiceForm((f) => ({ ...f, image: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              placeholder="https://..."
+            />
+          </div>
+          <div>
+            <label className="text-xs text-charcoal/50">Response time</label>
+            <input
+              value={serviceForm.responseTime}
+              onChange={(e) => setServiceForm((f) => ({ ...f, responseTime: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
+              placeholder="Within 24 hours"
+            />
+          </div>
+          <label className="inline-flex items-center gap-2 text-sm text-charcoal/70">
+            <input
+              type="checkbox"
+              checked={serviceForm.available}
+              onChange={(e) => setServiceForm((f) => ({ ...f, available: e.target.checked }))}
+              className="h-4 w-4 rounded border-charcoal/30 text-green focus:ring-green/40"
+            />
+            Available
+          </label>
+          {serviceErr && <p className="text-sm text-red-600">{serviceErr}</p>}
+          {serviceMsg && <p className="text-sm text-green">{serviceMsg}</p>}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              className="rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-dark"
+            >
+              {editingServiceId ? "Save service changes" : "Add service"}
+            </button>
+            {editingServiceId && (
+              <button
+                type="button"
+                onClick={cancelEditService}
                 className="rounded-xl border border-charcoal/20 px-5 py-2.5 text-sm font-semibold text-charcoal/70 hover:bg-charcoal/5"
               >
                 Cancel edit
