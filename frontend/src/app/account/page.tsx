@@ -38,6 +38,28 @@ interface SellerProductRow {
   currency?: string;
 }
 
+interface SellerAnalytics {
+  products: {
+    total: number;
+    approved: number;
+    pending: number;
+    rejected: number;
+    inStock: number;
+    outOfStock: number;
+    contactReveals: number;
+  };
+  services: {
+    total: number;
+    available: number;
+    unavailable: number;
+  };
+  views: {
+    product: number;
+    service: number;
+    profile: number;
+  };
+}
+
 function SellerDashboard() {
   const { t } = useLocale();
   const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : "";
@@ -58,6 +80,7 @@ function SellerDashboard() {
   const [profileMsg, setProfileMsg] = useState("");
   const [profileErr, setProfileErr] = useState("");
   const [rows, setRows] = useState<SellerProductRow[]>([]);
+  const [analytics, setAnalytics] = useState<SellerAnalytics | null>(null);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -93,6 +116,12 @@ function SellerDashboard() {
     fetch("/api/seller/products", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setRows(Array.isArray(d.products) ? d.products : []))
+      .catch(() => {});
+    fetch("/api/seller/analytics", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && typeof d === "object") setAnalytics(d);
+      })
       .catch(() => {});
   }, [token]);
 
@@ -309,6 +338,63 @@ function SellerDashboard() {
           </p>
         </div>
       )}
+
+      <div>
+        <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-3">Your dashboard</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Product views</p>
+            <p className="mt-1 text-2xl font-bold text-charcoal">{analytics?.views.product ?? 0}</p>
+            <p className="mt-1 text-xs text-charcoal/45">How many times your product pages were opened</p>
+          </div>
+          <div className="rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Profile visits</p>
+            <p className="mt-1 text-2xl font-bold text-charcoal">{analytics?.views.profile ?? 0}</p>
+            <p className="mt-1 text-xs text-charcoal/45">Visits to your public catalogue/profile filter</p>
+          </div>
+          <div className="rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Contact reveals</p>
+            <p className="mt-1 text-2xl font-bold text-charcoal">{analytics?.products.contactReveals ?? 0}</p>
+            <p className="mt-1 text-xs text-charcoal/45">How often buyers revealed your phone number</p>
+          </div>
+          <div className="rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Product status</p>
+            <div className="mt-2 space-y-1 text-xs text-charcoal/65">
+              <p>
+                <span className="font-semibold text-green">{analytics?.products.approved ?? 0}</span> approved
+              </p>
+              <p>
+                <span className="font-semibold text-amber-700">{analytics?.products.pending ?? 0}</span> pending
+              </p>
+              <p>
+                <span className="font-semibold text-red-600">{analytics?.products.rejected ?? 0}</span> rejected
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Stock snapshot</p>
+            <div className="mt-2 space-y-1 text-xs text-charcoal/65">
+              <p>
+                <span className="font-semibold text-green">{analytics?.products.inStock ?? 0}</span> in stock
+              </p>
+              <p>
+                <span className="font-semibold text-charcoal/70">{analytics?.products.outOfStock ?? 0}</span> out of stock
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-charcoal/10 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-charcoal/45">Services snapshot</p>
+            <div className="mt-2 space-y-1 text-xs text-charcoal/65">
+              <p>
+                <span className="font-semibold text-green">{analytics?.services.available ?? 0}</span> available
+              </p>
+              <p>
+                <span className="font-semibold text-charcoal/70">{analytics?.services.unavailable ?? 0}</span> unavailable
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div>
         <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-4">Public profile</h2>
