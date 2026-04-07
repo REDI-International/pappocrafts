@@ -1,4 +1,6 @@
 export type Locale = "en" | "sr" | "sq" | "bs" | "mk" | "cnr" | "tr";
+export const selectableLocales = ["en", "sr", "sq", "mk"] as const;
+export type SelectableLocale = (typeof selectableLocales)[number];
 
 export const translationKeys = [
   "nav.home", "nav.shop", "nav.services", "nav.howItWorks", "nav.mission", "nav.browseProducts", "nav.support", "nav.listOffer",
@@ -2094,6 +2096,11 @@ export const translations: Record<Locale, Translations> = { en, sr, sq, bs, mk, 
 /** Server-safe check for the `papposhop-locale` cookie (see root layout + LocaleProvider). */
 export function isSupportedLocale(code: string | undefined | null): code is Locale {
   return !!code && Object.prototype.hasOwnProperty.call(translations, code);
+}
+
+/** Active locales shown in UI and accepted from cookie/localStorage for runtime selection. */
+export function isSelectableLocale(code: string | undefined | null): code is SelectableLocale {
+  return !!code && (selectableLocales as readonly string[]).includes(code);
 }
 
 /** Maps DB/catalog English category strings to i18n keys. Filter values stay English for API/URL. */

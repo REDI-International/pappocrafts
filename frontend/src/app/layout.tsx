@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { LocaleProvider } from "@/lib/locale-context";
-import { isSupportedLocale, type Locale } from "@/lib/translations";
+import { isSelectableLocale, type SelectableLocale } from "@/lib/translations";
 import { SiteSettingsProvider } from "@/lib/site-settings-context";
 import PostHogProvider from "@/components/PostHogProvider";
 import Analytics from "@/components/Analytics";
@@ -93,9 +93,8 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const rawLocale = cookieStore.get("papposhop-locale")?.value;
-  const initialLocale: Locale | undefined = isSupportedLocale(rawLocale) ? rawLocale : undefined;
-  const htmlLang =
-    initialLocale === "cnr" ? "sr-ME" : initialLocale ?? "en";
+  const initialLocale: SelectableLocale | undefined = isSelectableLocale(rawLocale) ? rawLocale : undefined;
+  const htmlLang = initialLocale ?? "en";
 
   return (
     <html lang={htmlLang} suppressHydrationWarning>

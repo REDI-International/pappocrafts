@@ -1,4 +1,4 @@
-import type { Locale } from "./translations";
+import type { SelectableLocale } from "./translations";
 
 export type ShippingZone = "domestic" | "balkans" | "turkey" | "eu" | "international";
 export type PricingRegion = "balkans" | "turkey" | "western_europe" | "international";
@@ -89,31 +89,25 @@ export const shippingRates: ShippingRate[] = [
   },
 ];
 
-const localeToRegion: Record<Locale, PricingRegion> = {
+const localeToRegion: Record<SelectableLocale, PricingRegion> = {
   en: "western_europe",
   sr: "balkans",
   sq: "balkans",
-  bs: "balkans",
   mk: "balkans",
-  cnr: "balkans",
-  tr: "turkey",
 };
 
-const localeToShippingZone: Record<Locale, ShippingZone> = {
+const localeToShippingZone: Record<SelectableLocale, ShippingZone> = {
   en: "eu",
   sr: "balkans",
   sq: "balkans",
-  bs: "balkans",
   mk: "balkans",
-  cnr: "balkans",
-  tr: "turkey",
 };
 
-export function getRegionForLocale(locale: Locale): PricingRegion {
+export function getRegionForLocale(locale: SelectableLocale): PricingRegion {
   return localeToRegion[locale] || "western_europe";
 }
 
-export function getShippingZoneForLocale(locale: Locale): ShippingZone {
+export function getShippingZoneForLocale(locale: SelectableLocale): ShippingZone {
   return localeToShippingZone[locale] || "eu";
 }
 

@@ -10,7 +10,12 @@ import {
   useLayoutEffect,
   type ReactNode,
 } from "react";
-import { translations, isSupportedLocale, type Locale, type TranslationKey } from "./translations";
+import {
+  translations,
+  isSelectableLocale,
+  type SelectableLocale,
+  type TranslationKey,
+} from "./translations";
 import {
   getRegionForLocale,
   getShippingZoneForLocale,
@@ -25,7 +30,7 @@ import { UNITS_PER_ONE_EUR, amountInListingCurrencyToEur } from "./eur-fallback-
 export type CurrencyCode = "EUR" | "RSD" | "ALL" | "BAM" | "MKD" | "TRY";
 
 interface LocaleConfig {
-  code: Locale;
+  code: SelectableLocale;
   name: string;
   flag: string;
   defaultCurrency: CurrencyCode;
@@ -53,18 +58,15 @@ export const locales: LocaleConfig[] = [
   { code: "en", name: "English", flag: "🇬🇧", defaultCurrency: "EUR" },
   { code: "sr", name: "Srpski", flag: "🇷🇸", defaultCurrency: "RSD" },
   { code: "sq", name: "Shqip", flag: "🇦🇱", defaultCurrency: "ALL" },
-  { code: "bs", name: "Bosanski", flag: "🇧🇦", defaultCurrency: "BAM" },
   { code: "mk", name: "Македонски", flag: "🇲🇰", defaultCurrency: "MKD" },
-  { code: "cnr", name: "Crnogorski", flag: "🇲🇪", defaultCurrency: "EUR" },
-  { code: "tr", name: "Türkçe", flag: "🇹🇷", defaultCurrency: "TRY" },
 ];
 
 const FALLBACK_RATES: Record<string, number> = { ...UNITS_PER_ONE_EUR };
 
 interface LocaleContextValue {
-  locale: Locale;
+  locale: SelectableLocale;
   localeConfig: LocaleConfig;
-  setLocale: (locale: Locale) => void;
+  setLocale: (locale: SelectableLocale) => void;
   t: (key: TranslationKey) => string;
   currency: CurrencyCode;
   currencyConfig: CurrencyConfig;
@@ -91,7 +93,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 const LOCALE_COOKIE = "papposhop-locale";
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-function writeLocaleCookie(code: Locale) {
+function writeLocaleCookie(code: SelectableLocale) {
   if (typeof document === "undefined") return;
   document.cookie = `${LOCALE_COOKIE}=${code};path=/;max-age=${LOCALE_COOKIE_MAX_AGE};SameSite=Lax`;
 }
@@ -110,9 +112,9 @@ export function LocaleProvider({
 }: {
   children: ReactNode;
   /** From server `cookies()` so the first HTML paint matches the user’s language (not only after useEffect). */
-  initialLocale?: Locale;
+  initialLocale?: SelectableLocale;
 }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
+  const [locale, setLocaleState] = useState<SelectableLocale>(() => {
     if (initialLocaleProp && locales.some((l) => l.code === initialLocaleProp)) return initialLocaleProp;
     return "en";
   });
@@ -157,22 +159,22 @@ export function LocaleProvider({
     if (typeof window === "undefined") return;
     setLocaleState((current) => {
       const fromCookieRaw = readLocaleFromDocumentCookie();
-      if (isSupportedLocale(fromCookieRaw)) {
+      if (isSelectableLocale(fromCookieRaw)) {
         const next = fromCookieRaw;
         localStorage.setItem("papposhop-locale", next);
-        document.documentElement.lang = next === "cnr" ? "sr-ME" : next;
+        document.documentElement.lang = next;
         return next;
       }
       if (initialLocaleProp && locales.some((l) => l.code === initialLocaleProp)) {
         localStorage.setItem("papposhop-locale", initialLocaleProp);
-        document.documentElement.lang = initialLocaleProp === "cnr" ? "sr-ME" : initialLocaleProp;
+        document.documentElement.lang = initialLocaleProp;
         return initialLocaleProp;
       }
-      const ls = (localStorage.getItem("papposhop-locale") || localStorage.getItem("pappocrafts-locale")) as Locale | null;
+      const ls = (localStorage.getItem("papposhop-locale") || localStorage.getItem("pappocrafts-locale")) as SelectableLocale | null;
       const localeOk = ls && locales.some((l) => l.code === ls);
       if (localeOk) {
         writeLocaleCookie(ls);
-        document.documentElement.lang = ls === "cnr" ? "sr-ME" : ls;
+        document.documentElement.lang = ls;
         return ls;
       }
       return current;
@@ -194,12 +196,12 @@ export function LocaleProvider({
     }
   }, [locale]);
 
-  const setLocale = useCallback((code: Locale) => {
+  const setLocale = useCallback((code: SelectableLocale) => {
     setLocaleState(code);
     if (typeof window !== "undefined") {
       localStorage.setItem("papposhop-locale", code);
       writeLocaleCookie(code);
-      document.documentElement.lang = code === "cnr" ? "sr-ME" : code;
+      document.documentElement.lang = code;
     }
   }, []);
 

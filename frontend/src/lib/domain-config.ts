@@ -40,8 +40,8 @@ const BALKANS_CONFIG: DomainConfig = {
     { "@type": "Country", name: "North Macedonia" },
   ],
   ogLocale: "en_US",
-  alternateLocales: ["sr_RS", "sq_AL", "bs_BA", "mk_MK", "tr_TR"],
-  languages: ["en", "sr", "sq", "bs", "mk", "tr"],
+  alternateLocales: ["sr_RS", "sq_AL", "mk_MK"],
+  languages: ["en", "sr", "sq", "mk"],
   alternateUrl: "https://pappo.org",
 };
 
