@@ -47,6 +47,7 @@ export default function ListingOfferModal({
   const [productImages, setProductImages] = useState<string[]>(() => Array(MAX_PRODUCT_IMAGES).fill(""));
   const [productEmail, setProductEmail] = useState("");
   const [productPhone, setProductPhone] = useState("");
+  const [productInStock, setProductInStock] = useState(true);
 
   const [svcName, setSvcName] = useState("");
   const [svcEmail, setSvcEmail] = useState("");
@@ -59,6 +60,7 @@ export default function ListingOfferModal({
   const [svcHourlyRate, setSvcHourlyRate] = useState("");
   const [svcLocation, setSvcLocation] = useState("");
   const [svcCountry, setSvcCountry] = useState<string>(LISTING_COUNTRIES[2]);
+  const [svcAvailable, setSvcAvailable] = useState(true);
   const [svcNotes, setSvcNotes] = useState("");
   const [svcImageUrl, setSvcImageUrl] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -111,6 +113,7 @@ export default function ListingOfferModal({
     setProductImages(Array(MAX_PRODUCT_IMAGES).fill(""));
     setProductEmail("");
     setProductPhone("");
+    setProductInStock(true);
     setSvcName("");
     setSvcEmail("");
     setSvcPhone("");
@@ -120,6 +123,7 @@ export default function ListingOfferModal({
     setSvcHourlyRate("");
     setSvcLocation("");
     setSvcCountry(LISTING_COUNTRIES[2]);
+    setSvcAvailable(true);
     setSvcNotes("");
     setSvcImageUrl("");
     setCaptchaToken(null);
@@ -152,6 +156,7 @@ export default function ListingOfferModal({
           images: normalizeProductImageUrls(productImages),
           contactEmail: productEmail.trim() || undefined,
           contactPhone: productPhone,
+          inStock: productInStock,
           captchaToken: captchaToken || undefined,
         }),
       });
@@ -192,6 +197,7 @@ export default function ListingOfferModal({
           currency,
           location: svcLocation,
           country: svcCountry,
+          available: svcAvailable,
           notes: svcNotes || undefined,
           imageUrl: svcImageUrl.trim() || undefined,
           captchaToken: captchaToken || undefined,
@@ -621,6 +627,35 @@ export default function ListingOfferModal({
                       autoComplete="tel"
                     />
                   </div>
+                  <div>
+                    <label className={labelClass}>Stock status *</label>
+                    <div className="mt-1 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setProductInStock(true)}
+                        className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                          productInStock
+                            ? "border-green/50 bg-green/10 text-green-dark"
+                            : "border-charcoal/15 bg-white text-charcoal/65 hover:bg-charcoal/5"
+                        }`}
+                        aria-pressed={productInStock}
+                      >
+                        In stock
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProductInStock(false)}
+                        className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                          !productInStock
+                            ? "border-amber-400/60 bg-amber-50 text-amber-800"
+                            : "border-charcoal/15 bg-white text-charcoal/65 hover:bg-charcoal/5"
+                        }`}
+                        aria-pressed={!productInStock}
+                      >
+                        Out of stock
+                      </button>
+                    </div>
+                  </div>
                   <button
                     type="submit"
                     disabled={
@@ -838,6 +873,35 @@ export default function ListingOfferModal({
                   <div>
                     <label className={labelClass}>{t("listing.notes")}</label>
                     <textarea className={`${inputClass} min-h-[56px]`} value={svcNotes} onChange={(e) => setSvcNotes(e.target.value)} maxLength={2000} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Service availability *</label>
+                    <div className="mt-1 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSvcAvailable(true)}
+                        className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                          svcAvailable
+                            ? "border-green/50 bg-green/10 text-green-dark"
+                            : "border-charcoal/15 bg-white text-charcoal/65 hover:bg-charcoal/5"
+                        }`}
+                        aria-pressed={svcAvailable}
+                      >
+                        Available now
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSvcAvailable(false)}
+                        className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                          !svcAvailable
+                            ? "border-amber-400/60 bg-amber-50 text-amber-800"
+                            : "border-charcoal/15 bg-white text-charcoal/65 hover:bg-charcoal/5"
+                        }`}
+                        aria-pressed={!svcAvailable}
+                      >
+                        Not available now
+                      </button>
+                    </div>
                   </div>
                   <button
                     type="submit"

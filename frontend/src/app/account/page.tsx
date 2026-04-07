@@ -43,6 +43,7 @@ function SellerDashboard() {
     country: "North Macedonia" as (typeof SELLER_COUNTRIES)[number],
     artisan: "",
     phone: DEFAULT_LISTING_PHONE,
+    inStock: true,
   });
 
   const load = useCallback(() => {
@@ -80,6 +81,7 @@ function SellerDashboard() {
         country: form.country,
         artisan: form.artisan || undefined,
         phone: form.phone.trim(),
+        inStock: form.inStock,
       }),
     });
     const data = await res.json();
@@ -96,6 +98,7 @@ function SellerDashboard() {
       images: Array(MAX_PRODUCT_IMAGES).fill(""),
       artisan: "",
       phone: f.phone,
+      inStock: true,
     }));
     load();
   }
@@ -342,6 +345,15 @@ function SellerDashboard() {
               placeholder="+389…"
             />
           </div>
+          <label className="inline-flex items-center gap-2 text-sm text-charcoal/70">
+            <input
+              type="checkbox"
+              checked={form.inStock}
+              onChange={(e) => setForm((f) => ({ ...f, inStock: e.target.checked }))}
+              className="h-4 w-4 rounded border-charcoal/30 text-green focus:ring-green/40"
+            />
+            In stock
+          </label>
           {err && <p className="text-sm text-red-600">{err}</p>}
           {msg && <p className="text-sm text-green">{msg}</p>}
           <button

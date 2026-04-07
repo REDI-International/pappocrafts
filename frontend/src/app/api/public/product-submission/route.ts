@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
       fromGallery.length ? fromGallery : legacySingle ? [legacySingle] : []
     );
     const price = Number(body.price);
+    const inStock = body.inStock ?? body.in_stock;
+    const normalizedInStock = inStock === undefined ? true : Boolean(inStock);
     const currency = String(body.currency || "EUR").trim().toUpperCase() || "EUR";
 
     if (name.length < 2) {
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest) {
       image,
       images,
       tags: [] as string[],
-      in_stock: true,
+      in_stock: normalizedInStock,
       seller_id: null as string | null,
       business_name: artisan,
       business_slug,

@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     const hourlyRate = typeof hourlyRaw === "number" ? hourlyRaw : Number(String(hourlyRaw ?? "").replace(",", "."));
     const currency = String(body.currency || "EUR").trim().toUpperCase() || "EUR";
     const imageUrl = String(body.imageUrl || body.image_url || body.photoUrl || "").trim();
+    const available = body.available !== false;
 
     if (contactName.length < 2) {
       return NextResponse.json({ error: "Your name is required." }, { status: 400 });
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
       hourly_rate: Math.round(hourlyRate * 100) / 100,
       currency,
       image_url: imageUrl,
+      available,
     };
 
     const legacyPayload = {
@@ -106,6 +108,7 @@ export async function POST(request: NextRequest) {
       location,
       country,
       notes,
+      available,
     };
 
     let { error } = await db.from("service_listing_requests").insert(payload);
