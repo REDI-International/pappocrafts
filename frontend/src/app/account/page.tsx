@@ -9,6 +9,7 @@ import { categories } from "@/lib/products";
 import { MAX_PRODUCT_IMAGES, normalizeProductImageUrls } from "@/lib/product-images";
 import { useLocale } from "@/lib/locale-context";
 import { DEFAULT_LISTING_PHONE } from "@/lib/listing-phone";
+import { currencyForListingCountry } from "@/lib/country-currency";
 
 interface UserInfo {
   email: string;
@@ -38,7 +39,7 @@ interface SellerProductRow {
 }
 
 function SellerDashboard() {
-  const { currency, t } = useLocale();
+  const { t } = useLocale();
   const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : "";
   const productGalleryInputRef = useRef<HTMLInputElement>(null);
   const productCameraInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +72,7 @@ function SellerDashboard() {
     country: "North Macedonia" as (typeof SELLER_COUNTRIES)[number],
     artisan: "",
     phone: DEFAULT_LISTING_PHONE,
-    currency,
+    currency: currencyForListingCountry("North Macedonia"),
     inStock: true,
   });
 
@@ -99,11 +100,6 @@ function SellerDashboard() {
     load();
   }, [load]);
 
-  useEffect(() => {
-    if (editingProductId) return;
-    setForm((f) => ({ ...f, currency }));
-  }, [currency, editingProductId]);
-
   function rowImageSlots(row: SellerProductRow): string[] {
     const fromGallery = Array.isArray(row.images)
       ? row.images.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim())
@@ -124,7 +120,7 @@ function SellerDashboard() {
       country: "North Macedonia",
       artisan: "",
       phone: DEFAULT_LISTING_PHONE,
-      currency,
+      currency: currencyForListingCountry("North Macedonia"),
       inStock: true,
     });
   }
@@ -146,7 +142,7 @@ function SellerDashboard() {
     const rowCurrency =
       typeof row.currency === "string" && row.currency.trim()
         ? row.currency.trim().toUpperCase()
-        : currency;
+        : currencyForListingCountry(rowCountry);
     const rowPhone =
       (typeof row.phone === "string" && row.phone.trim()) ||
       (typeof row.submitter_phone === "string" && row.submitter_phone.trim()) ||
@@ -436,7 +432,16 @@ function SellerDashboard() {
               <label className="text-xs text-charcoal/50">Country (product)</label>
               <select
                 value={form.country}
-                onChange={(e) => setForm((f) => ({ ...f, country: e.target.value as (typeof SELLER_COUNTRIES)[number] }))}
+                onChange={(e) =>
+                  setForm((f) => {
+                    const nextCountry = e.target.value as (typeof SELLER_COUNTRIES)[number];
+                    return {
+                      ...f,
+                      country: nextCountry,
+                      currency: currencyForListingCountry(nextCountry),
+                    };
+                  })
+                }
                 className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
               >
                 {SELLER_COUNTRIES.map((c) => (

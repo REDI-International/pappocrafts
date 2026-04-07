@@ -11,9 +11,10 @@ import { categories } from "@/lib/products";
 import { serviceCategoryNames } from "@/lib/services";
 import { MAX_PRODUCT_IMAGES, normalizeProductImageUrls } from "@/lib/product-images";
 import ListingTurnstile, { isListingTurnstileConfigured } from "@/components/ListingTurnstile";
-
-/** Matches seller regions; values align with product `country` field (full MK name). */
-const LISTING_COUNTRIES = ["Albania", "Serbia", "North Macedonia"] as const;
+import {
+  LISTING_COUNTRIES,
+  currencyForListingCountry,
+} from "@/lib/country-currency";
 
 function listingCountryLabel(country: string, t: (key: TranslationKey) => string) {
   if (country === "Albania") return t("listing.countryAlbania");
@@ -31,7 +32,7 @@ export default function ListingOfferModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { t, currency } = useLocale();
+  const { t } = useLocale();
   const [tab, setTab] = useState<Tab>("product");
   const [done, setDone] = useState<"product" | "service" | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -68,6 +69,8 @@ export default function ListingOfferModal({
   const [productUploadingIndex, setProductUploadingIndex] = useState<number | null>(null);
   const [productUploadTargetIndex, setProductUploadTargetIndex] = useState<number | null>(null);
   const [serviceUploading, setServiceUploading] = useState(false);
+  const productCurrency = currencyForListingCountry(productCountry);
+  const serviceCurrency = currencyForListingCountry(svcCountry);
   const productGalleryInputRef = useRef<HTMLInputElement>(null);
   const productCameraInputRef = useRef<HTMLInputElement>(null);
   const serviceGalleryInputRef = useRef<HTMLInputElement>(null);
@@ -149,7 +152,7 @@ export default function ListingOfferModal({
           description: productDesc,
           longDescription: productLong,
           price: Number.isFinite(price) ? price : 0,
-          currency,
+          currency: productCurrency,
           category: productCategory,
           artisan: productArtisan,
           country: productCountry,
@@ -194,7 +197,7 @@ export default function ListingOfferModal({
           serviceCategory: svcCategory,
           serviceDescription: svcDesc,
           hourlyRate: Number.isFinite(hourly) ? hourly : 0,
-          currency,
+          currency: serviceCurrency,
           location: svcLocation,
           country: svcCountry,
           available: svcAvailable,
@@ -447,7 +450,7 @@ export default function ListingOfferModal({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2 sm:col-span-1">
                       <label className={labelClass}>
-                        {t("listing.priceEur")} ({currency}) *
+                        {t("listing.priceEur")} ({productCurrency}) *
                       </label>
                       <input
                         type="text"
@@ -817,7 +820,7 @@ export default function ListingOfferModal({
                   </div>
                   <div>
                     <label className={labelClass}>
-                      {t("listing.hourlyRate")} ({currency}) *
+                      {t("listing.hourlyRate")} ({serviceCurrency}) *
                     </label>
                     <input
                       type="text"

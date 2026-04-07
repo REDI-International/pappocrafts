@@ -92,6 +92,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 const LOCALE_COOKIE = "papposhop-locale";
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+const CURRENCY_LOCALE_KEY = "papposhop-currency-locale";
 
 function writeLocaleCookie(code: SelectableLocale) {
   if (typeof document === "undefined") return;
@@ -114,6 +115,10 @@ export function LocaleProvider({
   /** From server `cookies()` so the first HTML paint matches the user’s language (not only after useEffect). */
   initialLocale?: SelectableLocale;
 }) {
+  const defaultCurrencyForLocale = useCallback((code: SelectableLocale): CurrencyCode => {
+    return locales.find((l) => l.code === code)?.defaultCurrency || "EUR";
+  }, []);
+
   const [locale, setLocaleState] = useState<SelectableLocale>(() => {
     if (initialLocaleProp && locales.some((l) => l.code === initialLocaleProp)) return initialLocaleProp;
     return "en";
@@ -183,34 +188,41 @@ export function LocaleProvider({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const savedCurrency = (localStorage.getItem("papposhop-currency") || localStorage.getItem("pappocrafts-currency")) as CurrencyCode | null;
+    const savedCurrency = (
+      localStorage.getItem("papposhop-currency") || localStorage.getItem("pappocrafts-currency")
+    ) as CurrencyCode | null;
+    const savedCurrencyLocale = localStorage.getItem(CURRENCY_LOCALE_KEY);
     const currencyOk = savedCurrency && currencies.some((c) => c.code === savedCurrency);
-    if (currencyOk) {
+    if (currencyOk && savedCurrencyLocale === locale) {
       setCurrencyState(savedCurrency);
     } else {
-      const lc = locales.find((l) => l.code === locale);
-      if (lc) {
-        setCurrencyState(lc.defaultCurrency);
-        localStorage.setItem("papposhop-currency", lc.defaultCurrency);
-      }
+      const nextCurrency = defaultCurrencyForLocale(locale);
+      setCurrencyState(nextCurrency);
+      localStorage.setItem("papposhop-currency", nextCurrency);
+      localStorage.setItem(CURRENCY_LOCALE_KEY, locale);
     }
-  }, [locale]);
+  }, [locale, defaultCurrencyForLocale]);
 
   const setLocale = useCallback((code: SelectableLocale) => {
     setLocaleState(code);
+    const nextCurrency = defaultCurrencyForLocale(code);
+    setCurrencyState(nextCurrency);
     if (typeof window !== "undefined") {
       localStorage.setItem("papposhop-locale", code);
+      localStorage.setItem("papposhop-currency", nextCurrency);
+      localStorage.setItem(CURRENCY_LOCALE_KEY, code);
       writeLocaleCookie(code);
       document.documentElement.lang = code;
     }
-  }, []);
+  }, [defaultCurrencyForLocale]);
 
   const setCurrency = useCallback((code: CurrencyCode) => {
     setCurrencyState(code);
     if (typeof window !== "undefined") {
       localStorage.setItem("papposhop-currency", code);
+      localStorage.setItem(CURRENCY_LOCALE_KEY, locale);
     }
-  }, []);
+  }, [locale]);
 
   const t = useCallback(
     (key: TranslationKey): string => {
