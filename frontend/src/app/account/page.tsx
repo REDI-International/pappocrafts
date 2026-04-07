@@ -18,6 +18,24 @@ interface UserInfo {
 }
 
 const SELLER_COUNTRIES = ["North Macedonia", "Serbia", "Albania"] as const;
+const DEFAULT_PRODUCT_CATEGORY = categories[1] ?? "Pottery & Ceramics";
+
+interface SellerProductRow {
+  id: string;
+  name: string;
+  approval_status?: string;
+  description?: string;
+  price?: number | string;
+  category?: string;
+  country?: string;
+  artisan?: string;
+  phone?: string;
+  submitter_phone?: string;
+  image?: string;
+  images?: unknown;
+  in_stock?: boolean;
+  currency?: string;
+}
 
 function SellerDashboard() {
   const { currency, t } = useLocale();
@@ -29,20 +47,22 @@ function SellerDashboard() {
     business_slug: string;
     base_country: string | null;
   } | null>(null);
-  const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+  const [rows, setRows] = useState<SellerProductRow[]>([]);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [productUploadTargetIndex, setProductUploadTargetIndex] = useState<number | null>(null);
   const [productUploadingIndex, setProductUploadingIndex] = useState<number | null>(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
     price: "",
-    category: "Pottery & Ceramics",
+    category: DEFAULT_PRODUCT_CATEGORY,
     images: Array(MAX_PRODUCT_IMAGES).fill("") as string[],
     country: "North Macedonia" as (typeof SELLER_COUNTRIES)[number],
     artisan: "",
     phone: DEFAULT_LISTING_PHONE,
+    currency,
     inStock: true,
   });
 
@@ -56,7 +76,7 @@ function SellerDashboard() {
       .catch(() => {});
     fetch("/api/seller/products", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
-      .then((d) => setRows(d.products || []))
+      .then((d) => setRows(Array.isArray(d.products) ? d.products : []))
       .catch(() => {});
   }, [token]);
 
@@ -64,18 +84,98 @@ function SellerDashboard() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (editingProductId) return;
+    setForm((f) => ({ ...f, currency }));
+  }, [currency, editingProductId]);
+
+  function rowImageSlots(row: SellerProductRow): string[] {
+    const fromGallery = Array.isArray(row.images)
+      ? row.images.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim())
+      : [];
+    if (fromGallery.length > 0) return [...fromGallery.slice(0, MAX_PRODUCT_IMAGES), ...Array(MAX_PRODUCT_IMAGES).fill("")].slice(0, MAX_PRODUCT_IMAGES);
+    const single = typeof row.image === "string" ? row.image.trim() : "";
+    if (!single) return Array(MAX_PRODUCT_IMAGES).fill("");
+    return [single, ...Array(MAX_PRODUCT_IMAGES - 1).fill("")];
+  }
+
+  function resetForm() {
+    setForm({
+      name: "",
+      description: "",
+      price: "",
+      category: DEFAULT_PRODUCT_CATEGORY,
+      images: Array(MAX_PRODUCT_IMAGES).fill(""),
+      country: "North Macedonia",
+      artisan: "",
+      phone: DEFAULT_LISTING_PHONE,
+      currency,
+      inStock: true,
+    });
+  }
+
+  function startEditProduct(row: SellerProductRow) {
+    const rowCountry = SELLER_COUNTRIES.includes((row.country || "") as (typeof SELLER_COUNTRIES)[number])
+      ? (row.country as (typeof SELLER_COUNTRIES)[number])
+      : "North Macedonia";
+    const rowCategory =
+      typeof row.category === "string" && categories.includes(row.category)
+        ? row.category
+        : DEFAULT_PRODUCT_CATEGORY;
+    const rowPrice =
+      typeof row.price === "number"
+        ? String(row.price)
+        : typeof row.price === "string"
+          ? row.price
+          : "";
+    const rowCurrency =
+      typeof row.currency === "string" && row.currency.trim()
+        ? row.currency.trim().toUpperCase()
+        : currency;
+    const rowPhone =
+      (typeof row.phone === "string" && row.phone.trim()) ||
+      (typeof row.submitter_phone === "string" && row.submitter_phone.trim()) ||
+      DEFAULT_LISTING_PHONE;
+
+    setErr("");
+    setMsg("");
+    setEditingProductId(row.id);
+    setForm({
+      name: row.name || "",
+      description: row.description || "",
+      price: rowPrice,
+      category: rowCategory,
+      images: rowImageSlots(row),
+      country: rowCountry,
+      artisan: row.artisan || "",
+      phone: rowPhone,
+      currency: rowCurrency,
+      inStock: row.in_stock !== false,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditingProductId(null);
+    setErr("");
+    setMsg("");
+    resetForm();
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg("");
     setErr("");
+    const isEditing = !!editingProductId;
     const res = await fetch("/api/seller/products", {
-      method: "POST",
+      method: isEditing ? "PATCH" : "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({
+        id: editingProductId || undefined,
         name: form.name,
         description: form.description,
         price: parseFloat(form.price) || 0,
-        currency,
+        currency: form.currency,
         category: form.category,
         images: normalizeProductImageUrls(form.images),
         country: form.country,
@@ -89,17 +189,13 @@ function SellerDashboard() {
       setErr(data.error || "Failed to submit product.");
       return;
     }
-    setMsg("Product submitted — it will appear in the shop after admin approval (within 24 hours).");
-    setForm((f) => ({
-      ...f,
-      name: "",
-      description: "",
-      price: "",
-      images: Array(MAX_PRODUCT_IMAGES).fill(""),
-      artisan: "",
-      phone: f.phone,
-      inStock: true,
-    }));
+    setMsg(
+      isEditing
+        ? "Product updated — changes were sent for admin review."
+        : "Product submitted — it will appear in the shop after admin approval (within 24 hours)."
+    );
+    setEditingProductId(null);
+    resetForm();
     load();
   }
 
@@ -174,17 +270,26 @@ function SellerDashboard() {
                 className="flex items-center justify-between gap-3 rounded-xl border border-charcoal/8 px-4 py-3 text-sm"
               >
                 <span className="font-medium text-charcoal truncate">{String(r.name)}</span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    r.approval_status === "approved"
-                      ? "bg-green/10 text-green"
-                      : r.approval_status === "rejected"
-                        ? "bg-red-50 text-red-600"
-                        : "bg-amber-100 text-amber-800"
-                  }`}
-                >
-                  {String(r.approval_status || "pending")}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      r.approval_status === "approved"
+                        ? "bg-green/10 text-green"
+                        : r.approval_status === "rejected"
+                          ? "bg-red-50 text-red-600"
+                          : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {String(r.approval_status || "pending")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => startEditProduct(r)}
+                    className="rounded-lg border border-charcoal/15 px-2.5 py-1 text-xs font-semibold text-charcoal/70 hover:border-green/35 hover:text-green transition-colors"
+                  >
+                    Edit post
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -192,7 +297,9 @@ function SellerDashboard() {
       </div>
 
       <div>
-        <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-4">Add product/service</h2>
+        <h2 className="text-sm font-semibold text-charcoal/40 uppercase tracking-wider mb-4">
+          {editingProductId ? "Edit product post" : "Add product/service"}
+        </h2>
         <form onSubmit={submit} className="space-y-4 max-w-lg">
           <div>
             <label className="text-xs text-charcoal/50">Product name</label>
@@ -216,7 +323,7 @@ function SellerDashboard() {
           <div className="grid grid-cols-2 gap-3">
             <div className="sm:col-span-2">
               <label className="text-xs text-charcoal/50">
-                Price ({currency})
+              Price ({form.currency})
               </label>
               <input
                 required
@@ -356,12 +463,23 @@ function SellerDashboard() {
           </label>
           {err && <p className="text-sm text-red-600">{err}</p>}
           {msg && <p className="text-sm text-green">{msg}</p>}
-          <button
-            type="submit"
-            className="rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-dark"
-          >
-            Submit for approval
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              className="rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-dark"
+            >
+              {editingProductId ? "Save changes for approval" : "Submit for approval"}
+            </button>
+            {editingProductId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="rounded-xl border border-charcoal/20 px-5 py-2.5 text-sm font-semibold text-charcoal/70 hover:bg-charcoal/5"
+              >
+                Cancel edit
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>
