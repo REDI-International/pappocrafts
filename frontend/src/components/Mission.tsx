@@ -32,6 +32,9 @@ export default function Mission() {
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-bold text-charcoal tracking-tight leading-tight">
               {title}
             </h2>
+            <div className="mt-4 inline-flex items-center rounded-full border border-green/25 bg-green/10 px-3 py-1.5 text-xs font-semibold text-green-dark">
+              Grandfather&apos;s Workshop
+            </div>
             <p className="mt-6 text-lg text-charcoal/70 leading-relaxed">
               {desc1}
             </p>
