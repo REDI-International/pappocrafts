@@ -511,6 +511,29 @@ function SellerDashboard() {
     }
   }
 
+  function triggerServiceImagePicker(source: "gallery" | "camera") {
+    if (serviceUploading) return;
+    setServiceErr("");
+    const input = source === "camera" ? serviceCameraInputRef.current : serviceGalleryInputRef.current;
+    if (!input) return;
+    input.value = "";
+    input.click();
+  }
+
+  async function handleServiceImageChosen(file: File | null) {
+    if (!file) return;
+    setServiceErr("");
+    setServiceUploading(true);
+    try {
+      const uploadedUrl = await uploadSellerListingImage(file);
+      setServiceForm((prev) => ({ ...prev, image: uploadedUrl }));
+    } catch (uploadError) {
+      setServiceErr(uploadError instanceof Error ? uploadError.message : "Image upload failed.");
+    } finally {
+      setServiceUploading(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       {profile && (
@@ -1131,14 +1154,55 @@ function SellerDashboard() {
             />
           </div>
           <div>
-            <label className="text-xs text-charcoal/50">Image URL (optional)</label>
+            <label className="text-xs text-charcoal/50">Service photo (optional)</label>
             <input
-              type="url"
-              value={serviceForm.image}
-              onChange={(e) => setServiceForm((f) => ({ ...f, image: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
-              placeholder="https://..."
+              ref={serviceGalleryInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleServiceImageChosen(e.target.files?.[0] ?? null)}
+              className="hidden"
             />
+            <input
+              ref={serviceCameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => handleServiceImageChosen(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+            <div className="mt-1 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => triggerServiceImagePicker("gallery")}
+                disabled={serviceUploading}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-green/35 bg-green/10 px-2.5 py-1 text-[11px] font-semibold text-green-dark shadow-sm shadow-green/10 hover:bg-green/15 hover:border-green/50 disabled:opacity-60"
+              >
+                Gallery
+              </button>
+              <button
+                type="button"
+                onClick={() => triggerServiceImagePicker("camera")}
+                disabled={serviceUploading}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-blue/35 bg-blue/10 px-2.5 py-1 text-[11px] font-semibold text-blue-dark shadow-sm shadow-blue/10 hover:bg-blue/15 hover:border-blue/50 disabled:opacity-60 sm:hidden"
+              >
+                Camera
+              </button>
+              {serviceUploading && (
+                <span className="text-[11px] text-charcoal/45">Uploading…</span>
+              )}
+            </div>
+            {serviceForm.image ? (
+              <div className="mt-1 flex items-center gap-2 text-[11px] text-charcoal/60">
+                <span>Photo uploaded</span>
+                <button
+                  type="button"
+                  onClick={() => setServiceForm((f) => ({ ...f, image: "" }))}
+                  className="font-medium text-charcoal/70 underline underline-offset-2 hover:text-charcoal"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : null}
           </div>
           <div>
             <label className="text-xs text-charcoal/50">Response time</label>
