@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ALLOWED_SELLER_COUNTRIES,
   insertSellerUser,
+  isValidSellerPhone,
+  normalizeSellerPhone,
   nextUniqueBusinessSlug,
   sha256Password,
 } from "@/lib/admin-user-provision";
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
   const db = createAdminClient();
   const { data, error } = await db
     .from("admin_users")
-    .select("id, email, name, role, base_country, business_name, business_slug, created_at")
+    .select("id, email, name, role, base_country, business_name, business_slug, phone, created_at")
     .eq("role", "seller")
     .order("created_at", { ascending: false });
 
@@ -46,10 +48,11 @@ export async function POST(request: NextRequest) {
     const name = String(body.name || "").trim();
     const businessName = String(body.businessName || body.business_name || "").trim();
     const baseCountry = String(body.baseCountry || body.base_country || "").trim();
+    const phone = normalizeSellerPhone(body.phone);
 
-    if (!email || !password || !name || !businessName) {
+    if (!email || !password || !name || !businessName || !isValidSellerPhone(phone)) {
       return NextResponse.json(
-        { error: "email, password, name, and businessName are required." },
+        { error: "email, password, name, businessName, and phone are required." },
         { status: 400 }
       );
     }
@@ -66,6 +69,7 @@ export async function POST(request: NextRequest) {
       name,
       businessName,
       baseCountry: baseCountry as (typeof ALLOWED_SELLER_COUNTRIES)[number],
+      phone,
     });
 
     if (error) {
@@ -157,6 +161,14 @@ export async function PATCH(request: NextRequest) {
       updates.base_country = baseCountry;
     }
 
+    if (body.phone !== undefined && body.phone !== null) {
+      const phone = normalizeSellerPhone(body.phone);
+      if (!isValidSellerPhone(phone)) {
+        return NextResponse.json({ error: "phone cannot be empty." }, { status: 400 });
+      }
+      updates.phone = phone;
+    }
+
     if (body.email !== undefined && body.email !== null) {
       const email = String(body.email).trim().toLowerCase();
       if (!email) return NextResponse.json({ error: "email cannot be empty." }, { status: 400 });
@@ -183,7 +195,7 @@ export async function PATCH(request: NextRequest) {
       .update(updates)
       .eq("id", id)
       .eq("role", "seller")
-      .select("id, email, name, business_name, business_slug, base_country")
+      .select("id, email, name, business_name, business_slug, base_country, phone")
       .single();
 
     if (error) {

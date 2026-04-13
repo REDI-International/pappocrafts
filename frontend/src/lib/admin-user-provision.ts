@@ -5,6 +5,14 @@ import { slugifyBusinessName } from "@/lib/slug";
 export const ALLOWED_SELLER_COUNTRIES = ["North Macedonia", "Serbia", "Albania"] as const;
 export type SellerCountry = (typeof ALLOWED_SELLER_COUNTRIES)[number];
 
+export function normalizeSellerPhone(raw: unknown): string {
+  return String(raw ?? "").trim();
+}
+
+export function isValidSellerPhone(phone: string): boolean {
+  return phone.trim().length >= 6;
+}
+
 export function sha256Password(password: string) {
   return createHash("sha256").update(password).digest("hex");
 }
@@ -32,10 +40,12 @@ export async function insertSellerUser(input: {
   name: string;
   businessName: string;
   baseCountry: SellerCountry;
+  phone?: string;
 }) {
   const db = createAdminClient();
   const email = input.email.trim().toLowerCase();
   const businessName = input.businessName.trim();
+  const phone = String(input.phone ?? "").trim();
   const slug = await nextUniqueBusinessSlug(db, businessName);
   const { data, error } = await db
     .from("admin_users")
@@ -47,8 +57,9 @@ export async function insertSellerUser(input: {
       business_name: businessName,
       business_slug: slug,
       base_country: input.baseCountry,
+      phone,
     })
-    .select("id, email, name, business_name, business_slug, base_country")
+    .select("id, email, name, business_name, business_slug, base_country, phone")
     .single();
   return { data, error };
 }

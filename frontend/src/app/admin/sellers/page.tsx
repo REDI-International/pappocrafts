@@ -6,7 +6,15 @@ const COUNTRIES = ["North Macedonia", "Serbia", "Albania"] as const;
 
 export default function AdminSellersPage() {
   const [sellers, setSellers] = useState<
-    { id: string; email: string; name: string; business_name: string; business_slug: string; base_country: string | null }[]
+    {
+      id: string;
+      email: string;
+      name: string;
+      business_name: string;
+      business_slug: string;
+      base_country: string | null;
+      phone: string;
+    }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,6 +30,7 @@ export default function AdminSellersPage() {
     name: "",
     businessName: "",
     email: "",
+    phone: "",
     baseCountry: "North Macedonia" as (typeof COUNTRIES)[number],
     password: "",
   });
@@ -29,6 +38,7 @@ export default function AdminSellersPage() {
     email: "",
     password: "",
     name: "",
+    phone: "",
     businessName: "",
     baseCountry: "North Macedonia" as (typeof COUNTRIES)[number],
   });
@@ -65,6 +75,7 @@ export default function AdminSellersPage() {
           email: form.email.trim(),
           password: form.password,
           name: form.name.trim(),
+          phone: form.phone.trim(),
           businessName: form.businessName.trim(),
           baseCountry: form.baseCountry,
         }),
@@ -76,7 +87,7 @@ export default function AdminSellersPage() {
         return;
       }
       setOk(`Seller created: ${data.email}. Share login credentials securely.`);
-      setForm({ email: "", password: "", name: "", businessName: "", baseCountry: "North Macedonia" });
+      setForm({ email: "", password: "", name: "", phone: "", businessName: "", baseCountry: "North Macedonia" });
       load();
     } catch {
       setError("Request failed");
@@ -119,6 +130,7 @@ export default function AdminSellersPage() {
       name: s.name,
       businessName: s.business_name,
       email: s.email,
+      phone: s.phone || "",
       baseCountry: (COUNTRIES.includes(s.base_country as (typeof COUNTRIES)[number])
         ? s.base_country
         : "North Macedonia") as (typeof COUNTRIES)[number],
@@ -129,7 +141,7 @@ export default function AdminSellersPage() {
   function cancelEdit() {
     setEditingId(null);
     setEditError("");
-    setEditForm({ name: "", businessName: "", email: "", baseCountry: "North Macedonia", password: "" });
+    setEditForm({ name: "", businessName: "", email: "", phone: "", baseCountry: "North Macedonia", password: "" });
   }
 
   async function handleSaveEdit(sellerId: string) {
@@ -145,6 +157,7 @@ export default function AdminSellersPage() {
         name: editForm.name.trim(),
         businessName: editForm.businessName.trim(),
         email: editForm.email.trim().toLowerCase(),
+        phone: editForm.phone.trim(),
         baseCountry: editForm.baseCountry,
       };
       if (editForm.password.trim()) payload.password = editForm.password;
@@ -228,6 +241,17 @@ export default function AdminSellersPage() {
             />
           </div>
           <div>
+            <label className="text-xs text-white/40">Phone</label>
+            <input
+              required
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#0F1117] px-4 py-2.5 text-sm text-white"
+              placeholder="+389..."
+            />
+          </div>
+          <div>
             <label className="text-xs text-white/40">Initial password</label>
             <div className="relative mt-1">
               <input
@@ -281,7 +305,7 @@ export default function AdminSellersPage() {
                   <div className="min-w-0">
                     <p className="font-medium text-white">{s.business_name}</p>
                     <p className="text-white/45 text-xs mt-0.5">
-                      {s.name} · {s.email} · {s.base_country || "—"} · /?business={s.business_slug}
+                      {s.name} · {s.email} · {s.phone || "—"} · {s.base_country || "—"} · /?business={s.business_slug}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 shrink-0">
@@ -348,6 +372,15 @@ export default function AdminSellersPage() {
                         className="mt-1 w-full rounded-lg border border-white/10 bg-[#1A1D27] px-3 py-2 text-sm text-white"
                       />
                       <p className="text-[10px] text-white/30 mt-1">Changing email signs the seller out everywhere until they log in again.</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-white/40">Phone</label>
+                      <input
+                        type="tel"
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-[#1A1D27] px-3 py-2 text-sm text-white"
+                      />
                     </div>
                     <div>
                       <label className="text-xs text-white/40">New password (optional)</label>
