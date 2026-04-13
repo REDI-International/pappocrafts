@@ -168,7 +168,7 @@ const en: Translations = {
     "Discover rich collections of handmade products and other goods from Roma entrepreneurs from North Macedonia, Albania, and Serbia.",
   "how.step2Title": "Give small businesses wings",
   "how.step2Desc":
-    "Your choice means direct partnership with small and family-run businesses that create with passion workshop.",
+    "Your choice means direct partnership with small and family-run businesses that create with passion.",
   "how.step3Title": "Premium delivery",
   "how.step3Desc":
     "The products you choose arrive carefully packaged at your doorstep, carrying the story of their creator and a certificate of authenticity.",
