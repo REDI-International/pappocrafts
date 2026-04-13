@@ -5,16 +5,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export const INTRO_COOKIE = "papposhop-intro-dismissed";
+const INTRO_STORAGE_KEY = "papposhop-intro-dismissed-local";
 const INTRO_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 function writeIntroCookie() {
   if (typeof document === "undefined") return;
   document.cookie = `${INTRO_COOKIE}=1;path=/;max-age=${INTRO_COOKIE_MAX_AGE};SameSite=Lax`;
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(INTRO_STORAGE_KEY, "1");
+  }
+}
+
+function hasDismissedIntroCookie() {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split("; ").some((row) => row.startsWith(`${INTRO_COOKIE}=`));
+}
+
+function hasDismissedIntroLocally() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(INTRO_STORAGE_KEY) === "1";
 }
 
 export default function IntroEntryLayer({ initiallyOpen }: { initiallyOpen: boolean }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(initiallyOpen);
+  const [open, setOpen] = useState(() => {
+    // Avoid server/client flicker: decide visibility only on the client.
+    if (typeof window === "undefined") return false;
+    if (!initiallyOpen) return false;
+    return !hasDismissedIntroCookie() && !hasDismissedIntroLocally();
+  });
 
   const isHiddenRoute =
     pathname.startsWith("/admin") ||
@@ -22,7 +41,7 @@ export default function IntroEntryLayer({ initiallyOpen }: { initiallyOpen: bool
     pathname.startsWith("/login") ||
     pathname.startsWith("/account");
 
-  if (!open || isHiddenRoute) return null;
+  if (!open || isHiddenRoute || hasDismissedIntroCookie() || hasDismissedIntroLocally()) return null;
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-charcoal/55 p-4 backdrop-blur-sm">
