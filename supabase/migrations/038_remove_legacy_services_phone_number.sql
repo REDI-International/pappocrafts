@@ -1,4 +1,4 @@
--- Remove all occurrences of the old public phone number from services.phone_number.
+-- Remove all occurrences of the old public phone number from services.phone.
 DO $$
 BEGIN
   IF EXISTS (
@@ -6,11 +6,11 @@ BEGIN
     FROM information_schema.columns
     WHERE table_schema = 'public'
       AND table_name = 'services'
-      AND column_name = 'phone_number'
+      AND column_name = 'phone'
   ) THEN
     UPDATE public.services
-    SET phone_number = replace(phone_number, '+38976805651', '')
-    WHERE phone_number LIKE '%+38976805651%';
+    SET phone = replace(phone, '+38976805651', '')
+    WHERE phone LIKE '%+38976805651%';
   END IF;
 END
 $$;
