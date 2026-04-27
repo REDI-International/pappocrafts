@@ -499,6 +499,16 @@ function ShopContent() {
                         </div>
                       </div>
                       <p className="mt-3 text-sm text-charcoal/60 line-clamp-2">{product.description}</p>
+                      {product.womenEntrepreneurship && (
+                        <div className="mt-3 rounded-xl border border-green/15 bg-green/5 px-3 py-2">
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-green">
+                            Women Entrepreneurship
+                          </p>
+                          <p className="mt-0.5 text-xs text-charcoal/55">
+                            Product from a women-led Roma business.
+                          </p>
+                        </div>
+                      )}
                       <div className="mt-4 flex items-center justify-between gap-2">
                         <span className="text-sm font-bold text-green">
                           {formatProductRegionalPrice(product.price, product.currency)}

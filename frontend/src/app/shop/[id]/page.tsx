@@ -234,6 +234,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 )}
               </div>
 
+              {product.womenEntrepreneurship && (
+                <div className="mb-4 rounded-2xl border border-green/20 bg-green/5 px-5 py-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-green">
+                    Women Entrepreneurship
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-charcoal/70">
+                    This product is from a women-led Roma business featured by PappoShop.
+                  </p>
+                </div>
+              )}
+
               <h1 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal tracking-tight">
                 {product.name}
               </h1>
