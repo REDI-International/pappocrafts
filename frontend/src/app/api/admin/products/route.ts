@@ -55,6 +55,9 @@ export async function POST(request: NextRequest) {
       in_stock: body.inStock ?? body.in_stock ?? true,
       business_name: body.businessName ?? body.business_name ?? body.artisan ?? "",
       business_slug: body.businessSlug ?? body.business_slug ?? "",
+      contact_email: body.contactEmail ?? body.contact_email ?? "",
+      submitter_email: body.contactEmail ?? body.contact_email ?? "",
+      seller_gender: body.sellerGender ?? body.seller_gender ?? null,
       approval_status: "approved",
       reviewed_at: new Date().toISOString(),
       submitted_at: new Date().toISOString(),
@@ -106,8 +109,14 @@ export async function PATCH(request: NextRequest) {
     }
     if (body.approval_status !== undefined) updates.approval_status = body.approval_status;
     if (body.approvalStatus !== undefined) updates.approval_status = body.approvalStatus;
-    if (body.contactEmail !== undefined) updates.contact_email = body.contactEmail;
-    if (body.contact_email !== undefined) updates.contact_email = body.contact_email;
+    if (body.contactEmail !== undefined) {
+      updates.contact_email = body.contactEmail;
+      updates.submitter_email = body.contactEmail;
+    }
+    if (body.contact_email !== undefined) {
+      updates.contact_email = body.contact_email;
+      updates.submitter_email = body.contact_email;
+    }
     if (body.sellerGender !== undefined) updates.seller_gender = body.sellerGender;
     if (body.seller_gender !== undefined) updates.seller_gender = body.seller_gender;
     if (updates.approval_status !== undefined) {

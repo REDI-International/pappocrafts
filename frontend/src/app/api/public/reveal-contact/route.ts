@@ -32,7 +32,15 @@ export async function POST(request: NextRequest) {
     const row = rows[0];
     const contact = String(row?.out_contact || row?.out_phone || "").trim();
     if (!contact) {
-      return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+      return NextResponse.json(
+        {
+          error:
+            kind === "product"
+              ? "Seller contact email has not been added for this product yet."
+              : "Listing not found.",
+        },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
