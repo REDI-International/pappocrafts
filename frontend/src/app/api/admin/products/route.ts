@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSession } from "@/lib/admin-store";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 import { productImageDbPayload } from "@/lib/product-images";
+
+function normalizeProductSellerGender(value: unknown): "M" | "F" | null {
+  const gender = String(value ?? "").trim().toUpperCase();
+  if (gender === "M" || gender === "MALE") return "M";
+  if (gender === "F" || gender === "FEMALE") return "F";
+  return null;
+}
 
 async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -57,7 +64,7 @@ export async function POST(request: NextRequest) {
       business_slug: body.businessSlug ?? body.business_slug ?? "",
       contact_email: body.contactEmail ?? body.contact_email ?? "",
       submitter_email: body.contactEmail ?? body.contact_email ?? "",
-      seller_gender: body.sellerGender ?? body.seller_gender ?? null,
+      seller_gender: normalizeProductSellerGender(body.sellerGender ?? body.seller_gender),
       approval_status: "approved",
       reviewed_at: new Date().toISOString(),
       submitted_at: new Date().toISOString(),
@@ -117,8 +124,8 @@ export async function PATCH(request: NextRequest) {
       updates.contact_email = body.contact_email;
       updates.submitter_email = body.contact_email;
     }
-    if (body.sellerGender !== undefined) updates.seller_gender = body.sellerGender;
-    if (body.seller_gender !== undefined) updates.seller_gender = body.seller_gender;
+    if (body.sellerGender !== undefined) updates.seller_gender = normalizeProductSellerGender(body.sellerGender);
+    if (body.seller_gender !== undefined) updates.seller_gender = normalizeProductSellerGender(body.seller_gender);
     if (updates.approval_status !== undefined) {
       updates.reviewed_at = new Date().toISOString();
     }

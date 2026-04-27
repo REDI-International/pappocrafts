@@ -64,6 +64,7 @@ export default function AdminProducts() {
   const [tagInput, setTagInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
+  const [saveError, setSaveError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProducts = useCallback(async () => {
@@ -86,11 +87,13 @@ export default function AdminProducts() {
     setEditing({ ...emptyProduct, id: `product-${Date.now()}` });
     setIsNew(true);
     setTagInput("");
+    setSaveError("");
   }
 
   async function saveProduct() {
     if (!editing || !editing.name.trim()) return;
     setSaving(true);
+    setSaveError("");
     try {
       const method = isNew ? "POST" : "PATCH";
       const { image, images } = productImageDbPayload(editing.imageSlots);
@@ -112,15 +115,22 @@ export default function AdminProducts() {
         tags: editing.tags,
         in_stock: editing.in_stock,
       };
-      await fetch("/api/admin/products", {
+      const res = await fetch("/api/admin/products", {
         method,
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSaveError(typeof data.error === "string" ? data.error : "Failed to save product.");
+        return;
+      }
       await fetchProducts();
       setEditing(null);
       setIsNew(false);
-    } catch { /* ignore */ }
+    } catch {
+      setSaveError("Failed to save product.");
+    }
     setSaving(false);
   }
 
@@ -393,6 +403,7 @@ export default function AdminProducts() {
                 <span className="text-xs text-white/60">In Stock</span>
               </div>
             </div>
+            {saveError && <p className="mt-4 text-sm text-red-400">{saveError}</p>}
             <div className="flex gap-3 mt-6">
               <button onClick={saveProduct} disabled={saving} className="flex-1 rounded-xl bg-[#4A9B3F] py-2.5 text-sm font-semibold text-white hover:bg-[#3D8234] disabled:opacity-50 transition-colors">
                 {saving ? "Saving..." : "Save Product"}
