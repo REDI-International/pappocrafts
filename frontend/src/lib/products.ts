@@ -1,4 +1,5 @@
 import { galleryFromProductRow } from "@/lib/product-images";
+import { productGenderFromRow, visibleProductTags } from "@/lib/product-gender";
 
 export interface Product {
   id: string;
@@ -93,8 +94,7 @@ export function mapSupabaseProduct(row: any): Product {
   const businessSlug = typeof row.business_slug === "string" ? row.business_slug.trim() : "";
   const images = galleryFromProductRow(row);
   const image = images[0] || String(row.image || "").trim() || "";
-  const sellerGender =
-    row.seller_gender === "M" || row.seller_gender === "F" ? row.seller_gender : undefined;
+  const sellerGender = productGenderFromRow(row) ?? undefined;
   return {
     id: row.id,
     name: row.name || "",
@@ -128,7 +128,7 @@ export function mapSupabaseProduct(row: any): Product {
       (typeof row.seller_logo_url === "string" && row.seller_logo_url.trim())
         ? row.seller_logo_url.trim()
         : undefined,
-    tags: Array.isArray(row.tags) ? row.tags : [],
+    tags: visibleProductTags(row.tags),
     inStock: row.in_stock !== false,
   };
 }

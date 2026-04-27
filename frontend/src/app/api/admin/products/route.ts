@@ -2,35 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateSession } from "@/lib/admin-store";
 import { createAdminClient, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 import { productImageDbPayload } from "@/lib/product-images";
+import { normalizeProductSellerGender, productTagsWithGender } from "@/lib/product-gender";
 
 type ProductWritePayload = Record<string, unknown>;
 type SupabaseWriteError = { message?: string; code?: string } | null;
-
-function normalizeProductSellerGender(value: unknown): "M" | "F" | null {
-  const gender = String(value ?? "").trim().toUpperCase();
-  if (gender === "M" || gender === "MALE") return "M";
-  if (gender === "F" || gender === "FEMALE") return "F";
-  return null;
-}
 
 function removeMissingRolloutColumn(payload: ProductWritePayload, error: SupabaseWriteError): boolean {
   if (isSupabaseMissingColumnError(error, "contact_email") && "contact_email" in payload) {
     delete payload.contact_email;
     return true;
   }
+  if (isSupabaseMissingColumnError(error, "seller_gender") && "seller_gender" in payload) {
+    delete payload.seller_gender;
+    return true;
+  }
   return false;
 }
 
 function productWriteErrorResponse(error: SupabaseWriteError) {
-  if (isSupabaseMissingColumnError(error, "seller_gender")) {
-    return NextResponse.json(
-      {
-        error:
-          "The products.seller_gender column is not available in Supabase yet. Please reload the Supabase schema cache after applying the migration, then try saving again.",
-      },
-      { status: 500 }
-    );
-  }
   return NextResponse.json({ error: error?.message || "Product save failed." }, { status: 500 });
 }
 
@@ -38,6 +27,12 @@ async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   return validateSession(token);
+}
+
+function productTagsFromRow(row: { tags?: unknown } | null | undefined): string[] {
+  return Array.isArray(row?.tags)
+    ? row.tags.filter((tag): tag is string => typeof tag === "string")
+    : [];
 }
 
 export async function GET(request: NextRequest) {
@@ -69,6 +64,7 @@ export async function POST(request: NextRequest) {
     const { image, images } = productImageDbPayload(
       body.images !== undefined ? body.images : body.image ? [body.image] : []
     );
+    const sellerGender = normalizeProductSellerGender(body.sellerGender ?? body.seller_gender);
     const row: ProductWritePayload = {
       id: body.id || `product-${Date.now()}`,
       name: body.name,
@@ -82,13 +78,13 @@ export async function POST(request: NextRequest) {
       phone: String(body.phone ?? body.contactPhone ?? "").trim(),
       image,
       images,
-      tags: body.tags || [],
+      tags: productTagsWithGender(body.tags, sellerGender),
       in_stock: body.inStock ?? body.in_stock ?? true,
       business_name: body.businessName ?? body.business_name ?? body.artisan ?? "",
       business_slug: body.businessSlug ?? body.business_slug ?? "",
       contact_email: body.contactEmail ?? body.contact_email ?? "",
       submitter_email: body.contactEmail ?? body.contact_email ?? "",
-      seller_gender: normalizeProductSellerGender(body.sellerGender ?? body.seller_gender),
+      seller_gender: sellerGender,
       approval_status: "approved",
       reviewed_at: new Date().toISOString(),
       submitted_at: new Date().toISOString(),
@@ -137,7 +133,11 @@ export async function PATCH(request: NextRequest) {
       updates.image = image;
       updates.images = images;
     }
-    if (body.tags !== undefined) updates.tags = body.tags;
+    const sellerGender =
+      body.sellerGender !== undefined || body.seller_gender !== undefined
+        ? normalizeProductSellerGender(body.sellerGender ?? body.seller_gender)
+        : undefined;
+    if (body.tags !== undefined) updates.tags = productTagsWithGender(body.tags, sellerGender);
     if (body.inStock !== undefined) updates.in_stock = body.inStock;
     if (body.in_stock !== undefined) updates.in_stock = body.in_stock;
     if (body.businessName !== undefined) updates.business_name = body.businessName;
@@ -157,13 +157,22 @@ export async function PATCH(request: NextRequest) {
       updates.contact_email = body.contact_email;
       updates.submitter_email = body.contact_email;
     }
-    if (body.sellerGender !== undefined) updates.seller_gender = normalizeProductSellerGender(body.sellerGender);
-    if (body.seller_gender !== undefined) updates.seller_gender = normalizeProductSellerGender(body.seller_gender);
+    const db = createAdminClient();
+    if (sellerGender !== undefined) {
+      updates.seller_gender = sellerGender;
+      if (updates.tags === undefined) {
+        const { data: existing } = await db
+          .from("products")
+          .select("tags")
+          .eq("id", body.id)
+          .maybeSingle();
+        updates.tags = productTagsWithGender(existing?.tags, sellerGender);
+      }
+    }
     if (updates.approval_status !== undefined) {
       updates.reviewed_at = new Date().toISOString();
     }
 
-    const db = createAdminClient();
     let data = null;
     let error: SupabaseWriteError = null;
     for (let attempt = 0; attempt < 3; attempt += 1) {

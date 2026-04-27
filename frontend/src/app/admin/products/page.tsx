@@ -9,6 +9,7 @@ import {
   MAX_PRODUCT_IMAGES,
   productImageDbPayload,
 } from "@/lib/product-images";
+import { productGenderFromRow, visibleProductTags } from "@/lib/product-gender";
 
 interface DBProduct {
   id: string;
@@ -440,7 +441,7 @@ export default function AdminProducts() {
                 <div className="absolute top-2 right-2">
                   <span className="text-[10px] font-bold text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">{product.category}</span>
                 </div>
-                {product.seller_gender === "F" && (
+                {productGenderFromRow(product) === "F" && (
                   <div className="absolute left-2 top-2">
                     <span className="text-[10px] font-bold text-white bg-[#4A9B3F] px-2 py-0.5 rounded-full uppercase tracking-wide">
                       Women-led
@@ -473,11 +474,11 @@ export default function AdminProducts() {
                         country: product.country,
                         phone: (product as DBProduct).phone || "",
                         contact_email: (product as DBProduct).contact_email || "",
-                        seller_gender: (product as DBProduct).seller_gender || null,
+                        seller_gender: productGenderFromRow(product),
                         image: product.image,
                         images: product.images ?? [],
                         imageSlots: imageSlotsForForm(galleryFromProductRow(product)),
-                        tags: product.tags, in_stock: product.in_stock,
+                        tags: visibleProductTags(product.tags), in_stock: product.in_stock,
                       });
                       setIsNew(false);
                       setTagInput("");
