@@ -13,6 +13,7 @@ import { productGenderFromRow, visibleProductTags } from "@/lib/product-gender";
 
 interface DBProduct {
   id: string;
+  seller_id?: string | null;
   name: string;
   description: string;
   long_description: string;
@@ -20,6 +21,8 @@ interface DBProduct {
   currency: string;
   category: string;
   artisan: string;
+  business_name?: string;
+  business_slug?: string;
   country: string;
   phone: string;
   contact_email?: string;
@@ -37,9 +40,20 @@ type EditableProduct = Omit<DBProduct, "created_at" | "updated_at"> & {
   imageSlots: string[];
 };
 
+interface SellerOption {
+  id: string;
+  email: string;
+  name: string;
+  business_name: string;
+  business_slug: string;
+  phone: string;
+  contact_email: string;
+  gender: "M" | "F" | null;
+}
+
 const emptyProduct: EditableProduct = {
-  id: "", name: "", description: "", long_description: "", price: 0, currency: "EUR",
-  category: categories[1], artisan: "", country: "",
+  id: "", seller_id: "", name: "", description: "", long_description: "", price: 0, currency: "EUR",
+  category: categories[1], artisan: "", business_name: "", business_slug: "", country: "",
   phone: "",
   contact_email: "",
   seller_gender: null,
@@ -55,6 +69,7 @@ function getToken() {
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<DBProduct[]>([]);
+  const [sellers, setSellers] = useState<SellerOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<EditableProduct | null>(null);
   const [photoUploadIndex, setPhotoUploadIndex] = useState(0);
@@ -70,8 +85,14 @@ export default function AdminProducts() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/products", { headers: { Authorization: `Bearer ${getToken()}` } });
+      const token = getToken();
+      const res = await fetch("/api/admin/products", { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) setProducts(await res.json());
+      const sellerRes = await fetch("/api/admin/sellers", { headers: { Authorization: `Bearer ${token}` } });
+      if (sellerRes.ok) {
+        const data = await sellerRes.json();
+        setSellers(Array.isArray(data.sellers) ? data.sellers : []);
+      }
     } catch { /* ignore */ }
     setLoading(false);
   }, []);
@@ -100,6 +121,7 @@ export default function AdminProducts() {
       const { image, images } = productImageDbPayload(editing.imageSlots);
       const body = {
         id: editing.id,
+        seller_id: editing.seller_id || null,
         name: editing.name,
         description: editing.description,
         long_description: editing.long_description,
@@ -107,6 +129,8 @@ export default function AdminProducts() {
         currency: editing.currency,
         category: editing.category,
         artisan: editing.artisan,
+        business_name: editing.business_name || undefined,
+        business_slug: editing.business_slug || undefined,
         country: editing.country,
         phone: editing.phone.trim(),
         contact_email: editing.contact_email?.trim() || "",
@@ -260,7 +284,7 @@ export default function AdminProducts() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-white/40 mb-1.5">Artisan Name</label>
-                  <input value={editing.artisan} onChange={(e) => setEditing({ ...editing, artisan: e.target.value })} placeholder="e.g. Dragan M." className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50" />
+                  <input value={editing.artisan} disabled={Boolean(editing.seller_id)} onChange={(e) => setEditing({ ...editing, artisan: e.target.value })} placeholder="e.g. Dragan M." className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50 disabled:opacity-60" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-white/40 mb-1.5">Country</label>
@@ -268,26 +292,59 @@ export default function AdminProducts() {
                 </div>
               </div>
               <div>
+                <label className="block text-xs font-medium text-white/40 mb-1.5">Entrepreneur profile</label>
+                <select
+                  value={editing.seller_id || ""}
+                  onChange={(e) => {
+                    const sellerId = e.target.value;
+                    const seller = sellers.find((s) => s.id === sellerId);
+                    setEditing({
+                      ...editing,
+                      seller_id: sellerId,
+                      artisan: seller ? seller.name : editing.artisan,
+                      business_name: seller ? seller.business_name : editing.business_name,
+                      business_slug: seller ? seller.business_slug : editing.business_slug,
+                      contact_email: seller ? (seller.contact_email || seller.email) : editing.contact_email,
+                      seller_gender: seller ? seller.gender : editing.seller_gender,
+                      phone: seller?.phone || editing.phone,
+                    });
+                  }}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 text-white text-sm px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50"
+                >
+                  <option value="" className="bg-[#1A1D27]">No linked entrepreneur profile</option>
+                  {sellers.map((seller) => (
+                    <option key={seller.id} value={seller.id} className="bg-[#1A1D27]">
+                      {seller.business_name || seller.name} ({seller.email})
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[10px] text-white/30">
+                  Link products to entrepreneur accounts so profile email and gender changes flow from admin users.
+                </p>
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-white/40 mb-1.5">Direct order email</label>
                 <input
                   type="email"
+                  disabled={Boolean(editing.seller_id)}
                   value={editing.contact_email || ""}
                   onChange={(e) => setEditing({ ...editing, contact_email: e.target.value })}
                   placeholder="seller@example.com"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50 disabled:opacity-60"
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-white/40 mb-1.5">Gender (donor reporting)</label>
                 <select
                   value={editing.seller_gender || ""}
+                  disabled={Boolean(editing.seller_id)}
                   onChange={(e) =>
                     setEditing({
                       ...editing,
                       seller_gender: e.target.value === "M" || e.target.value === "F" ? e.target.value : null,
                     })
                   }
-                  className="w-full rounded-xl border border-white/10 bg-white/5 text-white text-sm px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 text-white text-sm px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#4A9B3F]/50 disabled:opacity-60"
                 >
                   <option value="" className="bg-[#1A1D27]">Not set</option>
                   <option value="M" className="bg-[#1A1D27]">Male (M)</option>
@@ -453,7 +510,7 @@ export default function AdminProducts() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="text-sm font-semibold text-white truncate">{product.name}</h3>
-                    <p className="text-xs text-white/30 mt-0.5">{product.artisan} &middot; {product.country}</p>
+                    <p className="text-xs text-white/30 mt-0.5">{product.business_name || product.artisan} &middot; {product.country}</p>
                   </div>
                   <span className="text-sm font-bold text-[#4A9B3F] shrink-0">&euro;{Number(product.price).toFixed(2)}</span>
                 </div>
@@ -468,9 +525,11 @@ export default function AdminProducts() {
                   <button
                     onClick={() => {
                       setEditing({
-                        id: product.id, name: product.name, description: product.description,
+                        id: product.id, seller_id: product.seller_id || "", name: product.name, description: product.description,
                         long_description: product.long_description, price: Number(product.price),
                         currency: product.currency, category: product.category, artisan: product.artisan,
+                        business_name: product.business_name || "",
+                        business_slug: product.business_slug || "",
                         country: product.country,
                         phone: (product as DBProduct).phone || "",
                         contact_email: (product as DBProduct).contact_email || "",
