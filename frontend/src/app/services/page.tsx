@@ -321,6 +321,9 @@ function ServicesContent() {
                           {provider.responseTime}
                         </div>
                       </div>
+                      {provider.phone ? (
+                        <p className="mt-2 text-xs font-medium text-green">Phone contact available</p>
+                      ) : null}
                       <p className="mt-3 text-xs font-medium text-green">Quick preview — click for details</p>
                     </div>
                   </button>
@@ -425,7 +428,7 @@ function ServicesContent() {
                   href={`/services/${preview.id}`}
                   className={`rounded-xl border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-colors ${preview.bookingCalendarUrl ? "flex-1" : "w-full"}`}
                 >
-                  Full profile page
+                  Full profile page & phone contact
                 </Link>
               </div>
             </div>

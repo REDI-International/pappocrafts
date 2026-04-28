@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const db = createAdminClient();
   const { data, error } = await db
     .from("admin_users")
-    .select("id, email, name, business_name, business_slug, base_country, role, phone, biography, logo_url")
+    .select("id, email, name, business_name, business_slug, base_country, role, phone, contact_email, gender, biography, logo_url")
     .eq("id", userId)
     .single();
 
@@ -78,7 +78,7 @@ export async function PATCH(request: NextRequest) {
       .from("admin_users")
       .update(updates)
       .eq("id", userId)
-      .select("id, email, name, business_name, business_slug, base_country, role, phone, biography, logo_url")
+      .select("id, email, name, business_name, business_slug, base_country, role, phone, contact_email, gender, biography, logo_url")
       .single();
 
     if (error || !data) {

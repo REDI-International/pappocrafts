@@ -4,7 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ALLOWED_SELLER_COUNTRIES,
   insertSellerUser,
+  isValidSellerContactEmail,
+  isValidSellerGender,
   isValidSellerPhone,
+  normalizeSellerContactEmail,
+  normalizeSellerGender,
   normalizeSellerPhone,
   nextUniqueBusinessSlug,
   sha256Password,
@@ -27,7 +31,7 @@ export async function GET(request: NextRequest) {
   const db = createAdminClient();
   const { data, error } = await db
     .from("admin_users")
-    .select("id, email, name, role, base_country, business_name, business_slug, phone, created_at")
+    .select("id, email, name, role, base_country, business_name, business_slug, phone, contact_email, gender, created_at")
     .eq("role", "seller")
     .order("created_at", { ascending: false });
 
@@ -49,10 +53,20 @@ export async function POST(request: NextRequest) {
     const businessName = String(body.businessName || body.business_name || "").trim();
     const baseCountry = String(body.baseCountry || body.base_country || "").trim();
     const phone = normalizeSellerPhone(body.phone);
+    const contactEmail = normalizeSellerContactEmail(body.contactEmail ?? body.contact_email ?? email);
+    const gender = normalizeSellerGender(body.gender);
 
-    if (!email || !password || !name || !businessName || !isValidSellerPhone(phone)) {
+    if (
+      !email ||
+      !password ||
+      !name ||
+      !businessName ||
+      !isValidSellerPhone(phone) ||
+      !isValidSellerContactEmail(contactEmail) ||
+      !isValidSellerGender(gender)
+    ) {
       return NextResponse.json(
-        { error: "email, password, name, businessName, and phone are required." },
+        { error: "email, password, name, businessName, phone, contactEmail, and gender are required." },
         { status: 400 }
       );
     }
@@ -70,6 +84,8 @@ export async function POST(request: NextRequest) {
       businessName,
       baseCountry: baseCountry as (typeof ALLOWED_SELLER_COUNTRIES)[number],
       phone,
+      contactEmail,
+      gender,
     });
 
     if (error) {
@@ -169,6 +185,22 @@ export async function PATCH(request: NextRequest) {
       updates.phone = phone;
     }
 
+    if (body.contactEmail !== undefined || body.contact_email !== undefined) {
+      const contactEmail = normalizeSellerContactEmail(body.contactEmail ?? body.contact_email);
+      if (!isValidSellerContactEmail(contactEmail)) {
+        return NextResponse.json({ error: "contactEmail must be a valid email." }, { status: 400 });
+      }
+      updates.contact_email = contactEmail;
+    }
+
+    if (body.gender !== undefined && body.gender !== null) {
+      const gender = normalizeSellerGender(body.gender);
+      if (!isValidSellerGender(gender)) {
+        return NextResponse.json({ error: "gender must be M or F." }, { status: 400 });
+      }
+      updates.gender = gender;
+    }
+
     if (body.email !== undefined && body.email !== null) {
       const email = String(body.email).trim().toLowerCase();
       if (!email) return NextResponse.json({ error: "email cannot be empty." }, { status: 400 });
@@ -195,7 +227,7 @@ export async function PATCH(request: NextRequest) {
       .update(updates)
       .eq("id", id)
       .eq("role", "seller")
-      .select("id, email, name, business_name, business_slug, base_country, phone")
+      .select("id, email, name, business_name, business_slug, base_country, phone, contact_email, gender")
       .single();
 
     if (error) {
@@ -205,12 +237,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (updates.business_name !== undefined || updates.business_slug !== undefined) {
+    if (
+      updates.business_name !== undefined ||
+      updates.business_slug !== undefined ||
+      updates.contact_email !== undefined ||
+      updates.gender !== undefined
+    ) {
       await db
         .from("products")
         .update({
-          business_name: updated.business_name,
-          business_slug: updated.business_slug,
+          ...(updates.business_name !== undefined ? { business_name: updated.business_name } : {}),
+          ...(updates.business_slug !== undefined ? { business_slug: updated.business_slug } : {}),
+          ...(updates.contact_email !== undefined ? { contact_email: updated.contact_email } : {}),
+          ...(updates.gender !== undefined ? { seller_gender: updated.gender } : {}),
         })
         .eq("seller_id", id);
     }

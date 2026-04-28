@@ -1,4 +1,6 @@
 import { galleryFromProductRow } from "@/lib/product-images";
+import { productGenderFromRow, visibleProductTags } from "@/lib/product-gender";
+import { productSizesFromRow, type ProductSize } from "@/lib/product-sizes";
 
 export interface Product {
   id: string;
@@ -16,6 +18,12 @@ export interface Product {
   country: string;
   /** Listing contact phone (E.164 or local format). */
   phone: string;
+  /** Temporary direct-order email for the seller. */
+  contactEmail: string;
+  /** Donor reporting marker from the entrepreneur profile. */
+  sellerGender?: "M" | "F";
+  /** True when the product belongs to a female entrepreneur. */
+  womenEntrepreneurship: boolean;
   /** Primary image (first in `images`). */
   image: string;
   /** Gallery URLs in order (max 5). */
@@ -24,6 +32,8 @@ export interface Product {
   sellerName?: string;
   sellerBiography?: string;
   sellerLogoUrl?: string;
+  /** Optional clothing/textile size availability. */
+  sizes: ProductSize[];
   tags: string[];
   inStock: boolean;
 }
@@ -49,6 +59,7 @@ export const categories = [
   "Machines",
   "Electronics",
   "Auto",
+  "Other",
 ];
 
 /** Emoji per category for the same horizontal chip strip pattern as the services page. */
@@ -72,6 +83,7 @@ const SHOP_CATEGORY_ICONS: Partial<Record<string, string>> = {
   Machines: "⚙️",
   Electronics: "💻",
   Auto: "🚗",
+  Other: "📦",
 };
 
 export const shopCategoryChips = categories.map((name) => ({
@@ -87,6 +99,7 @@ export function mapSupabaseProduct(row: any): Product {
   const businessSlug = typeof row.business_slug === "string" ? row.business_slug.trim() : "";
   const images = galleryFromProductRow(row);
   const image = images[0] || String(row.image || "").trim() || "";
+  const sellerGender = productGenderFromRow(row) ?? undefined;
   return {
     id: row.id,
     name: row.name || "",
@@ -100,6 +113,12 @@ export function mapSupabaseProduct(row: any): Product {
     businessSlug,
     country: row.country || "",
     phone: typeof row.phone === "string" && row.phone.trim() ? row.phone.trim() : "",
+    contactEmail:
+      typeof row.contact_email === "string" && row.contact_email.trim()
+        ? row.contact_email.trim()
+        : "",
+    sellerGender,
+    womenEntrepreneurship: sellerGender === "F",
     image,
     images: images.length ? images : image ? [image] : [],
     sellerName:
@@ -114,7 +133,8 @@ export function mapSupabaseProduct(row: any): Product {
       (typeof row.seller_logo_url === "string" && row.seller_logo_url.trim())
         ? row.seller_logo_url.trim()
         : undefined,
-    tags: Array.isArray(row.tags) ? row.tags : [],
+    sizes: productSizesFromRow(row),
+    tags: visibleProductTags(row.tags),
     inStock: row.in_stock !== false,
   };
 }

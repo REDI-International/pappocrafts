@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   const db = createAdminClient();
   const { data: profile } = await db
     .from("admin_users")
-    .select("business_name, business_slug, name, base_country")
+    .select("business_name, business_slug, name, base_country, contact_email, gender")
     .eq("id", ctx.userId)
     .single();
 
@@ -53,9 +53,6 @@ export async function POST(request: NextRequest) {
     const id = String(body.id || `product-${Date.now()}`);
     const artisan = String(body.artisan || profile.name || "").trim() || profile.name;
     const phone = normalizeListingPhone(body.phone ?? body.contactPhone);
-    if (!isValidListingPhone(phone)) {
-      return NextResponse.json({ error: "A valid contact phone number is required." }, { status: 400 });
-    }
 
     const priceRaw = Number(body.price ?? 0);
     const listingCurrency = String(body.listingCurrency || body.currency || "EUR")
@@ -95,6 +92,8 @@ export async function POST(request: NextRequest) {
       submitted_at: new Date().toISOString(),
       phone,
       submitter_phone: phone,
+      contact_email: String(profile.contact_email || ctx.session.email || "").trim().toLowerCase(),
+      seller_gender: profile.gender === "M" || profile.gender === "F" ? profile.gender : null,
     };
 
     const { data, error } = await db.from("products").insert(row).select().single();
@@ -157,7 +156,7 @@ export async function PATCH(request: NextRequest) {
     if (body.in_stock !== undefined) updates.in_stock = body.in_stock;
     if (body.phone !== undefined || body.contactPhone !== undefined) {
       const phone = normalizeListingPhone(body.phone ?? body.contactPhone);
-      if (!isValidListingPhone(phone)) {
+      if (phone && !isValidListingPhone(phone)) {
         return NextResponse.json({ error: "A valid contact phone number is required." }, { status: 400 });
       }
       updates.phone = phone;

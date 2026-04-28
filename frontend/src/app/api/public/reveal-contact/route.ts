@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-type RpcRow = { out_phone: string; out_count: number };
+type RpcRow = { out_contact?: string; out_phone?: string; out_count: number };
 
-/** Atomically increment reveal counter and return phone (approved product or service). */
+/** Atomically increment reveal counter and return email for products or phone for services. */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -30,12 +30,22 @@ export async function POST(request: NextRequest) {
 
     const rows = (data as RpcRow[] | null) ?? [];
     const row = rows[0];
-    if (!row?.out_phone?.trim()) {
-      return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+    const contact = String(row?.out_contact || row?.out_phone || "").trim();
+    if (!contact) {
+      return NextResponse.json(
+        {
+          error:
+            kind === "product"
+              ? "Seller contact email has not been added for this product yet."
+              : "Listing not found.",
+        },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
-      phone: row.out_phone.trim(),
+      contact,
+      ...(kind === "product" ? { email: contact } : { phone: contact }),
       contactRevealCount: row.out_count,
     });
   } catch {

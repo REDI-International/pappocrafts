@@ -23,7 +23,9 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-3">
-            <Image src={logo_url} alt="PappoShop" width={200} height={60} className="h-12 w-auto brightness-0 invert" unoptimized />
+            <div className="inline-flex rounded-xl bg-white p-3">
+              <Image src={logo_url} alt="PappoShop" width={200} height={60} className="h-12 w-auto object-contain" unoptimized />
+            </div>
             <p className="mt-3 text-sm text-white/50 leading-relaxed max-w-xs">
               {footer_description || t("footer.desc")}
             </p>

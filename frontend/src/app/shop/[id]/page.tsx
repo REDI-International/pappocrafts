@@ -1,11 +1,13 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ProductImageOverlays from "@/components/ProductImageOverlays";
 import { type Product, mapSupabaseProduct } from "@/lib/products";
+import { PRODUCT_SIZE_OPTIONS } from "@/lib/product-sizes";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
 import { trackMarketplaceEvent, trackViewContent } from "@/components/Analytics";
@@ -19,10 +21,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [revealedPhone, setRevealedPhone] = useState<string | null>(null);
-  const [revealCount, setRevealCount] = useState<number | null>(null);
-  const [revealLoading, setRevealLoading] = useState(false);
-  const [revealError, setRevealError] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [orderMessage, setOrderMessage] = useState("");
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
@@ -41,6 +43,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         const mapped = mapSupabaseProduct(data);
         setProduct(mapped);
         setGalleryIndex(0);
+        setSelectedSize("");
+        setOrderError("");
+        setOrderMessage("");
         trackViewContent({ id: mapped.id, name: mapped.name, price: mapped.price, category: mapped.category });
         trackMarketplaceEvent({
           eventType: "product_view",
@@ -75,27 +80,44 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     };
   }, [id]);
 
-  async function handleRevealContact() {
-    if (!product || revealLoading || revealedPhone) return;
-    setRevealError("");
-    setRevealLoading(true);
+  const isLoggedIn = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return Boolean(localStorage.getItem("admin-token"));
+  }, [product?.id]);
+
+  async function handleOrderProduct() {
+    if (!product || orderLoading) return;
+    setOrderError("");
+    setOrderMessage("");
+    const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : "";
+    if (!token) {
+      setOrderError("Please sign in before ordering this product.");
+      return;
+    }
+    if (product.sizes.length > 0 && !selectedSize) {
+      setOrderError("Please select a size before ordering.");
+      return;
+    }
+    setOrderLoading(true);
     try {
-      const res = await fetch("/api/public/reveal-contact", {
+      const res = await fetch("/api/product-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "product", id: product.id }),
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          selectedSize: selectedSize || undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok && typeof data.phone === "string" && data.phone.trim()) {
-        setRevealedPhone(data.phone.trim());
-        setRevealCount(typeof data.contactRevealCount === "number" ? data.contactRevealCount : null);
+      if (res.ok) {
+        setOrderMessage(typeof data.message === "string" ? data.message : "Order request sent.");
         return;
       }
-      setRevealError(typeof data.error === "string" ? data.error : t("listing.error"));
+      setOrderError(typeof data.error === "string" ? data.error : t("listing.error"));
     } catch {
-      setRevealError(t("listing.error"));
+      setOrderError(t("listing.error"));
     } finally {
-      setRevealLoading(false);
+      setOrderLoading(false);
     }
   }
 
@@ -174,15 +196,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="space-y-3">
               <div className="relative aspect-square overflow-hidden rounded-2xl bg-light">
                 {mainImage ? (
-                  <Image
-                    src={mainImage}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    priority
-                    unoptimized
-                  />
+                  <>
+                    <Image
+                      src={mainImage}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      priority
+                      unoptimized
+                    />
+                    <ProductImageOverlays womenLed={product.womenEntrepreneurship} watermarkSize="md" />
+                  </>
                 ) : null}
               </div>
               {galleryImages.length > 1 && (
@@ -197,6 +222,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       }`}
                     >
                       <Image src={src} alt="" fill className="object-cover" sizes="64px" unoptimized />
+                      <ProductImageOverlays womenLed={product.womenEntrepreneurship} />
                     </button>
                   ))}
                 </div>
@@ -216,7 +242,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     Out of stock
                   </span>
                 )}
+                {product.womenEntrepreneurship && (
+                  <span className="rounded-full bg-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green">
+                    Women Entrepreneurship
+                  </span>
+                )}
               </div>
+
+              {product.womenEntrepreneurship && (
+                <div className="mb-4 rounded-2xl border border-green/20 bg-green/5 px-5 py-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-green">
+                    Women Entrepreneurship
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-charcoal/70">
+                    This product is from a women-led Roma business featured by PappoShop.
+                  </p>
+                </div>
+              )}
 
               <h1 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal tracking-tight">
                 {product.name}
@@ -269,34 +311,58 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 {formatProductRegionalPrice(product.price, product.currency)}
               </p>
 
+              {product.sizes.length > 0 && (
+                <div className="mt-6 rounded-2xl border border-charcoal/10 bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/45">{t("product.availableSizes")}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {PRODUCT_SIZE_OPTIONS.map((size) => {
+                      const available = product.sizes.includes(size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          disabled={!available}
+                          onClick={() => setSelectedSize(size)}
+                          className={`rounded-full border px-3 py-1 text-sm font-semibold ${
+                            available
+                              ? selectedSize === size
+                                ? "border-green bg-green text-white"
+                                : "border-green/30 bg-green/10 text-green hover:border-green/60"
+                              : "border-charcoal/10 bg-charcoal/5 text-charcoal/35 line-through"
+                          }`}
+                          title={available ? `${size} available` : `${size} unavailable`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs text-charcoal/45">{t("product.unavailableSizesNote")}</p>
+                </div>
+              )}
+
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
               <div className="mt-8 flex flex-col gap-3">
-                {!revealedPhone ? (
-                  <button
-                    type="button"
-                    onClick={handleRevealContact}
-                    disabled={revealLoading}
-                    className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
-                  >
-                    {revealLoading ? t("listing.submitting") : t("listing.revealContactDetails")}
-                  </button>
-                ) : (
-                  <div className="rounded-2xl border border-green/20 bg-green/5 px-5 py-4">
-                    <p className="text-sm text-charcoal/60">
-                      <span className="text-charcoal/50">{t("product.contactPhone")}: </span>
-                      <a href={`tel:${revealedPhone.replace(/\s/g, "")}`} className="font-semibold text-green hover:underline">
-                        {revealedPhone}
-                      </a>
-                    </p>
-                    {revealCount != null && (
-                      <p className="mt-2 text-xs text-charcoal/45">
-                        {t("listing.contactRevealCount").replace("{count}", String(revealCount))}
-                      </p>
-                    )}
-                  </div>
+                {!isLoggedIn && (
+                  <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Please <Link href="/login" className="font-semibold underline">sign in</Link> to order this product.
+                  </p>
                 )}
-                {revealError && <p className="text-sm text-red-600">{revealError}</p>}
+                <button
+                  type="button"
+                  onClick={handleOrderProduct}
+                  disabled={orderLoading}
+                  className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
+                >
+                  {orderLoading ? t("listing.submitting") : "Order"}
+                </button>
+                {orderMessage && (
+                  <p className="rounded-2xl border border-green/20 bg-green/5 px-4 py-3 text-sm font-medium text-green">
+                    {orderMessage}
+                  </p>
+                )}
+                {orderError && <p className="text-sm text-red-600">{orderError}</p>}
               </div>
 
               <div className="mt-8 flex flex-wrap gap-2">
@@ -343,6 +409,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         unoptimized
                       />
+                    <ProductImageOverlays womenLed={p.womenEntrepreneurship} />
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-charcoal group-hover:text-green transition-colors">{p.name}</h3>

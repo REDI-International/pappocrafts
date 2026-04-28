@@ -23,9 +23,9 @@ const DEFAULTS: SiteSettings = {
   hero_title1: "Handcrafted with",
   hero_title2: "Heart & Heritage",
   hero_description:
-    "Discover authentic handmade products and local services from Roma entrepreneurs across the Western Balkans. Every purchase supports livelihoods and preserves cultural traditions.",
+    "Discover authentic products and local services from Roma entrepreneurs across the Western Balkans. Every purchase supports livelihoods and preserves cultural traditions.",
   footer_description:
-    "Authentic handmade products and services from Roma entrepreneurs across the Western Balkans.",
+    "A marketplace that brings together entrepreneurs from across the Western Balkans, offering products, goods, and services in one place.",
   /** Empty = public site uses locale `t("mission.*")`; admin can set overrides (single language). */
   mission_badge: "",
   mission_title: "",

@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 
 const COUNTRIES = ["North Macedonia", "Serbia", "Albania"] as const;
+const GENDERS = [
+  { value: "M", label: "Male (M)" },
+  { value: "F", label: "Female (F)" },
+] as const;
 
 export default function AdminSellersPage() {
   const [sellers, setSellers] = useState<
@@ -14,6 +18,8 @@ export default function AdminSellersPage() {
       business_slug: string;
       base_country: string | null;
       phone: string;
+      contact_email: string;
+      gender: "M" | "F" | null;
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +37,8 @@ export default function AdminSellersPage() {
     businessName: "",
     email: "",
     phone: "",
+    contactEmail: "",
+    gender: "F" as "M" | "F",
     baseCountry: "North Macedonia" as (typeof COUNTRIES)[number],
     password: "",
   });
@@ -39,6 +47,8 @@ export default function AdminSellersPage() {
     password: "",
     name: "",
     phone: "",
+    contactEmail: "",
+    gender: "F" as "M" | "F",
     businessName: "",
     baseCountry: "North Macedonia" as (typeof COUNTRIES)[number],
   });
@@ -76,6 +86,8 @@ export default function AdminSellersPage() {
           password: form.password,
           name: form.name.trim(),
           phone: form.phone.trim(),
+          contactEmail: form.contactEmail.trim(),
+          gender: form.gender,
           businessName: form.businessName.trim(),
           baseCountry: form.baseCountry,
         }),
@@ -87,7 +99,7 @@ export default function AdminSellersPage() {
         return;
       }
       setOk(`Seller created: ${data.email}. Share login credentials securely.`);
-      setForm({ email: "", password: "", name: "", phone: "", businessName: "", baseCountry: "North Macedonia" });
+      setForm({ email: "", password: "", name: "", phone: "", contactEmail: "", gender: "F", businessName: "", baseCountry: "North Macedonia" });
       load();
     } catch {
       setError("Request failed");
@@ -131,6 +143,8 @@ export default function AdminSellersPage() {
       businessName: s.business_name,
       email: s.email,
       phone: s.phone || "",
+      contactEmail: s.contact_email || s.email,
+      gender: s.gender === "M" ? "M" : "F",
       baseCountry: (COUNTRIES.includes(s.base_country as (typeof COUNTRIES)[number])
         ? s.base_country
         : "North Macedonia") as (typeof COUNTRIES)[number],
@@ -141,7 +155,7 @@ export default function AdminSellersPage() {
   function cancelEdit() {
     setEditingId(null);
     setEditError("");
-    setEditForm({ name: "", businessName: "", email: "", phone: "", baseCountry: "North Macedonia", password: "" });
+    setEditForm({ name: "", businessName: "", email: "", phone: "", contactEmail: "", gender: "F", baseCountry: "North Macedonia", password: "" });
   }
 
   async function handleSaveEdit(sellerId: string) {
@@ -158,6 +172,8 @@ export default function AdminSellersPage() {
         businessName: editForm.businessName.trim(),
         email: editForm.email.trim().toLowerCase(),
         phone: editForm.phone.trim(),
+        contactEmail: editForm.contactEmail.trim(),
+        gender: editForm.gender,
         baseCountry: editForm.baseCountry,
       };
       if (editForm.password.trim()) payload.password = editForm.password;
@@ -236,9 +252,41 @@ export default function AdminSellersPage() {
               required
               type="email"
               value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  email: e.target.value,
+                  contactEmail: f.contactEmail ? f.contactEmail : e.target.value,
+                }))
+              }
               className="mt-1 w-full rounded-xl border border-white/10 bg-[#0F1117] px-4 py-2.5 text-sm text-white"
             />
+          </div>
+          <div>
+            <label className="text-xs text-white/40">Direct order email</label>
+            <input
+              required
+              type="email"
+              value={form.contactEmail}
+              onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#0F1117] px-4 py-2.5 text-sm text-white"
+              placeholder="Shown to buyers for product orders"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-white/40">Gender (donor reporting)</label>
+            <select
+              required
+              value={form.gender}
+              onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value as "M" | "F" }))}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#0F1117] px-4 py-2.5 text-sm text-white"
+            >
+              {GENDERS.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-xs text-white/40">Phone</label>
@@ -305,7 +353,7 @@ export default function AdminSellersPage() {
                   <div className="min-w-0">
                     <p className="font-medium text-white">{s.business_name}</p>
                     <p className="text-white/45 text-xs mt-0.5">
-                      {s.name} · {s.email} · {s.phone || "—"} · {s.base_country || "—"} · /?business={s.business_slug}
+                      {s.name} · login: {s.email} · orders: {s.contact_email || "—"} · {s.gender || "—"} · {s.phone || "—"} · {s.base_country || "—"} · /?business={s.business_slug}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 shrink-0">
@@ -372,6 +420,30 @@ export default function AdminSellersPage() {
                         className="mt-1 w-full rounded-lg border border-white/10 bg-[#1A1D27] px-3 py-2 text-sm text-white"
                       />
                       <p className="text-[10px] text-white/30 mt-1">Changing email signs the seller out everywhere until they log in again.</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-white/40">Direct order email</label>
+                      <input
+                        type="email"
+                        value={editForm.contactEmail}
+                        onChange={(e) => setEditForm((f) => ({ ...f, contactEmail: e.target.value }))}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-[#1A1D27] px-3 py-2 text-sm text-white"
+                      />
+                      <p className="text-[10px] text-white/30 mt-1">Displayed after buyers request product contact details.</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-white/40">Gender (donor reporting)</label>
+                      <select
+                        value={editForm.gender}
+                        onChange={(e) => setEditForm((f) => ({ ...f, gender: e.target.value as "M" | "F" }))}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-[#1A1D27] px-3 py-2 text-sm text-white"
+                      >
+                        {GENDERS.map((g) => (
+                          <option key={g.value} value={g.value}>
+                            {g.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="text-xs text-white/40">Phone</label>

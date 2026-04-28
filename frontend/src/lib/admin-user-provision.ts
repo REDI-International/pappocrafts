@@ -13,6 +13,27 @@ export function isValidSellerPhone(phone: string): boolean {
   return phone.trim().length >= 6;
 }
 
+export type SellerGender = "M" | "F";
+
+export function normalizeSellerGender(raw: unknown): SellerGender | "" {
+  const value = String(raw ?? "").trim().toUpperCase();
+  if (value === "M" || value === "MALE") return "M";
+  if (value === "F" || value === "FEMALE") return "F";
+  return "";
+}
+
+export function isValidSellerGender(gender: string): gender is SellerGender {
+  return gender === "M" || gender === "F";
+}
+
+export function normalizeSellerContactEmail(raw: unknown): string {
+  return String(raw ?? "").trim().toLowerCase();
+}
+
+export function isValidSellerContactEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export function sha256Password(password: string) {
   return createHash("sha256").update(password).digest("hex");
 }
@@ -41,6 +62,8 @@ export async function insertSellerUser(input: {
   businessName: string;
   baseCountry: SellerCountry;
   phone?: string;
+  contactEmail: string;
+  gender: SellerGender;
 }) {
   const db = createAdminClient();
   const email = input.email.trim().toLowerCase();
@@ -58,8 +81,10 @@ export async function insertSellerUser(input: {
       business_slug: slug,
       base_country: input.baseCountry,
       phone,
+      contact_email: input.contactEmail.trim().toLowerCase(),
+      gender: input.gender,
     })
-    .select("id, email, name, business_name, business_slug, base_country, phone")
+    .select("id, email, name, business_name, business_slug, base_country, phone, contact_email, gender")
     .single();
   return { data, error };
 }

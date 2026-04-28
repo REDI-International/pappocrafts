@@ -92,8 +92,14 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
         body: JSON.stringify({ kind: "service", id: svc.id }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok && typeof data.phone === "string" && data.phone.trim()) {
-        setRevealedPhone(data.phone.trim());
+      const phone =
+        typeof data.phone === "string" && data.phone.trim()
+          ? data.phone.trim()
+          : typeof data.contact === "string" && data.contact.trim()
+            ? data.contact.trim()
+            : "";
+      if (res.ok && phone) {
+        setRevealedPhone(phone);
         setRevealCount(typeof data.contactRevealCount === "number" ? data.contactRevealCount : null);
         return;
       }
@@ -102,7 +108,7 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
         setRevealCount(null);
         return;
       }
-      setRevealError(typeof data.error === "string" ? data.error : t("listing.error"));
+                      setRevealError(typeof data.error === "string" ? data.error : t("listing.error"));
     } catch {
       if (svc.phone?.trim()) {
         setRevealedPhone(svc.phone.trim());
@@ -255,6 +261,15 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
                       className="block w-full rounded-full border-2 border-green py-3 text-center text-sm font-semibold text-green hover:bg-green hover:text-white transition-all"
                     >
                       View availability & book
+                    </a>
+                  )}
+
+                  {provider.phone && !revealedPhone && (
+                    <a
+                      href={`tel:${provider.phone.replace(/\s/g, "")}`}
+                      className="block w-full rounded-full bg-green py-3 text-center text-sm font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all"
+                    >
+                      Call {provider.phone}
                     </a>
                   )}
 

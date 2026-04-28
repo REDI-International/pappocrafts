@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
-import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
+import { normalizeListingPhone } from "@/lib/listing-phone";
 import { slugifyBusinessName } from "@/lib/slug";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
 import { normalizeProductImageUrls, productImageDbPayload } from "@/lib/product-images";
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
     if (description.length < 10) {
       return NextResponse.json({ error: "Please add a short description (at least 10 characters)." }, { status: 400 });
     }
-    if (contactEmail && !isValidEmail(contactEmail)) {
-      return NextResponse.json({ error: "If provided, contact email must be valid." }, { status: 400 });
+    if (!isValidEmail(contactEmail)) {
+      return NextResponse.json({ error: "A valid contact email is required." }, { status: 400 });
     }
     if (!artisan || artisan.length < 2) {
       return NextResponse.json({ error: "Maker or business name is required." }, { status: 400 });
@@ -66,9 +66,6 @@ export async function POST(request: NextRequest) {
     }
     if (!isListingCurrency(currency)) {
       return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
-    }
-    if (!isValidListingPhone(contactPhone)) {
-      return NextResponse.json({ error: "A valid contact phone number is required." }, { status: 400 });
     }
 
     const id = `pub-product-${crypto.randomUUID()}`;
