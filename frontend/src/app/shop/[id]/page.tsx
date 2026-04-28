@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -21,10 +21,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [revealedEmail, setRevealedEmail] = useState<string | null>(null);
-  const [revealCount, setRevealCount] = useState<number | null>(null);
-  const [revealLoading, setRevealLoading] = useState(false);
-  const [revealError, setRevealError] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [orderMessage, setOrderMessage] = useState("");
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
@@ -43,6 +43,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         const mapped = mapSupabaseProduct(data);
         setProduct(mapped);
         setGalleryIndex(0);
+        setSelectedSize("");
+        setOrderError("");
+        setOrderMessage("");
         trackViewContent({ id: mapped.id, name: mapped.name, price: mapped.price, category: mapped.category });
         trackMarketplaceEvent({
           eventType: "product_view",
@@ -77,33 +80,44 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     };
   }, [id]);
 
-  async function handleRevealContact() {
-    if (!product || revealLoading || revealedEmail) return;
-    setRevealError("");
-    setRevealLoading(true);
+  const isLoggedIn = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return Boolean(localStorage.getItem("admin-token"));
+  }, [product?.id]);
+
+  async function handleOrderProduct() {
+    if (!product || orderLoading) return;
+    setOrderError("");
+    setOrderMessage("");
+    const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : "";
+    if (!token) {
+      setOrderError("Please sign in before ordering this product.");
+      return;
+    }
+    if (product.sizes.length > 0 && !selectedSize) {
+      setOrderError("Please select a size before ordering.");
+      return;
+    }
+    setOrderLoading(true);
     try {
-      const res = await fetch("/api/public/reveal-contact", {
+      const res = await fetch("/api/product-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "product", id: product.id }),
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          selectedSize: selectedSize || undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
-      const email =
-        typeof data.email === "string"
-          ? data.email.trim()
-          : typeof data.contact === "string"
-            ? data.contact.trim()
-            : "";
-      if (res.ok && email) {
-        setRevealedEmail(email);
-        setRevealCount(typeof data.contactRevealCount === "number" ? data.contactRevealCount : null);
+      if (res.ok) {
+        setOrderMessage(typeof data.message === "string" ? data.message : "Order request sent.");
         return;
       }
-      setRevealError(typeof data.error === "string" ? data.error : t("listing.error"));
+      setOrderError(typeof data.error === "string" ? data.error : t("listing.error"));
     } catch {
-      setRevealError(t("listing.error"));
+      setOrderError(t("listing.error"));
     } finally {
-      setRevealLoading(false);
+      setOrderLoading(false);
     }
   }
 
@@ -304,17 +318,22 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     {PRODUCT_SIZE_OPTIONS.map((size) => {
                       const available = product.sizes.includes(size);
                       return (
-                        <span
+                        <button
                           key={size}
+                          type="button"
+                          disabled={!available}
+                          onClick={() => setSelectedSize(size)}
                           className={`rounded-full border px-3 py-1 text-sm font-semibold ${
                             available
-                              ? "border-green/30 bg-green/10 text-green"
+                              ? selectedSize === size
+                                ? "border-green bg-green text-white"
+                                : "border-green/30 bg-green/10 text-green hover:border-green/60"
                               : "border-charcoal/10 bg-charcoal/5 text-charcoal/35 line-through"
                           }`}
                           title={available ? `${size} available` : `${size} unavailable`}
                         >
                           {size}
-                        </span>
+                        </button>
                       );
                     })}
                   </div>
@@ -325,31 +344,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
               <div className="mt-8 flex flex-col gap-3">
-                {!revealedEmail ? (
-                  <button
-                    type="button"
-                    onClick={handleRevealContact}
-                    disabled={revealLoading}
-                    className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
-                  >
-                    {revealLoading ? t("listing.submitting") : t("listing.revealContactDetails")}
-                  </button>
-                ) : (
-                  <div className="rounded-2xl border border-green/20 bg-green/5 px-5 py-4">
-                    <p className="text-sm text-charcoal/60">
-                      <span className="text-charcoal/50">Contact seller by email: </span>
-                      <a href={`mailto:${encodeURIComponent(revealedEmail)}`} className="font-semibold text-green hover:underline">
-                        {revealedEmail}
-                      </a>
-                    </p>
-                    {revealCount != null && (
-                      <p className="mt-2 text-xs text-charcoal/45">
-                        {t("listing.contactRevealCount").replace("{count}", String(revealCount))}
-                      </p>
-                    )}
-                  </div>
+                {!isLoggedIn && (
+                  <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Please <Link href="/login" className="font-semibold underline">sign in</Link> to order this product.
+                  </p>
                 )}
-                {revealError && <p className="text-sm text-red-600">{revealError}</p>}
+                <button
+                  type="button"
+                  onClick={handleOrderProduct}
+                  disabled={orderLoading}
+                  className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
+                >
+                  {orderLoading ? t("listing.submitting") : "Order"}
+                </button>
+                {orderMessage && (
+                  <p className="rounded-2xl border border-green/20 bg-green/5 px-4 py-3 text-sm font-medium text-green">
+                    {orderMessage}
+                  </p>
+                )}
+                {orderError && <p className="text-sm text-red-600">{orderError}</p>}
               </div>
 
               <div className="mt-8 flex flex-wrap gap-2">
