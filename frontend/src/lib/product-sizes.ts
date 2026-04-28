@@ -33,9 +33,34 @@ export function productSizesFromTags(tags: unknown): ProductSize[] {
   return [];
 }
 
-export function productSizesFromRow(row: { available_sizes?: unknown; sizes?: unknown; tags?: unknown }): ProductSize[] {
+function productSizesFromText(...values: unknown[]): ProductSize[] {
+  const text = values
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ");
+  if (!text) return [];
+
+  const match = text.match(/\bsizes?\s*(?:available|include|includes|:|are|in)?\s*([A-Z,\s/]+)/i);
+  if (!match) return [];
+
+  const rawSizes = match[1]
+    .split(/[,\s/]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return normalizeProductSizes(rawSizes);
+}
+
+export function productSizesFromRow(row: {
+  available_sizes?: unknown;
+  sizes?: unknown;
+  tags?: unknown;
+  description?: unknown;
+  long_description?: unknown;
+}): ProductSize[] {
   const direct = normalizeProductSizes(row.available_sizes ?? row.sizes);
-  return direct.length ? direct : productSizesFromTags(row.tags);
+  if (direct.length) return direct;
+  const tagged = productSizesFromTags(row.tags);
+  if (tagged.length) return tagged;
+  return productSizesFromText(row.description, row.long_description);
 }
 
 export function productSizesDbPayload(sizes: unknown): {
