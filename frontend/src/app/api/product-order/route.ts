@@ -11,6 +11,14 @@ function getResend() {
   return key ? new Resend(key) : null;
 }
 
+function productOrderFromAddress() {
+  return (
+    process.env.PRODUCT_ORDER_FROM_EMAIL ||
+    process.env.RESEND_FROM_EMAIL ||
+    "PappoShop Orders <onboarding@resend.dev>"
+  );
+}
+
 async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
@@ -112,8 +120,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email sending is not configured." }, { status: 500 });
     }
 
-    await resend.emails.send({
-      from: "PappoShop Orders <onboarding@resend.dev>",
+    const emailResult = await resend.emails.send({
+      from: productOrderFromAddress(),
       to: [entrepreneurEmail],
       replyTo: session.email,
       subject: `New order request — ${String(product.name || "Product")}`,
@@ -124,8 +132,21 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    if (emailResult.error) {
+      console.error("[product-order] resend failed", emailResult.error);
+      return NextResponse.json(
+        {
+          error:
+            emailResult.error.message ||
+            "Email delivery failed. Check the configured sender domain and Resend settings.",
+        },
+        { status: 502 }
+      );
+    }
+
     return NextResponse.json({ success: true, message: "Order request sent to the entrepreneur." });
-  } catch {
+  } catch (err) {
+    console.error("[product-order] unexpected", err);
     return NextResponse.json({ error: "Order request failed." }, { status: 500 });
   }
 }
