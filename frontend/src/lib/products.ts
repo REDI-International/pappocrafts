@@ -59,6 +59,7 @@ export const categories = [
   "Machines",
   "Electronics",
   "Auto",
+  "Other",
 ];
 
 /** Emoji per category for the same horizontal chip strip pattern as the services page. */
@@ -82,6 +83,7 @@ const SHOP_CATEGORY_ICONS: Partial<Record<string, string>> = {
   Machines: "⚙️",
   Electronics: "💻",
   Auto: "🚗",
+  Other: "📦",
 };
 
 export const shopCategoryChips = categories.map((name) => ({
