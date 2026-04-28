@@ -47,7 +47,7 @@ export default function IntroEntryLayer({ initiallyOpen }: { initiallyOpen: bool
             }}
             className="inline-flex flex-1 items-center justify-center rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-dark transition-colors"
           >
-            Read the story first
+            {t("entryLayer.storyFirst")}
           </Link>
           <button
             type="button"

@@ -70,7 +70,7 @@ export const translationKeys = [
   "service.morning", "service.afternoon", "service.evening", "service.selectTime",
   "service.requestSent", "service.respondsIn", "service.verified", "service.startingFrom",
   "service.fixedFrom", "service.bookingPlaceholder",
-  "entryLayer.badge", "entryLayer.title", "entryLayer.subtitle", "entryLayer.enter",
+  "entryLayer.badge", "entryLayer.title", "entryLayer.subtitle", "entryLayer.storyFirst", "entryLayer.enter",
   "cart.title", "cart.empty", "cart.startShopping", "cart.subtotal", "cart.checkout", "cart.continueShopping",
   "checkout.title", "checkout.review", "checkout.subtotal", "checkout.shipping", "checkout.shippingFree",
   "checkout.total", "checkout.payStripe", "checkout.redirecting", "checkout.secure",
@@ -375,6 +375,7 @@ const en: Translations = {
   "entryLayer.title": "Pappo! The first community based shop for the Western Balkans!",
   "entryLayer.subtitle":
     "Before you enter the marketplace, discover the story behind PappoShop and how we support entrepreneurs from vulnerable communities.",
+  "entryLayer.storyFirst": "Read the story first",
   "entryLayer.enter": "Continue to website",
   "cart.title": "Your Cart",
   "cart.empty": "Your cart is empty",
@@ -714,6 +715,7 @@ const sr: Translations = {
   "entryLayer.subtitle":
     "Prije ulaska na tržište, upoznajte priču iza PappoShopa i kako podržavamo zanatlije iz ranjivih zajednica.",
   "entryLayer.enter": "Nastavi na web stranicu",
+  "entryLayer.storyFirst": "Prvo pročitaj priču",
   "cart.title": "Vaša korpa",
   "cart.empty": "Vaša korpa je prazna",
   "cart.startShopping": "Počnite kupovinu",
@@ -1051,6 +1053,7 @@ const sq: Translations = {
   "entryLayer.title": "Pappo! Dyqani i parë i bazuar në komunitet për Ballkanin Perëndimor!",
   "entryLayer.subtitle":
     "Para se të hyni në treg, zbuloni historinë pas PappoShop dhe si mbështesim artizanët nga komunitete të cenueshme.",
+  "entryLayer.storyFirst": "Lexo historinë së pari",
   "entryLayer.enter": "Vazhdo në faqe",
   "cart.title": "Shporta juaj",
   "cart.empty": "Shporta juaj është bosh",
@@ -1388,6 +1391,7 @@ const bs: Translations = {
   "entryLayer.badge": "Prije ulaska",
   "entryLayer.title": "Dobrodošli u PappoShop",
   "entryLayer.subtitle": "Prvo pogledajte kratku priču o zajednici i misiji PappoShop-a.",
+  "entryLayer.storyFirst": "Prvo pročitaj priču",
   "entryLayer.enter": "Uđi na stranicu",
   "cart.title": "Vaša korpa",
   "cart.empty": "Vaša korpa je prazna",
@@ -1726,6 +1730,7 @@ const mk: Translations = {
   "entryLayer.title": "Pappo! Првата продавница заснована на заедницата за Западен Балкан!",
   "entryLayer.subtitle":
     "Пред да влезете на пазарот, откријте ја приказната зад PappoShop и како ги поддржуваме претприемачите од ранливи заедници.",
+  "entryLayer.storyFirst": "Прочитај ја приказната прво",
   "entryLayer.enter": "Продолжи на веб-страницата",
   "cart.title": "Вашата кошничка",
   "cart.empty": "Вашата кошничка е празна",
@@ -2073,6 +2078,7 @@ const tr: Translations = {
   "entryLayer.title": "Pappo! Batı Balkanlar için ilk topluluk temelli mağaza!",
   "entryLayer.subtitle":
     "Pazara girmeden önce, PappoShop'un hikayesini ve kırılgan topluluklardan zanaatkarları nasıl desteklediğimizi keşfedin.",
+  "entryLayer.storyFirst": "Önce hikayeyi oku",
   "entryLayer.enter": "Web sitesine devam et",
   "cart.title": "Sepetiniz",
   "cart.empty": "Sepetiniz boş",
