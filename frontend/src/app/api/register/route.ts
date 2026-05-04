@@ -9,6 +9,7 @@ import {
   normalizeSellerPhone,
 } from "@/lib/admin-user-provision";
 import { createVerificationToken, sendVerificationEmail } from "@/lib/email-verification";
+import { isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -75,6 +76,19 @@ export async function POST(request: NextRequest) {
     if (error) {
       if ("code" in error && error.code === "23505") {
         return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
+      }
+      if (
+        isSupabaseMissingColumnError(error, "email_verified") ||
+        isSupabaseMissingColumnError(error, "verification_token_hash") ||
+        isSupabaseMissingColumnError(error, "verification_sent_at")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Email verification is not ready yet. Please apply Supabase migration 043_admin_users_email_verification.sql and refresh the Supabase schema cache.",
+          },
+          { status: 503 }
+        );
       }
       return NextResponse.json({ error: error.message }, { status: error.code === "VALIDATION" ? 400 : 500 });
     }

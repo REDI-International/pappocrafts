@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 
 function htmlPage(title: string, message: string) {
   return new NextResponse(
@@ -34,6 +34,13 @@ export async function GET(request: NextRequest) {
     .select("id, email_verified")
     .eq("verification_token_hash", tokenHash)
     .maybeSingle();
+
+  if (isSupabaseMissingColumnError(error, "verification_token_hash")) {
+    return htmlPage(
+      "Verification unavailable",
+      "Email verification is not fully configured yet. Please contact support."
+    );
+  }
 
   if (error || !user) {
     return htmlPage("Invalid verification link", "This verification link is invalid or has already been used.");

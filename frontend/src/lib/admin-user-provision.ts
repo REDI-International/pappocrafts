@@ -38,6 +38,18 @@ export function sha256Password(password: string) {
   return createHash("sha256").update(password).digest("hex");
 }
 
+function verificationFields(input: {
+  emailVerified?: boolean;
+  verificationTokenHash?: string | null;
+  verificationSentAt?: string | null;
+}) {
+  const fields: Record<string, string | boolean | null> = {};
+  if (input.emailVerified !== undefined) fields.email_verified = input.emailVerified;
+  if (input.verificationTokenHash !== undefined) fields.verification_token_hash = input.verificationTokenHash;
+  if (input.verificationSentAt !== undefined) fields.verification_sent_at = input.verificationSentAt;
+  return fields;
+}
+
 export async function nextUniqueBusinessSlug(
   db: ReturnType<typeof createAdminClient>,
   businessName: string,
@@ -86,9 +98,7 @@ export async function insertSellerUser(input: {
       phone,
       contact_email: input.contactEmail.trim().toLowerCase(),
       gender: input.gender,
-      email_verified: input.emailVerified ?? true,
-      verification_token_hash: input.verificationTokenHash ?? null,
-      verification_sent_at: input.verificationSentAt ?? null,
+      ...verificationFields(input),
     })
     .select("id, email, name, business_name, business_slug, base_country, phone, contact_email, gender, role")
     .single();
@@ -112,9 +122,7 @@ export async function insertBuyerUser(input: {
       password_hash: sha256Password(input.password),
       role: "user",
       name: input.name.trim(),
-      email_verified: input.emailVerified ?? true,
-      verification_token_hash: input.verificationTokenHash ?? null,
-      verification_sent_at: input.verificationSentAt ?? null,
+      ...verificationFields(input),
     })
     .select("id, email, name, role")
     .single();
