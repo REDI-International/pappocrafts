@@ -81,11 +81,24 @@ export async function authenticate(
   let user: { email: string; role: UserRole; name: string; userId: string | null } | null = null;
 
   if (db) {
-    let { data, error } = await db
+    let data:
+      | {
+          id: unknown;
+          email: string;
+          role: string;
+          name: string;
+          password_hash: string;
+          email_verified?: boolean | null;
+        }
+      | null = null;
+    let error: { message?: string } | null = null;
+    const primary = await db
       .from("admin_users")
       .select("id, email, role, name, password_hash, email_verified")
       .eq("email", email.toLowerCase())
       .single();
+    data = primary.data;
+    error = primary.error;
     if (error?.message?.toLowerCase().includes("email_verified")) {
       const fallback = await db
         .from("admin_users")
