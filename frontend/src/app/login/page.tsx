@@ -9,8 +9,11 @@ import { useSiteSettings } from "@/lib/site-settings-context";
 export default function LoginPage() {
   const router = useRouter();
   const { logo_url } = useSiteSettings();
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +59,48 @@ export default function LoginPage() {
     }
   }
 
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Could not create account.");
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem("admin-token", data.token);
+      localStorage.setItem(
+        "admin-user",
+        JSON.stringify({
+          email: data.email,
+          role: data.role,
+          name: data.name,
+          userId: data.userId ?? null,
+        })
+      );
+      router.push("/account");
+    } catch {
+      setError("Connection error. Please try again.");
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8f6f3] via-white to-[#f0ede8] flex flex-col">
       <div className="p-6">
@@ -81,14 +126,35 @@ export default function LoginPage() {
                 unoptimized
               />
             </Link>
-            <h1 className="mt-6 text-2xl font-bold text-charcoal">Welcome back</h1>
+            <h1 className="mt-6 text-2xl font-bold text-charcoal">
+              {mode === "login" ? "Welcome back" : "Create customer account"}
+            </h1>
             <p className="mt-2 text-sm text-charcoal/50">
-              Sign in to your PappoShop account. Public registration is not available — entrepreneur access is issued by the team.
+              {mode === "login"
+                ? "Sign in to your PappoShop account."
+                : "Create a customer account to order products. Entrepreneur access is issued by the team."}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-charcoal/8 shadow-lg shadow-charcoal/5 p-8">
+          <form onSubmit={mode === "login" ? handleSubmit : handleRegister} className="bg-white rounded-2xl border border-charcoal/8 shadow-lg shadow-charcoal/5 p-8">
             <div className="space-y-5">
+              {mode === "register" && (
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-charcoal/70 mb-1.5">
+                    Full name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    required
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
+                    placeholder="Your name"
+                  />
+                </div>
+              )}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-charcoal/70 mb-1.5">
                   Email address
@@ -138,6 +204,23 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
+              {mode === "register" && (
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-charcoal/70 mb-1.5">
+                    Confirm password
+                  </label>
+                  <input
+                    id="confirm-password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
+                    placeholder="Repeat your password"
+                  />
+                </div>
+              )}
             </div>
 
             {error && (
@@ -157,17 +240,27 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Signing in...
+                  {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
               ) : (
-                "Sign in"
+                mode === "login" ? "Sign in" : "Create account"
               )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode((m) => (m === "login" ? "register" : "login"));
+                setError("");
+              }}
+              className="mt-4 w-full text-sm font-medium text-green hover:text-green-dark"
+            >
+              {mode === "login" ? "Create a customer account" : "Already have an account? Sign in"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-xs text-charcoal/30">
-              Handmade by Roma artisans in the Balkans
+              Customer accounts can order products. Entrepreneur accounts are created by the PappoShop team.
             </p>
           </div>
         </div>
