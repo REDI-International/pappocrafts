@@ -219,8 +219,13 @@ export default function Navbar() {
 
               <Link
                 href={loggedIn ? "/account" : "/login"}
-                className="p-2 text-charcoal/70 hover:text-green transition-colors"
-                aria-label="Account"
+                className={`rounded-full p-2 transition-all ${
+                  loggedIn
+                    ? "bg-green/15 text-green-dark shadow-sm shadow-green/10 ring-1 ring-green/35"
+                    : "text-charcoal/70 hover:bg-green/10 hover:text-green"
+                }`}
+                aria-label={loggedIn ? "Account (signed in)" : "Account"}
+                title={loggedIn ? "Signed in" : "Sign in"}
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -242,8 +247,13 @@ export default function Navbar() {
               <LanguageSelector variant="mobile" />
               <Link
                 href={loggedIn ? "/account" : "/login"}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-charcoal hover:bg-charcoal/5"
-                aria-label="Account"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${
+                  loggedIn
+                    ? "bg-green/15 text-green-dark shadow-sm shadow-green/10 ring-1 ring-green/35"
+                    : "text-charcoal hover:bg-charcoal/5"
+                }`}
+                aria-label={loggedIn ? "Account (signed in)" : "Account"}
+                title={loggedIn ? "Signed in" : "Sign in"}
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
