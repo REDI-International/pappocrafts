@@ -10,11 +10,17 @@ export default function LoginPage() {
   const router = useRouter();
   const { logo_url } = useSiteSettings();
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [registerRole, setRegisterRole] = useState<"user" | "seller">("user");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [baseCountry, setBaseCountry] = useState("North Macedonia");
+  const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState<"M" | "F" | "">("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,6 +28,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setInfo("");
 
     try {
       const res = await fetch("/api/admin/auth", {
@@ -63,6 +70,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setInfo("");
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -74,7 +82,16 @@ export default function LoginPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: registerRole,
+          businessName,
+          baseCountry,
+          phone,
+          gender,
+        }),
       });
       const data = await res.json();
 
@@ -84,17 +101,10 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem("admin-token", data.token);
-      localStorage.setItem(
-        "admin-user",
-        JSON.stringify({
-          email: data.email,
-          role: data.role,
-          name: data.name,
-          userId: data.userId ?? null,
-        })
-      );
-      router.push("/account");
+      setInfo(data.message || "Account created. Please check your email to verify your account.");
+      setMode("login");
+      setPassword("");
+      setConfirmPassword("");
     } catch {
       setError("Connection error. Please try again.");
       setLoading(false);
@@ -127,33 +137,116 @@ export default function LoginPage() {
               />
             </Link>
             <h1 className="mt-6 text-2xl font-bold text-charcoal">
-              {mode === "login" ? "Welcome back" : "Create customer account"}
+              {mode === "login" ? "Welcome back" : "Create account"}
             </h1>
             <p className="mt-2 text-sm text-charcoal/50">
               {mode === "login"
                 ? "Sign in to your PappoShop account."
-                : "Create a customer account to order products. Entrepreneur access is issued by the team."}
+                : "Create a customer or entrepreneur account. You must verify your email before signing in."}
             </p>
           </div>
 
           <form onSubmit={mode === "login" ? handleSubmit : handleRegister} className="bg-white rounded-2xl border border-charcoal/8 shadow-lg shadow-charcoal/5 p-8">
             <div className="space-y-5">
               {mode === "register" && (
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-charcoal/70 mb-1.5">
-                    Full name
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    required
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
-                    placeholder="Your name"
-                  />
-                </div>
+                <>
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-light/70 p-1">
+                    {[
+                      { value: "user", label: "Customer" },
+                      { value: "seller", label: "Entrepreneur" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setRegisterRole(option.value as "user" | "seller")}
+                        className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                          registerRole === option.value ? "bg-green text-white" : "text-charcoal/60 hover:bg-white"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-charcoal/70 mb-1.5">
+                      Full name
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      required
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
+                      placeholder="Your name"
+                    />
+                  </div>
+                  {registerRole === "seller" && (
+                    <>
+                      <div>
+                        <label htmlFor="business-name" className="block text-sm font-medium text-charcoal/70 mb-1.5">
+                          Business / shop name
+                        </label>
+                        <input
+                          id="business-name"
+                          type="text"
+                          required
+                          value={businessName}
+                          onChange={(e) => setBusinessName(e.target.value)}
+                          className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
+                          placeholder="Your shop name"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label htmlFor="country" className="block text-sm font-medium text-charcoal/70 mb-1.5">
+                            Country
+                          </label>
+                          <select
+                            id="country"
+                            value={baseCountry}
+                            onChange={(e) => setBaseCountry(e.target.value)}
+                            className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
+                          >
+                            <option>North Macedonia</option>
+                            <option>Serbia</option>
+                            <option>Albania</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label htmlFor="gender" className="block text-sm font-medium text-charcoal/70 mb-1.5">
+                            Gender
+                          </label>
+                          <select
+                            id="gender"
+                            required
+                            value={gender}
+                            onChange={(e) => setGender(e.target.value as "M" | "F" | "")}
+                            className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
+                          >
+                            <option value="">Select</option>
+                            <option value="M">Male (M)</option>
+                            <option value="F">Female (F)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label htmlFor="phone" className="block text-sm font-medium text-charcoal/70 mb-1.5">
+                          Phone
+                        </label>
+                        <input
+                          id="phone"
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full rounded-xl border border-charcoal/15 bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-green/40 focus:border-green/40 transition-all"
+                          placeholder="+389..."
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
               )}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-charcoal/70 mb-1.5">
@@ -228,6 +321,11 @@ export default function LoginPage() {
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
+            {info && (
+              <div className="mt-4 rounded-xl bg-green/5 border border-green/20 px-4 py-3">
+                <p className="text-sm text-green">{info}</p>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -251,16 +349,17 @@ export default function LoginPage() {
               onClick={() => {
                 setMode((m) => (m === "login" ? "register" : "login"));
                 setError("");
+                setInfo("");
               }}
               className="mt-4 w-full text-sm font-medium text-green hover:text-green-dark"
             >
-              {mode === "login" ? "Create a customer account" : "Already have an account? Sign in"}
+              {mode === "login" ? "Create an account" : "Already have an account? Sign in"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-xs text-charcoal/30">
-              Customer accounts can order products. Entrepreneur accounts are created by the PappoShop team.
+              Customer and entrepreneur accounts require email verification before sign-in.
             </p>
           </div>
         </div>

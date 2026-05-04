@@ -64,6 +64,9 @@ export async function insertSellerUser(input: {
   phone?: string;
   contactEmail: string;
   gender: SellerGender;
+  emailVerified?: boolean;
+  verificationTokenHash?: string | null;
+  verificationSentAt?: string | null;
 }) {
   const db = createAdminClient();
   const email = input.email.trim().toLowerCase();
@@ -83,13 +86,23 @@ export async function insertSellerUser(input: {
       phone,
       contact_email: input.contactEmail.trim().toLowerCase(),
       gender: input.gender,
+      email_verified: input.emailVerified ?? true,
+      verification_token_hash: input.verificationTokenHash ?? null,
+      verification_sent_at: input.verificationSentAt ?? null,
     })
-    .select("id, email, name, business_name, business_slug, base_country, phone, contact_email, gender")
+    .select("id, email, name, business_name, business_slug, base_country, phone, contact_email, gender, role")
     .single();
   return { data, error };
 }
 
-export async function insertBuyerUser(input: { email: string; password: string; name: string }) {
+export async function insertBuyerUser(input: {
+  email: string;
+  password: string;
+  name: string;
+  emailVerified?: boolean;
+  verificationTokenHash?: string | null;
+  verificationSentAt?: string | null;
+}) {
   const db = createAdminClient();
   const email = input.email.trim().toLowerCase();
   const { data, error } = await db
@@ -99,6 +112,9 @@ export async function insertBuyerUser(input: { email: string; password: string; 
       password_hash: sha256Password(input.password),
       role: "user",
       name: input.name.trim(),
+      email_verified: input.emailVerified ?? true,
+      verification_token_hash: input.verificationTokenHash ?? null,
+      verification_sent_at: input.verificationSentAt ?? null,
     })
     .select("id, email, name, role")
     .single();

@@ -71,7 +71,10 @@ function supabase() {
   }
 }
 
-export async function authenticate(email: string, password: string): Promise<Session | null> {
+export async function authenticate(
+  email: string,
+  password: string
+): Promise<Session | null | "email_unverified"> {
   const hash = sha256(password);
   const db = supabase();
 
@@ -80,11 +83,12 @@ export async function authenticate(email: string, password: string): Promise<Ses
   if (db) {
     const { data } = await db
       .from("admin_users")
-      .select("id, email, role, name, password_hash")
+      .select("id, email, role, name, password_hash, email_verified")
       .eq("email", email.toLowerCase())
       .single();
 
     if (data && data.password_hash === hash) {
+      if (data.email_verified === false) return "email_unverified";
       user = {
         email: data.email,
         role: data.role as UserRole,
