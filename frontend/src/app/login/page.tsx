@@ -141,8 +141,8 @@ export default function LoginPage() {
             </h1>
             <p className="mt-2 text-sm text-charcoal/50">
               {mode === "login"
-                ? "Sign in to your PappoShop account."
-                : "Create a customer or entrepreneur account. You must verify your email before signing in."}
+                ? "Sign in to your PappoShop account, or create a customer/entrepreneur account below."
+                : "Choose Customer or Entrepreneur below, create your account, then verify your email before signing in."}
             </p>
           </div>
 
