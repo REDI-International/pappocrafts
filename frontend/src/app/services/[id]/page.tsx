@@ -239,20 +239,27 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
             </div>
 
             <div className="lg:col-span-1">
-              <div className="sticky top-24 rounded-2xl bg-white border border-charcoal/5 p-6 shadow-sm">
-                <div className="text-center mb-6">
-                  <div className="text-sm text-charcoal/50 mb-1">{t("service.startingFrom")}</div>
-                  <div className="flex items-baseline justify-center gap-2">
-                    {provider.hourlyRate > 0 && (
-                      <span className="text-3xl font-bold text-green">{formatRegionalPrice(provider.hourlyRate)}<span className="text-base font-normal text-charcoal/50">{t("services.perHour")}</span></span>
+              <div className="sticky top-24 overflow-hidden rounded-3xl border border-charcoal/10 bg-white shadow-xl shadow-charcoal/5">
+                <div className="bg-gradient-to-br from-green/10 via-white to-blue/5 p-6 text-center">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/40">{t("service.startingFrom")}</p>
+                  <div className="mt-2 flex items-baseline justify-center gap-2">
+                    {provider.hourlyRate > 0 ? (
+                      <span className="text-3xl font-bold text-green">
+                        {formatRegionalPrice(provider.hourlyRate)}
+                        <span className="text-base font-normal text-charcoal/50">{t("services.perHour")}</span>
+                      </span>
+                    ) : (
+                      <span className="text-lg font-semibold text-charcoal/55">Contact for price</span>
                     )}
                   </div>
                   {provider.fixedRateFrom && (
-                    <p className="text-sm text-charcoal/50 mt-1">{t("service.fixedFrom")} {formatRegionalPrice(provider.fixedRateFrom)}</p>
+                    <p className="mt-1 text-sm text-charcoal/50">
+                      {t("service.fixedFrom")} {formatRegionalPrice(provider.fixedRateFrom)}
+                    </p>
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 p-6">
                   {provider.bookingCalendarUrl && (
                     <a
                       href={provider.bookingCalendarUrl}
@@ -264,43 +271,37 @@ export default function ServiceProviderPage({ params }: { params: Promise<{ id: 
                     </a>
                   )}
 
-                  {provider.phone && !revealedPhone && (
-                    <a
-                      href={`tel:${provider.phone.replace(/\s/g, "")}`}
-                      className="block w-full rounded-full bg-green py-3 text-center text-sm font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all"
-                    >
-                      Call {provider.phone}
-                    </a>
-                  )}
-
-                  {!revealedPhone ? (
-                    <button
-                      type="button"
-                      onClick={handleRevealContact}
-                      disabled={revealLoading}
-                      className="w-full rounded-full bg-green py-3 text-center text-sm font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
-                    >
-                      {revealLoading ? t("listing.submitting") : t("listing.revealContactDetails")}
-                    </button>
-                  ) : (
-                    <div className="rounded-2xl border border-green/20 bg-green/5 px-4 py-4">
-                      <p className="text-sm text-charcoal/60">
-                        <span className="text-charcoal/45">{t("service.providerPhone")}: </span>
-                        <a href={`tel:${revealedPhone.replace(/\s/g, "")}`} className="font-semibold text-green hover:underline">
-                          {revealedPhone}
-                        </a>
-                      </p>
+                  {provider.phone ? (
+                    <div className="rounded-2xl border border-green/20 bg-green/5 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/40">{t("service.providerPhone")}</p>
+                      <a
+                        href={`tel:${provider.phone.replace(/\s/g, "")}`}
+                        className="mt-2 flex items-center justify-center rounded-full bg-green px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green/20 hover:bg-green-dark transition-all"
+                      >
+                        Call {provider.phone}
+                      </a>
                       {revealCount != null && (
-                        <p className="mt-2 text-xs text-charcoal/45">
+                        <p className="mt-3 text-center text-xs text-charcoal/45">
                           {t("listing.contactRevealCount").replace("{count}", String(revealCount))}
                         </p>
                       )}
                     </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleRevealContact}
+                        disabled={revealLoading}
+                        className="w-full rounded-full bg-green py-3 text-center text-sm font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
+                      >
+                        {revealLoading ? t("listing.submitting") : t("listing.revealContactDetails")}
+                      </button>
+                      {revealError && <p className="text-xs text-red-600 text-center">{revealError}</p>}
+                    </>
                   )}
-                  {revealError && <p className="text-xs text-red-600 text-center">{revealError}</p>}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-charcoal/10 space-y-2">
+                <div className="border-t border-charcoal/10 px-6 py-5 space-y-2">
                   <div className="flex items-center gap-2 text-xs text-charcoal/50">
                     <svg className="h-4 w-4 text-green" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
