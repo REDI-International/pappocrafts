@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useLocale, locales, currencies } from "@/lib/locale-context";
 import { useSiteSettings } from "@/lib/site-settings-context";
 import CartSidebar from "./CartSidebar";
+import ListingOfferModal from "./ListingOfferModal";
 
 function useAccountRole() {
   const [role, setRole] = useState<string | null>(null);
@@ -149,12 +150,12 @@ function CurrencySelector({ variant }: { variant: "desktop" | "mobile" }) {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [listingModalOpen, setListingModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLocale();
   const { logo_url } = useSiteSettings();
   const accountRole = useAccountRole();
   const loggedIn = accountRole != null;
-  const isSeller = accountRole === "seller";
   const supportHref = `${pathname === "/" ? "/" : pathname}#contact`;
   const shopActive = pathname === "/" || pathname.startsWith("/shop");
   const servicesActive = pathname.startsWith("/services");
@@ -232,14 +233,13 @@ export default function Navbar() {
                 </svg>
               </Link>
 
-              {isSeller && (
-                <Link
-                  href="/account"
-                  className="inline-flex items-center justify-center rounded-full bg-green px-5 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-green-dark transition-colors"
-                >
-                  {t("nav.listOffer")}
-                </Link>
-              )}
+              <button
+                type="button"
+                onClick={() => setListingModalOpen(true)}
+                className="inline-flex items-center justify-center rounded-full bg-green px-5 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-green-dark transition-colors"
+              >
+                {t("nav.listOffer")}
+              </button>
             </div>
 
             <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:hidden *:shrink-0">
@@ -313,20 +313,22 @@ export default function Navbar() {
               >
                 {t("nav.support")}
               </Link>
-              {isSeller && (
-                <Link
-                  href="/account"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-xl bg-green px-3 py-2.5 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-green-dark"
-                >
-                  {t("nav.listOffer")}
-                </Link>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setListingModalOpen(true);
+                  setMobileOpen(false);
+                }}
+                className="rounded-xl bg-green px-3 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-green-dark"
+              >
+                {t("nav.listOffer")}
+              </button>
             </div>
           </div>
         )}
       </nav>
       <CartSidebar />
+      <ListingOfferModal open={listingModalOpen} onClose={() => setListingModalOpen(false)} />
     </>
   );
 }
