@@ -3,26 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-export const INTRO_COOKIE = "papposhop-intro-dismissed";
-const INTRO_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
-
-function writeIntroCookie() {
-  if (typeof document === "undefined") return;
-  document.cookie = `${INTRO_COOKIE}=1;path=/;max-age=${INTRO_COOKIE_MAX_AGE};SameSite=Lax`;
-}
+import { isIntroHiddenPath, readIntroDismissedFromDocument, writeIntroDismissedCookie } from "@/lib/intro-entry";
 
 export default function IntroEntryLayer({ initiallyOpen }: { initiallyOpen: boolean }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(initiallyOpen);
+  const [userClosed, setUserClosed] = useState(false);
 
-  const isHiddenRoute =
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/account");
+  const open =
+    !userClosed &&
+    !isIntroHiddenPath(pathname) &&
+    (typeof document === "undefined" ? initiallyOpen : !readIntroDismissedFromDocument());
 
-  if (!open || isHiddenRoute) return null;
+  if (!open) return null;
+
+  function dismiss() {
+    writeIntroDismissedCookie();
+    setUserClosed(true);
+  }
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-charcoal/55 p-4 backdrop-blur-sm">
@@ -40,20 +37,14 @@ export default function IntroEntryLayer({ initiallyOpen }: { initiallyOpen: bool
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
           <Link
             href="/landing#mission"
-            onClick={() => {
-              writeIntroCookie();
-              setOpen(false);
-            }}
+            onClick={dismiss}
             className="inline-flex flex-1 items-center justify-center rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-dark transition-colors"
           >
             Read the story first
           </Link>
           <button
             type="button"
-            onClick={() => {
-              writeIntroCookie();
-              setOpen(false);
-            }}
+            onClick={dismiss}
             className="inline-flex flex-1 items-center justify-center rounded-full border border-charcoal/20 px-5 py-2.5 text-sm font-semibold text-charcoal/75 hover:bg-charcoal/5"
           >
             Continue to website
