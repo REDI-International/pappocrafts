@@ -11,6 +11,15 @@ function getResend() {
   return new Resend(key);
 }
 
+/** Same precedence as other mailers: order-specific override, then shared Resend sender. */
+function ordersFromAddress(): string {
+  return (
+    process.env.RESEND_ORDERS_FROM?.trim() ||
+    process.env.RESEND_FROM_EMAIL?.trim() ||
+    "PappoShop <onboarding@resend.dev>"
+  );
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -290,8 +299,7 @@ export async function POST(request: NextRequest) {
     });
 
     const resend = getResend();
-    const from =
-      process.env.RESEND_ORDERS_FROM || "PappoShop <onboarding@resend.dev>";
+    const from = ordersFromAddress();
 
     const bccRaw = process.env.PRODUCT_ORDER_BCC || "";
     const bcc = bccRaw
