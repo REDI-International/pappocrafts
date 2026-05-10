@@ -20,12 +20,20 @@ async function enrichWithSellerProfile(
 
   // Keep endpoint resilient while migration is rolling out.
   let sellers:
-    | Array<{ id: string; name?: string; business_name?: string; biography?: string; logo_url?: string }>
+    | Array<{
+        id: string;
+        name?: string;
+        business_name?: string;
+        biography?: string;
+        logo_url?: string;
+        contact_email?: string;
+        gender?: string;
+      }>
     | null = null;
   {
     const { data } = await db
       .from("admin_users")
-      .select("id, name, business_name, biography, logo_url")
+      .select("id, name, business_name, biography, logo_url, contact_email, gender")
       .in("id", sellerIds);
     sellers = data;
   }
@@ -49,6 +57,13 @@ async function enrichWithSellerProfile(
       seller_name: String(seller.business_name || seller.name || ""),
       seller_biography: String(seller.biography || ""),
       seller_logo_url: String(seller.logo_url || ""),
+      contact_email: String(seller.contact_email || row.contact_email || ""),
+      seller_gender:
+        seller.gender === "M" || seller.gender === "F"
+          ? seller.gender
+          : row.seller_gender === "M" || row.seller_gender === "F"
+            ? row.seller_gender
+            : "",
     };
   });
 }

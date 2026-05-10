@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { redactPublicListingContact } from "@/lib/public-listing-response";
 
 type ListingRow = Record<string, unknown>;
 
@@ -19,12 +18,12 @@ async function enrichWithSellerProfile(
 
   // Keep endpoint resilient while migration is rolling out.
   let sellers:
-    | Array<{ id: string; name?: string; business_name?: string; biography?: string; logo_url?: string }>
+    | Array<{ id: string; name?: string; business_name?: string; biography?: string; logo_url?: string; phone?: string }>
     | null = null;
   {
     const { data } = await db
       .from("admin_users")
-      .select("id, name, business_name, biography, logo_url")
+      .select("id, name, business_name, biography, logo_url, phone")
       .in("id", sellerIds);
     sellers = data;
   }
@@ -48,6 +47,7 @@ async function enrichWithSellerProfile(
       seller_name: String(seller.business_name || seller.name || ""),
       seller_biography: String(seller.biography || ""),
       seller_logo_url: String(seller.logo_url || ""),
+      phone: String(row.phone || seller.phone || ""),
     };
   });
 }
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       const { data, error } = await db.from("services").select("*").eq("id", id).single();
       if (error || !data) return NextResponse.json({ error: "Not found" }, { status: 404 });
       const [enriched] = await enrichWithSellerProfile(db, [data as ListingRow]);
-      return NextResponse.json(redactPublicListingContact(enriched || (data as ListingRow)), {
+      return NextResponse.json(enriched || (data as ListingRow), {
         headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300" },
       });
     }
@@ -81,8 +81,7 @@ export async function GET(request: NextRequest) {
       db,
       ((data ?? []) as ListingRow[])
     );
-    const rows = enrichedRows.map((r) => redactPublicListingContact(r));
-    return NextResponse.json(rows, {
+    return NextResponse.json(enrichedRows, {
       headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300" },
     });
   } catch {

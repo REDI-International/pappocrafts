@@ -605,7 +605,7 @@ export default function ListingOfferModal({
                     ))}
                   </div>
                   <div>
-                    <label className={labelClass}>{t("listing.contactEmail")}</label>
+                    <label className={labelClass}>{t("listing.contactEmail")} *</label>
                     <input
                       type="email"
                       className={inputClass}
@@ -613,11 +613,12 @@ export default function ListingOfferModal({
                       onChange={(e) => setProductEmail(e.target.value)}
                       onInvalid={handleFieldInvalid}
                       onInput={clearFieldValidity}
+                      required
                       autoComplete="email"
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>{t("listing.contactPhone")} *</label>
+                    <label className={labelClass}>{t("listing.contactPhone")}</label>
                     <input
                       type="tel"
                       className={inputClass}
@@ -625,8 +626,6 @@ export default function ListingOfferModal({
                       onChange={(e) => setProductPhone(e.target.value)}
                       onInvalid={handleFieldInvalid}
                       onInput={clearFieldValidity}
-                      required
-                      minLength={6}
                       autoComplete="tel"
                     />
                   </div>
