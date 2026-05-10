@@ -9,21 +9,22 @@ import { useSiteSettings } from "@/lib/site-settings-context";
 import CartSidebar from "./CartSidebar";
 import ListingOfferModal from "./ListingOfferModal";
 
-function useAccountRole() {
-  const [role, setRole] = useState<string | null>(null);
+function useLoggedIn() {
+  const pathname = usePathname();
+  const [loggedIn, setLoggedIn] = useState(false);
   useEffect(() => {
-    if (!localStorage.getItem("admin-token")) {
-      setRole(null);
-      return;
+    setLoggedIn(!!localStorage.getItem("admin-token"));
+  }, [pathname]);
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === "admin-token" || e.key === null) {
+        setLoggedIn(!!localStorage.getItem("admin-token"));
+      }
     }
-    try {
-      const user = JSON.parse(localStorage.getItem("admin-user") || "{}") as { role?: string };
-      setRole(typeof user.role === "string" ? user.role : null);
-    } catch {
-      setRole(null);
-    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
-  return role;
+  return loggedIn;
 }
 
 function LanguageSelector({ variant }: { variant: "desktop" | "mobile" }) {
@@ -154,8 +155,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLocale();
   const { logo_url } = useSiteSettings();
-  const accountRole = useAccountRole();
-  const loggedIn = accountRole != null;
+  const loggedIn = useLoggedIn();
   const supportHref = `${pathname === "/" ? "/" : pathname}#contact`;
   const shopActive = pathname === "/" || pathname.startsWith("/shop");
   const servicesActive = pathname.startsWith("/services");
