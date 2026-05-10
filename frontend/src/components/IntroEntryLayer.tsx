@@ -4,8 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/lib/locale-context";
-import { isIntroHiddenPath, readIntroDismissedFromDocument, writeIntroDismissedCookie } from "@/lib/intro-entry";
+import {
+  isIntroHiddenPath,
+  readIntroDismissedFromDocument,
+  writeIntroDismissedCookie,
+} from "@/lib/intro-entry";
 
+/**
+ * One dismiss cookie persists for a year. Mounted once from root layout so client
+ * navigations to `/` do not remount and replay the intro; client-side cookie read
+ * corrects stale RSC payloads that omit the dismissal cookie.
+ */
 export default function IntroEntryLayer({ initiallyOpen }: { initiallyOpen: boolean }) {
   const pathname = usePathname();
   const { t } = useLocale();
