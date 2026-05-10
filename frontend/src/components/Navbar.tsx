@@ -9,12 +9,21 @@ import { useSiteSettings } from "@/lib/site-settings-context";
 import CartSidebar from "./CartSidebar";
 import ListingOfferModal from "./ListingOfferModal";
 
-function useLoggedIn() {
-  const [loggedIn, setLoggedIn] = useState(false);
+function useAccountRole() {
+  const [role, setRole] = useState<string | null>(null);
   useEffect(() => {
-    setLoggedIn(!!localStorage.getItem("admin-token"));
+    if (!localStorage.getItem("admin-token")) {
+      setRole(null);
+      return;
+    }
+    try {
+      const user = JSON.parse(localStorage.getItem("admin-user") || "{}") as { role?: string };
+      setRole(typeof user.role === "string" ? user.role : null);
+    } catch {
+      setRole(null);
+    }
   }, []);
-  return loggedIn;
+  return role;
 }
 
 function LanguageSelector({ variant }: { variant: "desktop" | "mobile" }) {
@@ -145,7 +154,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLocale();
   const { logo_url } = useSiteSettings();
-  const loggedIn = useLoggedIn();
+  const accountRole = useAccountRole();
+  const loggedIn = accountRole != null;
   const supportHref = `${pathname === "/" ? "/" : pathname}#contact`;
   const shopActive = pathname === "/" || pathname.startsWith("/shop");
   const servicesActive = pathname.startsWith("/services");
@@ -210,8 +220,13 @@ export default function Navbar() {
 
               <Link
                 href={loggedIn ? "/account" : "/login"}
-                className="p-2 text-charcoal/70 hover:text-green transition-colors"
-                aria-label="Account"
+                className={`rounded-full p-2 transition-all ${
+                  loggedIn
+                    ? "bg-green/15 text-green-dark shadow-sm shadow-green/10 ring-1 ring-green/35"
+                    : "text-charcoal/70 hover:bg-green/10 hover:text-green"
+                }`}
+                aria-label={loggedIn ? "Account (signed in)" : "Account"}
+                title={loggedIn ? "Signed in" : "Sign in"}
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -223,7 +238,7 @@ export default function Navbar() {
                 onClick={() => setListingModalOpen(true)}
                 className="inline-flex items-center justify-center rounded-full bg-green px-5 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-green-dark transition-colors"
               >
-                ADD PRODUCT/SERVICE
+                {t("nav.listOffer")}
               </button>
             </div>
 
@@ -232,8 +247,13 @@ export default function Navbar() {
               <LanguageSelector variant="mobile" />
               <Link
                 href={loggedIn ? "/account" : "/login"}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-charcoal hover:bg-charcoal/5"
-                aria-label="Account"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${
+                  loggedIn
+                    ? "bg-green/15 text-green-dark shadow-sm shadow-green/10 ring-1 ring-green/35"
+                    : "text-charcoal hover:bg-charcoal/5"
+                }`}
+                aria-label={loggedIn ? "Account (signed in)" : "Account"}
+                title={loggedIn ? "Signed in" : "Sign in"}
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -293,6 +313,16 @@ export default function Navbar() {
               >
                 {t("nav.support")}
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setListingModalOpen(true);
+                  setMobileOpen(false);
+                }}
+                className="rounded-xl bg-green px-3 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-green-dark"
+              >
+                {t("nav.listOffer")}
+              </button>
             </div>
           </div>
         )}

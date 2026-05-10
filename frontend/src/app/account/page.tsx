@@ -243,11 +243,6 @@ function SellerDashboard() {
     const rowCurrency: CurrencyCode = isListingCurrency(rowCurrencyRaw)
       ? (rowCurrencyRaw as CurrencyCode)
       : currencyForListingCountry(rowCountry);
-    const rowPhone =
-      (typeof row.phone === "string" && row.phone.trim()) ||
-      (typeof row.submitter_phone === "string" && row.submitter_phone.trim()) ||
-      "";
-
     setErr("");
     setMsg("");
     setEditingProductId(row.id);
@@ -259,7 +254,7 @@ function SellerDashboard() {
       images: rowImageSlots(row),
       country: rowCountry,
       artisan: row.artisan || "",
-      phone: rowPhone,
+      phone: "",
       currency: rowCurrency,
       inStock: row.in_stock !== false,
     });
@@ -457,7 +452,7 @@ function SellerDashboard() {
         images: normalizeProductImageUrls(form.images),
         country: form.country,
         artisan: form.artisan || undefined,
-        phone: form.phone.trim(),
+        phone: form.phone.trim() || undefined,
         inStock: form.inStock,
       }),
     });
@@ -945,18 +940,6 @@ function SellerDashboard() {
               onChange={(e) => setForm((f) => ({ ...f, artisan: e.target.value }))}
               className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
               placeholder="Defaults to your account name"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-charcoal/50">Contact phone (shown to buyers after approval)</label>
-            <input
-              required
-              type="tel"
-              minLength={6}
-              value={form.phone}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm"
-              placeholder="+389…"
             />
           </div>
           <label className="inline-flex items-center gap-2 text-sm text-charcoal/70">
