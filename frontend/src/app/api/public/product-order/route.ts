@@ -299,33 +299,58 @@ export async function POST(request: NextRequest) {
       .map((s) => s.trim())
       .filter(Boolean);
 
-    if (resend) {
-      await resend.emails.send({
-        from,
-        to: [sellerEmail],
-        ...(bcc.length ? { bcc } : {}),
-        replyTo: buyerEmail,
-        subject: `Order request: ${productName} — ${buyerName}`,
-        html: sellerHtml,
+    if (!resend) {
+      return NextResponse.json({
+        success: true,
+        message: "Request recorded. (Configure RESEND_API_KEY to send email.)",
+        emailDelivery: { sellerSent: false, buyerSent: false, configured: false },
       });
-      try {
-        await resend.emails.send({
-          from,
-          to: [buyerEmail.trim().toLowerCase()],
-          replyTo: sellerEmail,
-          subject: `Your order request: ${productName}`,
-          html: buyerHtml,
-        });
-      } catch (buyerErr) {
-        console.error("[product-order] buyer confirmation email failed", buyerErr);
-      }
+    }
+
+    const sellerResult = await resend.emails.send({
+      from,
+      to: [sellerEmail],
+      ...(bcc.length ? { bcc } : {}),
+      replyTo: buyerEmail,
+      subject: `Order request: ${productName} — ${buyerName}`,
+      html: sellerHtml,
+    });
+
+    if (sellerResult.error) {
+      console.error("[product-order] seller email failed", sellerResult.error);
+      return NextResponse.json(
+        {
+          error:
+            sellerResult.error.message ||
+            "Could not notify the seller by email. Check RESEND_API_KEY and your verified sender domain.",
+        },
+        { status: 502 }
+      );
+    }
+
+    const buyerTo = buyerEmail.trim().toLowerCase();
+    const buyerResult = await resend.emails.send({
+      from,
+      to: [buyerTo],
+      replyTo: sellerEmail,
+      subject: `Your order request: ${productName}`,
+      html: buyerHtml,
+    });
+
+    const buyerSent = !buyerResult.error;
+    if (buyerResult.error) {
+      console.error("[product-order] buyer confirmation failed", buyerResult.error);
     }
 
     return NextResponse.json({
       success: true,
-      message: resend
+      message: buyerSent
         ? "The seller has been notified by email, and a confirmation has been sent to you."
-        : "Request recorded. (Configure RESEND_API_KEY to send email.)",
+        : "The seller has been notified by email. We could not deliver your confirmation — check spam, or ask your admin to verify the sending domain in Resend.",
+      emailDelivery: { sellerSent: true, buyerSent, configured: true },
+      ...(buyerResult.error && process.env.NODE_ENV !== "production"
+        ? { debugBuyerEmailError: buyerResult.error.message }
+        : {}),
     });
   } catch (e) {
     console.error("[product-order]", e);

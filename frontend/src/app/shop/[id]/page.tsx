@@ -34,6 +34,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderNotice, setOrderNotice] = useState<"success" | "error" | null>(null);
+  /** Server-provided success copy (accurate when buyer email fails). */
+  const [orderSuccessDetail, setOrderSuccessDetail] = useState<string | null>(null);
+  /** Last POST /api/public/product-order emailDelivery (for warning styling). */
+  const [orderEmailDelivery, setOrderEmailDelivery] = useState<{
+    sellerSent?: boolean;
+    buyerSent?: boolean;
+  } | null>(null);
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
@@ -127,7 +134,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       headers,
       body: JSON.stringify(body),
     });
-    const data = await res.json().catch(() => ({}));
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      message?: string;
+      emailDelivery?: { sellerSent?: boolean; buyerSent?: boolean };
+    };
     if (!res.ok) {
       throw new Error(typeof data.error === "string" ? data.error : "Order failed");
     }
@@ -137,6 +148,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   async function handleOrderClick() {
     if (!product || orderBusy) return;
     setOrderNotice(null);
+    setOrderSuccessDetail(null);
+    setOrderEmailDelivery(null);
 
     if (product.sizes.length > 0 && !selectedSize) return;
 
@@ -146,7 +159,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     if (canQuickOrder) {
       setOrderBusy(true);
       try {
-        await postOrder(orderPayload);
+        const data = await postOrder(orderPayload);
+        setOrderSuccessDetail(typeof data.message === "string" ? data.message : null);
+        setOrderEmailDelivery(data.emailDelivery ?? null);
         setOrderNotice("success");
       } catch {
         setOrderNotice("error");
@@ -167,6 +182,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     if (!product || orderBusy) return;
     setOrderBusy(true);
     setOrderNotice(null);
+    setOrderSuccessDetail(null);
+    setOrderEmailDelivery(null);
     try {
       const orderPayload: Record<string, unknown> = {
         productId: product.id,
@@ -177,7 +194,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         },
       };
       if (product.sizes.length > 0 && selectedSize) orderPayload.selectedSize = selectedSize;
-      await postOrder(orderPayload);
+      const data = await postOrder(orderPayload);
+      setOrderSuccessDetail(typeof data.message === "string" ? data.message : null);
+      setOrderEmailDelivery(data.emailDelivery ?? null);
       setGuestModalOpen(false);
       setOrderNotice("success");
     } catch {
@@ -412,8 +431,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <div className="mt-8 flex flex-col gap-3">
                 {orderNotice === "success" && (
-                  <p className="rounded-xl border border-green/25 bg-green/5 px-4 py-3 text-sm text-charcoal">
-                    {t("product.orderSuccess")}
+                  <p
+                    className={`rounded-xl border px-4 py-3 text-sm text-charcoal ${
+                      orderEmailDelivery?.sellerSent === true && orderEmailDelivery?.buyerSent === false
+                        ? "border-amber-200 bg-amber-50"
+                        : "border-green/25 bg-green/5"
+                    }`}
+                  >
+                    {orderSuccessDetail?.trim() || t("product.orderSuccess")}
                   </p>
                 )}
                 {orderNotice === "error" && (
