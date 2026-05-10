@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { LocaleProvider } from "@/lib/locale-context";
@@ -10,7 +10,9 @@ import PostHogProvider from "@/components/PostHogProvider";
 import Analytics from "@/components/Analytics";
 import StructuredData from "@/components/StructuredData";
 import CookieConsent from "@/components/CookieConsent";
+import IntroEntryLayer from "@/components/IntroEntryLayer";
 import { getDomainConfig } from "@/lib/domain-config";
+import { INTRO_COOKIE, INTRO_ELIGIBLE_HEADER } from "@/lib/intro-entry";
 import "./globals.css";
 
 const inter = Inter({
@@ -92,13 +94,19 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
+  const headersList = await headers();
   const rawLocale = cookieStore.get("papposhop-locale")?.value;
   const initialLocale: SelectableLocale | undefined = isSelectableLocale(rawLocale) ? rawLocale : undefined;
   const htmlLang = initialLocale ?? "en";
 
+  const introEligible = headersList.get(INTRO_ELIGIBLE_HEADER) === "1";
+  const hasIntroCookie = Boolean(cookieStore.get(INTRO_COOKIE)?.value);
+  const introInitiallyOpen = introEligible && !hasIntroCookie;
+
   return (
     <html lang={htmlLang} suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
+        <IntroEntryLayer initiallyOpen={introInitiallyOpen} />
         <StructuredData />
         <Analytics />
         <Suspense fallback={null}>
