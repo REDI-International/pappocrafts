@@ -42,12 +42,23 @@ export default function Mission() {
               {desc2}
             </p>
 
-            <div className="mt-8 flex items-center gap-4">
-              <Image src="/redi-logo.png" alt="REDI" width={60} height={60} className="h-14 w-auto" />
+            <a
+              href="https://redi-ngo.eu/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-8 inline-flex w-full flex-col items-start gap-3 rounded-xl border border-charcoal/10 bg-white/70 p-3 transition-colors hover:border-green/30 sm:w-auto sm:flex-row sm:items-center sm:gap-4"
+            >
+              <Image
+                src="/redi-logo.png"
+                alt="REDI"
+                width={510}
+                height={208}
+                className="h-14 w-auto object-contain"
+              />
               <p className="text-sm text-charcoal/60">
                 {t("mission.supportedBy")} <strong className="text-charcoal">REDI</strong> — Roma Entrepreneurship Development Initiative
               </p>
-            </div>
+            </a>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">

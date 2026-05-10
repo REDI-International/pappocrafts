@@ -12,12 +12,12 @@ export default function LandingPage() {
     <>
       <Navbar />
       <main>
-        <Hero />
+        <Mission />
         <HowItWorks />
         <Categories />
         <ServicesPreview />
-        <Mission />
         <WaitlistForm />
+        <Hero />
       </main>
       <Footer />
     </>
