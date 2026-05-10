@@ -10,9 +10,19 @@ import CartSidebar from "./CartSidebar";
 import ListingOfferModal from "./ListingOfferModal";
 
 function useLoggedIn() {
+  const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
   useEffect(() => {
     setLoggedIn(!!localStorage.getItem("admin-token"));
+  }, [pathname]);
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === "admin-token" || e.key === null) {
+        setLoggedIn(!!localStorage.getItem("admin-token"));
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
   return loggedIn;
 }
@@ -210,7 +220,11 @@ export default function Navbar() {
 
               <Link
                 href={loggedIn ? "/account" : "/login"}
-                className="p-2 text-charcoal/70 hover:text-green transition-colors"
+                className={
+                  loggedIn
+                    ? "rounded-full p-2 text-green ring-1 ring-green/40 bg-green/15 shadow-sm shadow-green/10 transition-colors hover:bg-green/20"
+                    : "p-2 text-charcoal/70 hover:text-green transition-colors"
+                }
                 aria-label="Account"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -232,7 +246,11 @@ export default function Navbar() {
               <LanguageSelector variant="mobile" />
               <Link
                 href={loggedIn ? "/account" : "/login"}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-charcoal hover:bg-charcoal/5"
+                className={
+                  loggedIn
+                    ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-green ring-1 ring-green/40 bg-green/15 shadow-sm shadow-green/10 transition-colors hover:bg-green/20"
+                    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-charcoal hover:bg-charcoal/5"
+                }
                 aria-label="Account"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
