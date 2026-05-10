@@ -106,13 +106,13 @@ export default async function RootLayout({
   return (
     <html lang={htmlLang} suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
-        <IntroEntryLayer initiallyOpen={introInitiallyOpen} />
         <StructuredData />
         <Analytics />
         <Suspense fallback={null}>
           <PostHogProvider>
             <SiteSettingsProvider>
               <LocaleProvider initialLocale={initialLocale}>
+                <IntroEntryLayer initiallyOpen={introInitiallyOpen} />
                 <CartProvider>{children}</CartProvider>
               </LocaleProvider>
             </SiteSettingsProvider>
