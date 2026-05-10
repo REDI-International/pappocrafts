@@ -346,7 +346,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: buyerSent
         ? "The seller has been notified by email, and a confirmation has been sent to you."
-        : "The seller has been notified by email. We could not deliver your confirmation — check spam, or ask your admin to verify the sending domain in Resend.",
+        : "The seller was notified. We could not send a confirmation email to you.",
       emailDelivery: { sellerSent: true, buyerSent, configured: true },
       ...(buyerResult.error && process.env.NODE_ENV !== "production"
         ? { debugBuyerEmailError: buyerResult.error.message }

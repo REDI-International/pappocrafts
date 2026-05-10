@@ -438,7 +438,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         : "border-green/25 bg-green/5"
                     }`}
                   >
-                    {orderSuccessDetail?.trim() || t("product.orderSuccess")}
+                    {orderEmailDelivery?.sellerSent === true && orderEmailDelivery?.buyerSent === false
+                      ? t("product.orderBuyerCopyFailed")
+                      : orderSuccessDetail?.trim() || t("product.orderSuccess")}
                   </p>
                 )}
                 {orderNotice === "error" && (
