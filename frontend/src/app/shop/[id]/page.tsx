@@ -37,6 +37,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
+  /** Parsed non-meta tag chips; `__seller_gender` / `__sizes` are stripped in `mapSupabaseProduct`. */
   const meta = useMemo(() => parseProductMetaTags(product?.tags ?? []), [product]);
 
   useEffect(() => {
@@ -44,8 +45,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       setSelectedSize(null);
       return;
     }
-    const { sizes } = parseProductMetaTags(product.tags);
-    setSelectedSize(sizes.length > 0 ? sizes[0] : null);
+    // Sizes come from mapped `product.sizes` (DB columns + raw __sizes tags). `product.tags` omits __meta keys.
+    setSelectedSize(product.sizes.length > 0 ? product.sizes[0] : null);
   }, [product]);
 
   useEffect(() => {
@@ -135,11 +136,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     if (!product || orderBusy) return;
     setOrderNotice(null);
 
-    const m = parseProductMetaTags(product.tags);
-    if (m.sizes.length > 0 && !selectedSize) return;
+    if (product.sizes.length > 0 && !selectedSize) return;
 
     const orderPayload: Record<string, unknown> = { productId: product.id };
-    if (m.sizes.length > 0 && selectedSize) orderPayload.selectedSize = selectedSize;
+    if (product.sizes.length > 0 && selectedSize) orderPayload.selectedSize = selectedSize;
 
     if (canQuickOrder) {
       setOrderBusy(true);
@@ -166,7 +166,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     setOrderBusy(true);
     setOrderNotice(null);
     try {
-      const m = parseProductMetaTags(product.tags);
       const orderPayload: Record<string, unknown> = {
         productId: product.id,
         guest: {
@@ -175,7 +174,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           address: guestAddress.trim(),
         },
       };
-      if (m.sizes.length > 0 && selectedSize) orderPayload.selectedSize = selectedSize;
+      if (product.sizes.length > 0 && selectedSize) orderPayload.selectedSize = selectedSize;
       await postOrder(orderPayload);
       setGuestModalOpen(false);
       setOrderNotice("success");
@@ -305,16 +304,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 )}
               </div>
 
-              {(meta.sellerGender === "f" || meta.sellerGender === "m") && (
+              {(product.sellerGender === "F" || product.sellerGender === "M") && (
                 <div className="mb-3 flex flex-wrap gap-2">
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${
-                      meta.sellerGender === "f"
+                      product.sellerGender === "F"
                         ? "bg-pink-100 text-pink-900"
                         : "bg-sky-100 text-sky-900"
                     }`}
                   >
-                    {meta.sellerGender === "f"
+                    {product.sellerGender === "F"
                       ? t("product.badgeFemaleEntrepreneur")
                       : t("product.badgeMaleEntrepreneur")}
                   </span>
@@ -385,13 +384,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
-              {meta.sizes.length > 0 && (
+              {product.sizes.length > 0 && (
                 <div className="mt-6">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-charcoal/45">
                     {t("product.availableSizes")}
                   </p>
                   <div className="flex flex-wrap gap-2" role="group" aria-label={t("product.availableSizes")}>
-                    {meta.sizes.map((sz) => (
+                    {product.sizes.map((sz) => (
                       <button
                         key={sz}
                         type="button"
