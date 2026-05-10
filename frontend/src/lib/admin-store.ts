@@ -71,20 +71,46 @@ function supabase() {
   }
 }
 
-export async function authenticate(email: string, password: string): Promise<Session | null> {
+export async function authenticate(
+  email: string,
+  password: string
+): Promise<Session | null | "email_unverified"> {
   const hash = sha256(password);
   const db = supabase();
 
   let user: { email: string; role: UserRole; name: string; userId: string | null } | null = null;
 
   if (db) {
-    const { data } = await db
+    let data:
+      | {
+          id: unknown;
+          email: string;
+          role: string;
+          name: string;
+          password_hash: string;
+          email_verified?: boolean | null;
+        }
+      | null = null;
+    let error: { message?: string } | null = null;
+    const primary = await db
       .from("admin_users")
-      .select("id, email, role, name, password_hash")
+      .select("id, email, role, name, password_hash, email_verified")
       .eq("email", email.toLowerCase())
       .single();
+    data = primary.data;
+    error = primary.error;
+    if (error?.message?.toLowerCase().includes("email_verified")) {
+      const fallback = await db
+        .from("admin_users")
+        .select("id, email, role, name, password_hash")
+        .eq("email", email.toLowerCase())
+        .single();
+      data = fallback.data;
+      error = fallback.error;
+    }
 
-    if (data && data.password_hash === hash) {
+    if (!error && data && data.password_hash === hash) {
+      if (data.email_verified === false) return "email_unverified";
       user = {
         email: data.email,
         role: data.role as UserRole,

@@ -11,6 +11,12 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }
+    if (session === "email_unverified") {
+      return NextResponse.json(
+        { error: "Please verify your email address before signing in." },
+        { status: 403 }
+      );
+    }
     return NextResponse.json({
       token: session.token,
       email: session.email,

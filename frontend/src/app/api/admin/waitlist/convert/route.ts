@@ -5,6 +5,9 @@ import {
   ALLOWED_SELLER_COUNTRIES,
   insertBuyerUser,
   insertSellerUser,
+  isValidSellerGender,
+  normalizeSellerGender,
+  normalizeSellerPhone,
 } from "@/lib/admin-user-provision";
 
 async function getSession(request: NextRequest) {
@@ -139,6 +142,8 @@ export async function POST(request: NextRequest) {
       }
       const businessName = String(body.businessName || body.business_name || "").trim();
       const baseCountry = String(body.baseCountry || body.base_country || "").trim();
+      const phone = normalizeSellerPhone(body.phone);
+      const gender = normalizeSellerGender(body.gender);
       if (!businessName) {
         return NextResponse.json({ error: "Business / display name is required." }, { status: 400 });
       }
@@ -148,6 +153,9 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+      if (!isValidSellerGender(gender)) {
+        return NextResponse.json({ error: "gender must be M or F." }, { status: 400 });
+      }
 
       const { data, error } = await insertSellerUser({
         email: row.email,
@@ -155,6 +163,9 @@ export async function POST(request: NextRequest) {
         name,
         businessName,
         baseCountry: baseCountry as (typeof ALLOWED_SELLER_COUNTRIES)[number],
+        phone,
+        contactEmail: row.email,
+        gender,
       });
 
       if (error) {

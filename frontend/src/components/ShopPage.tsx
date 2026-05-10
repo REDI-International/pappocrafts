@@ -12,6 +12,7 @@ import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
 import { hasFeaturedMarker } from "@/lib/listing-featured";
 import { trackMarketplaceEvent } from "@/components/Analytics";
+import ProductImageOverlays from "@/components/ProductImageOverlays";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -33,6 +34,7 @@ function ShopContent() {
   const [sortMode, setSortMode] = useState<"featured" | "price-asc" | "price-desc">("featured");
   const [countryFilter, setCountryFilter] = useState("");
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [womenOnly, setWomenOnly] = useState(searchParams.get("women") === "true");
   const [activeArtisan, setActiveArtisan] = useState(artisanFilter);
   const [activeBusinessSlug, setActiveBusinessSlug] = useState(businessFilter);
   const [products, setProducts] = useState<Product[]>([]);
@@ -66,6 +68,7 @@ function ShopContent() {
     setActiveBusinessSlug(searchParams.get("business") || "");
     const cat = searchParams.get("category");
     if (cat && categories.includes(cat)) setActiveCategory(cat);
+    setWomenOnly(searchParams.get("women") === "true");
   }, [searchParams]);
 
   const trackedProfileVisitKeyRef = useRef<string>("");
@@ -135,6 +138,9 @@ function ShopContent() {
     if (inStockOnly) {
       result = result.filter((p) => p.inStock);
     }
+    if (womenOnly) {
+      result = result.filter((p) => p.womenEntrepreneurship);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -147,7 +153,7 @@ function ShopContent() {
       );
     }
     return result;
-  }, [activeCategory, activeArtisan, activeBusinessSlug, activeBusinessName, search, products, countryFilter, inStockOnly]);
+  }, [activeCategory, activeArtisan, activeBusinessSlug, activeBusinessName, search, products, countryFilter, inStockOnly, womenOnly]);
 
   const sortedProducts = useMemo(() => {
     const copy = [...filtered];
@@ -184,7 +190,7 @@ function ShopContent() {
     [sortedProducts, currentPage]
   );
 
-  const filterKey = `${activeCategory}|${search}|${countryFilter}|${inStockOnly}|${activeArtisan}|${activeBusinessSlug}|${sortMode}`;
+  const filterKey = `${activeCategory}|${search}|${countryFilter}|${inStockOnly}|${womenOnly}|${activeArtisan}|${activeBusinessSlug}|${sortMode}`;
   const prevFilterKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -290,7 +296,54 @@ function ShopContent() {
               />
               {t("shop.inStockOnly")}
             </label>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !womenOnly;
+                setWomenOnly(next);
+                const u = new URLSearchParams(searchParams.toString());
+                if (next) u.set("women", "true");
+                else u.delete("women");
+                u.delete("page");
+                const q = u.toString();
+                router.replace(q ? `${listingBase}?${q}` : listingBase, { scroll: false });
+              }}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                womenOnly
+                  ? "border-green bg-green text-white"
+                  : "border-green/20 bg-white text-green hover:bg-green/5"
+              }`}
+            >
+              Women Entrepreneurship
+            </button>
           </div>
+
+          {womenOnly && (
+            <section className="mb-8 overflow-hidden rounded-2xl border border-green/15 bg-gradient-to-br from-green/10 via-white to-blue/5 p-5 sm:p-7">
+              <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-green">
+                    Women Entrepreneurship
+                  </p>
+                  <h2 className="mt-2 font-serif text-2xl font-bold text-charcoal">
+                    Discover products from women-led Roma businesses
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-charcoal/65">
+                    This section highlights women entrepreneurs, their craft traditions, and the
+                    businesses they are growing through PappoShop.
+                  </p>
+                </div>
+                <div className="grid gap-2 text-sm text-charcoal/70">
+                  <div className="rounded-xl bg-white/70 p-3 shadow-sm">
+                    Success stories and entrepreneur interviews can be featured here.
+                  </div>
+                  <div className="rounded-xl bg-white/70 p-3 shadow-sm">
+                    Promotional banners and awareness content can be rotated during campaigns.
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
 
           <div className="mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
             <p className="text-center text-[11px] font-semibold uppercase tracking-wider text-charcoal/40 mb-2">
@@ -371,7 +424,13 @@ function ShopContent() {
                   setActiveCategory("All");
                   setCountryFilter("");
                   setInStockOnly(false);
+                  setWomenOnly(false);
                   setSortMode("featured");
+                  const u = new URLSearchParams(searchParams.toString());
+                  u.delete("women");
+                  u.delete("page");
+                  const q = u.toString();
+                  router.replace(q ? `${listingBase}?${q}` : listingBase, { scroll: false });
                 }}
                 className="mt-4 text-green font-medium hover:text-green-dark transition-colors"
               >
@@ -407,6 +466,7 @@ function ShopContent() {
                             sizes="64px"
                             unoptimized
                           />
+                          <ProductImageOverlays womenLed={product.womenEntrepreneurship} compact />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -416,6 +476,11 @@ function ShopContent() {
                             {isFeatured && (
                               <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green uppercase tracking-wide">
                                 {t("listing.featuredBadge")}
+                              </span>
+                            )}
+                            {product.womenEntrepreneurship && (
+                              <span className="flex-shrink-0 rounded-full bg-green/10 px-2 py-0.5 text-[10px] font-bold text-green uppercase tracking-wide">
+                                Women-led
                               </span>
                             )}
                             {!product.inStock && (
@@ -434,6 +499,16 @@ function ShopContent() {
                         </div>
                       </div>
                       <p className="mt-3 text-sm text-charcoal/60 line-clamp-2">{product.description}</p>
+                      {product.womenEntrepreneurship && (
+                        <div className="mt-3 rounded-xl border border-green/15 bg-green/5 px-3 py-2">
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-green">
+                            Women Entrepreneurship
+                          </p>
+                          <p className="mt-0.5 text-xs text-charcoal/55">
+                            Product from a women-led Roma business.
+                          </p>
+                        </div>
+                      )}
                       <div className="mt-4 flex items-center justify-between gap-2">
                         <span className="text-sm font-bold text-green">
                           {formatProductRegionalPrice(product.price, product.currency)}
