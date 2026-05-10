@@ -65,7 +65,7 @@ export const translationKeys = [
   "product.addToCart", "product.buyNow", "product.freeShipping", "product.authenticity", "product.related",
   "product.handcraftedBy", "product.contactPhone",
   "product.orderButton", "product.listingPhoneLabel", "product.phoneNotListed",
-  "product.orderSending", "product.orderSuccess", "product.orderError",
+  "product.orderSending", "product.orderSuccess", "product.orderError", "product.orderBuyerCopyFailed",
   "product.guestOrderTitle", "product.guestOrderIntro", "product.orderModalClose",
   "product.badgeFemaleEntrepreneur", "product.badgeMaleEntrepreneur",
   "product.availableSizes", "product.unavailableSizesNote",
@@ -360,6 +360,8 @@ const en: Translations = {
   "product.orderSending": "Sending…",
   "product.orderSuccess": "Request sent. You and the seller have been notified by email.",
   "product.orderError": "Could not send your request. Please try again.",
+  "product.orderBuyerCopyFailed":
+    "The seller has been notified. We couldn’t send a confirmation to your email — check spam or junk mail. Your request still reached the seller.",
   "product.guestOrderTitle": "Your contact details",
   "product.guestOrderIntro": "We email the seller your details together with this product order.",
   "product.orderModalClose": "Cancel",
@@ -713,6 +715,8 @@ const sr: Translations = {
   "product.orderSending": "Sending…",
   "product.orderSuccess": "Request sent. You and the seller have been notified by email.",
   "product.orderError": "Could not send your request. Please try again.",
+  "product.orderBuyerCopyFailed":
+    "The seller has been notified. We couldn’t send a confirmation to your email — check spam or junk mail. Your request still reached the seller.",
   "product.guestOrderTitle": "Your contact details",
   "product.guestOrderIntro": "We email the seller your details together with this product order.",
   "product.orderModalClose": "Cancel",
@@ -1066,6 +1070,8 @@ const sq: Translations = {
   "product.orderSending": "Sending…",
   "product.orderSuccess": "Request sent. You and the seller have been notified by email.",
   "product.orderError": "Could not send your request. Please try again.",
+  "product.orderBuyerCopyFailed":
+    "The seller has been notified. We couldn’t send a confirmation to your email — check spam or junk mail. Your request still reached the seller.",
   "product.guestOrderTitle": "Your contact details",
   "product.guestOrderIntro": "We email the seller your details together with this product order.",
   "product.orderModalClose": "Cancel",
@@ -1419,6 +1425,8 @@ const bs: Translations = {
   "product.orderSending": "Sending…",
   "product.orderSuccess": "Request sent. You and the seller have been notified by email.",
   "product.orderError": "Could not send your request. Please try again.",
+  "product.orderBuyerCopyFailed":
+    "The seller has been notified. We couldn’t send a confirmation to your email — check spam or junk mail. Your request still reached the seller.",
   "product.guestOrderTitle": "Your contact details",
   "product.guestOrderIntro": "We email the seller your details together with this product order.",
   "product.orderModalClose": "Cancel",
@@ -1771,6 +1779,8 @@ const mk: Translations = {
   "product.orderSending": "Sending…",
   "product.orderSuccess": "Request sent. You and the seller have been notified by email.",
   "product.orderError": "Could not send your request. Please try again.",
+  "product.orderBuyerCopyFailed":
+    "The seller has been notified. We couldn’t send a confirmation to your email — check spam or junk mail. Your request still reached the seller.",
   "product.guestOrderTitle": "Your contact details",
   "product.guestOrderIntro": "We email the seller your details together with this product order.",
   "product.orderModalClose": "Cancel",
@@ -2133,6 +2143,8 @@ const tr: Translations = {
   "product.orderSending": "Sending…",
   "product.orderSuccess": "Request sent. You and the seller have been notified by email.",
   "product.orderError": "Could not send your request. Please try again.",
+  "product.orderBuyerCopyFailed":
+    "The seller has been notified. We couldn’t send a confirmation to your email — check spam or junk mail. Your request still reached the seller.",
   "product.guestOrderTitle": "Your contact details",
   "product.guestOrderIntro": "We email the seller your details together with this product order.",
   "product.orderModalClose": "Cancel",

@@ -11,6 +11,15 @@ function getResend() {
   return new Resend(key);
 }
 
+/** Same precedence as other mailers: order-specific override, then shared Resend sender. */
+function ordersFromAddress(): string {
+  return (
+    process.env.RESEND_ORDERS_FROM?.trim() ||
+    process.env.RESEND_FROM_EMAIL?.trim() ||
+    "PappoShop <onboarding@resend.dev>"
+  );
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -290,8 +299,7 @@ export async function POST(request: NextRequest) {
     });
 
     const resend = getResend();
-    const from =
-      process.env.RESEND_ORDERS_FROM || "PappoShop <onboarding@resend.dev>";
+    const from = ordersFromAddress();
 
     const bccRaw = process.env.PRODUCT_ORDER_BCC || "";
     const bcc = bccRaw
@@ -346,7 +354,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: buyerSent
         ? "The seller has been notified by email, and a confirmation has been sent to you."
-        : "The seller has been notified by email. We could not deliver your confirmation — check spam, or ask your admin to verify the sending domain in Resend.",
+        : "The seller was notified. We could not send a confirmation email to you.",
       emailDelivery: { sellerSent: true, buyerSent, configured: true },
       ...(buyerResult.error && process.env.NODE_ENV !== "production"
         ? { debugBuyerEmailError: buyerResult.error.message }
