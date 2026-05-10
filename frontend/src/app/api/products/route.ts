@@ -74,7 +74,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
       }
       const [enriched] = await enrichWithSellerProfile(db, [data as ListingRow]);
-      return NextResponse.json(redactPublicListingContact(enriched || (data as ListingRow)), {
+      // Single product detail: show listing phone on the page (still redacted in list endpoints).
+      return NextResponse.json(enriched || (data as ListingRow), {
         headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
       });
     }

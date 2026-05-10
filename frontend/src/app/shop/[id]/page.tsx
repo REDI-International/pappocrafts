@@ -10,6 +10,8 @@ import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
 import { trackMarketplaceEvent, trackViewContent } from "@/components/Analytics";
 
+type AccountSession = { email: string; role: string; name: string };
+
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { t, formatProductRegionalPrice } = useLocale();
@@ -19,11 +21,32 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [revealedPhone, setRevealedPhone] = useState<string | null>(null);
-  const [revealCount, setRevealCount] = useState<number | null>(null);
-  const [revealLoading, setRevealLoading] = useState(false);
-  const [revealError, setRevealError] = useState("");
   const [galleryIndex, setGalleryIndex] = useState(0);
+
+  const [accountSession, setAccountSession] = useState<AccountSession | null>(null);
+  const [sessionResolved, setSessionResolved] = useState(false);
+
+  const [guestModalOpen, setGuestModalOpen] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestAddress, setGuestAddress] = useState("");
+
+  const [orderBusy, setOrderBusy] = useState(false);
+  const [orderNotice, setOrderNotice] = useState<"success" | "error" | null>(null);
+
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : null;
+    if (!token) {
+      setSessionResolved(true);
+      return;
+    }
+    fetch("/api/admin/auth", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: AccountSession | null) => {
+        if (data?.email) setAccountSession(data);
+      })
+      .finally(() => setSessionResolved(true));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,27 +98,68 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     };
   }, [id]);
 
-  async function handleRevealContact() {
-    if (!product || revealLoading || revealedPhone) return;
-    setRevealError("");
-    setRevealLoading(true);
-    try {
-      const res = await fetch("/api/public/reveal-contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "product", id: product.id }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && typeof data.phone === "string" && data.phone.trim()) {
-        setRevealedPhone(data.phone.trim());
-        setRevealCount(typeof data.contactRevealCount === "number" ? data.contactRevealCount : null);
-        return;
+  const canQuickOrder =
+    accountSession && (accountSession.role === "user" || accountSession.role === "seller");
+
+  async function postOrder(body: Record<string, unknown>) {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : null;
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch("/api/public/product-order", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(typeof data.error === "string" ? data.error : "Order failed");
+    }
+    return data;
+  }
+
+  async function handleOrderClick() {
+    if (!product || orderBusy) return;
+    setOrderNotice(null);
+
+    if (canQuickOrder) {
+      setOrderBusy(true);
+      try {
+        await postOrder({ productId: product.id });
+        setOrderNotice("success");
+      } catch {
+        setOrderNotice("error");
+      } finally {
+        setOrderBusy(false);
       }
-      setRevealError(typeof data.error === "string" ? data.error : t("listing.error"));
+      return;
+    }
+
+    setGuestEmail(accountSession?.email || "");
+    setGuestPhone("");
+    setGuestAddress("");
+    setGuestModalOpen(true);
+  }
+
+  async function handleGuestSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!product || orderBusy) return;
+    setOrderBusy(true);
+    setOrderNotice(null);
+    try {
+      await postOrder({
+        productId: product.id,
+        guest: {
+          email: guestEmail.trim(),
+          phone: guestPhone.trim(),
+          address: guestAddress.trim(),
+        },
+      });
+      setGuestModalOpen(false);
+      setOrderNotice("success");
     } catch {
-      setRevealError(t("listing.error"));
+      setOrderNotice("error");
     } finally {
-      setRevealLoading(false);
+      setOrderBusy(false);
     }
   }
 
@@ -269,40 +333,44 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 {formatProductRegionalPrice(product.price, product.currency)}
               </p>
 
+              <p className="mt-4 text-sm text-charcoal/70">
+                <span className="text-charcoal/50">{t("product.listingPhoneLabel")}: </span>
+                {product.phone ? (
+                  <a href={`tel:${product.phone.replace(/\s/g, "")}`} className="font-semibold text-green hover:underline">
+                    {product.phone}
+                  </a>
+                ) : (
+                  <span className="text-charcoal/45">{t("product.phoneNotListed")}</span>
+                )}
+              </p>
+
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
               <div className="mt-8 flex flex-col gap-3">
-                {!revealedPhone ? (
-                  <button
-                    type="button"
-                    onClick={handleRevealContact}
-                    disabled={revealLoading}
-                    className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
-                  >
-                    {revealLoading ? t("listing.submitting") : t("listing.revealContactDetails")}
-                  </button>
-                ) : (
-                  <div className="rounded-2xl border border-green/20 bg-green/5 px-5 py-4">
-                    <p className="text-sm text-charcoal/60">
-                      <span className="text-charcoal/50">{t("product.contactPhone")}: </span>
-                      <a href={`tel:${revealedPhone.replace(/\s/g, "")}`} className="font-semibold text-green hover:underline">
-                        {revealedPhone}
-                      </a>
-                    </p>
-                    {revealCount != null && (
-                      <p className="mt-2 text-xs text-charcoal/45">
-                        {t("listing.contactRevealCount").replace("{count}", String(revealCount))}
-                      </p>
-                    )}
-                  </div>
+                {orderNotice === "success" && (
+                  <p className="rounded-xl border border-green/25 bg-green/5 px-4 py-3 text-sm text-charcoal">
+                    {t("product.orderSuccess")}
+                  </p>
                 )}
-                {revealError && <p className="text-sm text-red-600">{revealError}</p>}
+                {orderNotice === "error" && (
+                  <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {t("product.orderError")}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleOrderClick}
+                  disabled={orderBusy || !sessionResolved}
+                  className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
+                >
+                  {orderBusy ? t("product.orderSending") : t("product.orderButton")}
+                </button>
               </div>
 
               <div className="mt-8 flex flex-wrap gap-2">
                 {product.tags.map((tag) => (
                   <span key={tag} className="rounded-full bg-light-dark px-3 py-1 text-xs text-charcoal/50">
-                    #{tag}
+                    {tag}
                   </span>
                 ))}
               </div>
@@ -358,6 +426,83 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
       </main>
+
+      {guestModalOpen && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-charcoal/55 p-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="guest-order-title"
+            className="w-full max-w-md rounded-2xl border border-white/20 bg-white p-6 shadow-2xl sm:p-7"
+          >
+            <h2 id="guest-order-title" className="font-serif text-xl font-bold text-charcoal">
+              {t("product.guestOrderTitle")}
+            </h2>
+            <p className="mt-2 text-sm text-charcoal/60">{t("product.guestOrderIntro")}</p>
+            <form onSubmit={handleGuestSubmit} className="mt-6 space-y-4">
+              <div>
+                <label htmlFor="guest-email" className="block text-xs font-medium text-charcoal/60 mb-1">
+                  {t("checkout.email")}
+                </label>
+                <input
+                  id="guest-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  className="w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-green/40"
+                />
+              </div>
+              <div>
+                <label htmlFor="guest-phone" className="block text-xs font-medium text-charcoal/60 mb-1">
+                  {t("checkout.phone")}
+                </label>
+                <input
+                  id="guest-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  required
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                  className="w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-green/40"
+                />
+              </div>
+              <div>
+                <label htmlFor="guest-address" className="block text-xs font-medium text-charcoal/60 mb-1">
+                  {t("checkout.address")}
+                </label>
+                <textarea
+                  id="guest-address"
+                  autoComplete="street-address"
+                  required
+                  rows={3}
+                  value={guestAddress}
+                  onChange={(e) => setGuestAddress(e.target.value)}
+                  className="w-full rounded-xl border border-charcoal/15 px-4 py-2.5 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-green/40"
+                />
+              </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setGuestModalOpen(false)}
+                  className="rounded-full border border-charcoal/15 px-5 py-2.5 text-sm font-semibold text-charcoal/70 hover:bg-charcoal/5"
+                >
+                  {t("product.orderModalClose")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={orderBusy}
+                  className="rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-dark disabled:opacity-60"
+                >
+                  {orderBusy ? t("product.orderSending") : t("product.orderButton")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );
