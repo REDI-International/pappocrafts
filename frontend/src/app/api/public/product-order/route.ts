@@ -86,6 +86,72 @@ function buildSellerEmailHtml(params: {
 </html>`;
 }
 
+function buildBuyerConfirmationHtml(params: {
+  buyerName: string;
+  productName: string;
+  priceLabel: string;
+  artisan: string;
+  country: string;
+  listingUrl: string;
+  selectedSize: string | null;
+  buyerPhone: string;
+  buyerAddress: string;
+}): string {
+  const {
+    buyerName,
+    productName,
+    priceLabel,
+    artisan,
+    country,
+    listingUrl,
+    selectedSize,
+    buyerPhone,
+    buyerAddress,
+  } = params;
+
+  const sizeRow = selectedSize
+    ? `<tr><td style="padding:4px 0;color:#888;">Size</td><td style="padding:4px 0;font-weight:600;">${escapeHtml(selectedSize)}</td></tr>`
+    : "";
+
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2D2D2D;max-width:640px;margin:0 auto;padding:20px;">
+  <div style="text-align:center;padding:24px 0;border-bottom:2px solid #4A9B3F;">
+    <h1 style="margin:0;color:#4A9B3F;font-size:22px;">We received your order request</h1>
+    <p style="margin:6px 0 0;color:#888;font-size:13px;">PappoShop marketplace</p>
+  </div>
+
+  <p style="margin:20px 0;font-size:15px;">Hi ${escapeHtml(buyerName)},</p>
+  <p style="margin:0 0 16px;font-size:14px;line-height:1.5;color:#444;">
+    Thanks for your interest. We&apos;ve notified the maker about your request for the product below.
+    They may follow up with you directly about shipping and payment.
+  </p>
+
+  <div style="margin:20px 0;padding:16px;background:#f9faf9;border-radius:8px;">
+    <p style="margin:0 0 8px;font-size:15px;font-weight:600;">${escapeHtml(productName)}</p>
+    <table style="width:100%;font-size:14px;">
+      <tr><td style="padding:4px 0;color:#888;width:120px;">Price</td><td style="padding:4px 0;">${escapeHtml(priceLabel)}</td></tr>
+      ${sizeRow}
+      <tr><td style="padding:4px 0;color:#888;">Maker</td><td style="padding:4px 0;">${escapeHtml(artisan)} (${escapeHtml(country)})</td></tr>
+      <tr><td style="padding:4px 0;color:#888;">Listing</td><td style="padding:4px 0;"><a href="${listingUrl.replace(/"/g, "&quot;")}" style="color:#4A9B3F;">View product</a></td></tr>
+    </table>
+  </div>
+
+  <h2 style="font-size:15px;margin:20px 0 8px;color:#555;">Details we shared with the seller</h2>
+  <table style="width:100%;font-size:14px;">
+    <tr><td style="padding:4px 0;color:#888;width:120px;vertical-align:top;">Phone</td><td style="padding:4px 0;">${escapeHtml(buyerPhone)}</td></tr>
+    <tr><td style="padding:4px 0;color:#888;vertical-align:top;">Address</td><td style="padding:4px 0;white-space:pre-line;">${escapeHtml(buyerAddress)}</td></tr>
+  </table>
+
+  <div style="margin-top:28px;padding-top:16px;border-top:1px solid #eee;text-align:center;color:#aaa;font-size:12px;">
+    <p style="margin:0;">This message was sent because you requested an order on PappoShop.</p>
+  </div>
+</body>
+</html>`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -197,7 +263,7 @@ export async function POST(request: NextRequest) {
     const cfg = getDomainConfigStatic();
     const listingUrl = `${cfg.baseUrl.replace(/\/$/, "")}/shop/${encodeURIComponent(productId)}`;
 
-    const html = buildSellerEmailHtml({
+    const sellerHtml = buildSellerEmailHtml({
       productName,
       productId,
       priceLabel,
@@ -209,6 +275,18 @@ export async function POST(request: NextRequest) {
       buyerPhone,
       buyerAddress,
       selectedSize: selectedSizeForEmail,
+    });
+
+    const buyerHtml = buildBuyerConfirmationHtml({
+      buyerName,
+      productName,
+      priceLabel,
+      artisan,
+      country,
+      listingUrl,
+      selectedSize: selectedSizeForEmail,
+      buyerPhone,
+      buyerAddress,
     });
 
     const resend = getResend();
@@ -228,14 +306,25 @@ export async function POST(request: NextRequest) {
         ...(bcc.length ? { bcc } : {}),
         replyTo: buyerEmail,
         subject: `Order request: ${productName} — ${buyerName}`,
-        html,
+        html: sellerHtml,
       });
+      try {
+        await resend.emails.send({
+          from,
+          to: [buyerEmail.trim().toLowerCase()],
+          replyTo: sellerEmail,
+          subject: `Your order request: ${productName}`,
+          html: buyerHtml,
+        });
+      } catch (buyerErr) {
+        console.error("[product-order] buyer confirmation email failed", buyerErr);
+      }
     }
 
     return NextResponse.json({
       success: true,
       message: resend
-        ? "The seller has been notified by email."
+        ? "The seller has been notified by email, and a confirmation has been sent to you."
         : "Request recorded. (Configure RESEND_API_KEY to send email.)",
     });
   } catch (e) {
