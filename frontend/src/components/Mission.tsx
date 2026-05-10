@@ -13,13 +13,14 @@ const values: { titleKey: TranslationKey; descKey: TranslationKey }[] = [
 ];
 
 export default function Mission() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const siteSettings = useSiteSettings();
 
-  const badge = siteSettings.mission_badge.trim() || t("mission.badge");
-  const title = siteSettings.mission_title.trim() || t("mission.title");
-  const desc1 = siteSettings.mission_desc1.trim() || t("mission.desc1");
-  const desc2 = siteSettings.mission_desc2.trim() || t("mission.desc2");
+  const useAdminMissionCopy = locale === "en";
+  const badge = useAdminMissionCopy && siteSettings.mission_badge.trim() ? siteSettings.mission_badge : t("mission.badge");
+  const title = useAdminMissionCopy && siteSettings.mission_title.trim() ? siteSettings.mission_title : t("mission.title");
+  const desc1 = useAdminMissionCopy && siteSettings.mission_desc1.trim() ? siteSettings.mission_desc1 : t("mission.desc1");
+  const desc2 = useAdminMissionCopy && siteSettings.mission_desc2.trim() ? siteSettings.mission_desc2 : t("mission.desc2");
 
   return (
     <section id="mission" className="py-24 sm:py-32">
