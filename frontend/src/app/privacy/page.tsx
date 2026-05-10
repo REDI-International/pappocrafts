@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         <div className="mt-10 prose prose-charcoal max-w-none text-charcoal/80 text-sm leading-relaxed space-y-6">
           <section>
             <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">1. Who We Are</h2>
-            <p>PappoShop (accessible at pappo.org and papposhop.org) is a social enterprise marketplace operated by REDI International, connecting Roma artisans and entrepreneurs across the Western Balkans with customers worldwide.</p>
+            <p>PappoShop (accessible at pappo.org and papposhop.org) is a social enterprise marketplace operated by REDI North Macedonia, connecting Roma entrepreneurs across the Western Balkans with customers worldwide.</p>
           </section>
 
           <section>
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
               <li>Data portability</li>
               <li>Object to processing</li>
             </ul>
-            <p>To exercise these rights, contact us at <a href="mailto:petrica@redi-ngo.eu" className="text-green font-medium hover:underline">petrica@redi-ngo.eu</a>.</p>
+            <p>To exercise these rights, contact us at <a href="mailto:redimk@redi-ngo.eu" className="text-green font-medium hover:underline">redimk@redi-ngo.eu</a>.</p>
           </section>
 
           <section>
@@ -97,8 +97,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-charcoal mt-8 mb-3">9. Contact</h2>
             <p>For privacy-related inquiries, contact:<br />
-            <strong>REDI International</strong><br />
-            Email: <a href="mailto:petrica@redi-ngo.eu" className="text-green font-medium hover:underline">petrica@redi-ngo.eu</a></p>
+            <strong>REDI North Macedonia</strong><br />
+            Email: <a href="mailto:redimk@redi-ngo.eu" className="text-green font-medium hover:underline">redimk@redi-ngo.eu</a></p>
           </section>
         </div>
       </div>

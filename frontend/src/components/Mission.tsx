@@ -13,13 +13,14 @@ const values: { titleKey: TranslationKey; descKey: TranslationKey }[] = [
 ];
 
 export default function Mission() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const siteSettings = useSiteSettings();
 
-  const badge = siteSettings.mission_badge.trim() || t("mission.badge");
-  const title = siteSettings.mission_title.trim() || t("mission.title");
-  const desc1 = siteSettings.mission_desc1.trim() || t("mission.desc1");
-  const desc2 = siteSettings.mission_desc2.trim() || t("mission.desc2");
+  const useAdminMissionCopy = locale === "en";
+  const badge = useAdminMissionCopy && siteSettings.mission_badge.trim() ? siteSettings.mission_badge : t("mission.badge");
+  const title = useAdminMissionCopy && siteSettings.mission_title.trim() ? siteSettings.mission_title : t("mission.title");
+  const desc1 = useAdminMissionCopy && siteSettings.mission_desc1.trim() ? siteSettings.mission_desc1 : t("mission.desc1");
+  const desc2 = useAdminMissionCopy && siteSettings.mission_desc2.trim() ? siteSettings.mission_desc2 : t("mission.desc2");
 
   return (
     <section id="mission" className="py-24 sm:py-32">
@@ -42,12 +43,23 @@ export default function Mission() {
               {desc2}
             </p>
 
-            <div className="mt-8 flex items-center gap-4">
-              <Image src="/redi-logo.png" alt="REDI" width={60} height={60} className="h-14 w-auto" />
+            <a
+              href="https://redi-ngo.eu/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-8 inline-flex w-full flex-col items-start gap-3 rounded-xl border border-charcoal/10 bg-white/70 p-3 transition-colors hover:border-green/30 sm:w-auto sm:flex-row sm:items-center sm:gap-4"
+            >
+              <Image
+                src="/redi-logo.png"
+                alt="REDI"
+                width={510}
+                height={208}
+                className="h-14 w-auto object-contain"
+              />
               <p className="text-sm text-charcoal/60">
                 {t("mission.supportedBy")} <strong className="text-charcoal">REDI</strong> — Roma Entrepreneurship Development Initiative
               </p>
-            </div>
+            </a>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
