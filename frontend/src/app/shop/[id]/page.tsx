@@ -113,8 +113,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     };
   }, [id]);
 
+  /** Any authenticated marketplace/admin account — session email + profile phone used server-side. */
   const canQuickOrder =
-    accountSession && (accountSession.role === "user" || accountSession.role === "seller");
+    accountSession &&
+    ["user", "seller", "admin", "superadmin"].includes(accountSession.role);
 
   async function postOrder(body: Record<string, unknown>) {
     const headers: Record<string, string> = { "Content-Type": "application/json" };

@@ -142,7 +142,12 @@ export async function POST(request: NextRequest) {
     let buyerPhone: string;
     let buyerAddress: string;
 
-    const quickRoles = session && (session.role === "user" || session.role === "seller");
+    const quickRoles =
+      session &&
+      (session.role === "user" ||
+        session.role === "seller" ||
+        session.role === "admin" ||
+        session.role === "superadmin");
 
     if (quickRoles) {
       buyerName = session!.name?.trim() || session!.email.split("@")[0] || "Customer";
