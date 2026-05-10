@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateSession } from "@/lib/admin-store";
 import { getDomainConfigStatic } from "@/lib/domain-config";
+import { parseProductMetaTags } from "@/lib/product-listing-meta";
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -29,6 +30,7 @@ function buildSellerEmailHtml(params: {
   buyerEmail: string;
   buyerPhone: string;
   buyerAddress: string;
+  selectedSize: string | null;
 }): string {
   const {
     productName,
@@ -41,7 +43,12 @@ function buildSellerEmailHtml(params: {
     buyerEmail,
     buyerPhone,
     buyerAddress,
+    selectedSize,
   } = params;
+
+  const sizeRow = selectedSize
+    ? `<tr><td style="padding:4px 0;color:#888;">Size</td><td style="padding:4px 0;font-weight:600;">${escapeHtml(selectedSize)}</td></tr>`
+    : "";
 
   return `
 <!DOCTYPE html>
@@ -58,6 +65,7 @@ function buildSellerEmailHtml(params: {
     <table style="width:100%;font-size:14px;">
       <tr><td style="padding:4px 0;color:#888;width:120px;">Product ID</td><td style="padding:4px 0;font-family:monospace;">${escapeHtml(productId)}</td></tr>
       <tr><td style="padding:4px 0;color:#888;">Price</td><td style="padding:4px 0;">${escapeHtml(priceLabel)}</td></tr>
+      ${sizeRow}
       <tr><td style="padding:4px 0;color:#888;">Maker</td><td style="padding:4px 0;">${escapeHtml(artisan)} (${escapeHtml(country)})</td></tr>
       <tr><td style="padding:4px 0;color:#888;">Listing</td><td style="padding:4px 0;"><a href="${listingUrl.replace(/"/g, "&quot;")}" style="color:#4A9B3F;">View product</a></td></tr>
     </table>
@@ -95,7 +103,7 @@ export async function POST(request: NextRequest) {
     const db = createAdminClient();
     const { data: row, error: pErr } = await db
       .from("products")
-      .select("id, name, price, currency, artisan, country, image, seller_id")
+      .select("id, name, price, currency, artisan, country, image, seller_id, tags")
       .eq("id", productId)
       .eq("approval_status", "approved")
       .maybeSingle();
@@ -103,6 +111,18 @@ export async function POST(request: NextRequest) {
     if (pErr || !row) {
       return NextResponse.json({ error: "Product not found." }, { status: 404 });
     }
+
+    const listingMeta = parseProductMetaTags(Array.isArray(row.tags) ? row.tags : []);
+    const selectedSizeRaw =
+      body && typeof body === "object" && typeof (body as Record<string, unknown>).selectedSize === "string"
+        ? String((body as Record<string, unknown>).selectedSize).trim()
+        : "";
+    if (listingMeta.sizes.length > 0) {
+      if (!selectedSizeRaw || !listingMeta.sizes.includes(selectedSizeRaw)) {
+        return NextResponse.json({ error: "Please select a valid size." }, { status: 400 });
+      }
+    }
+    const selectedSizeForEmail = listingMeta.sizes.length > 0 ? selectedSizeRaw : null;
 
     let sellerEmail: string | null = null;
     const sellerId = typeof row.seller_id === "string" ? row.seller_id : null;
@@ -183,6 +203,7 @@ export async function POST(request: NextRequest) {
       buyerEmail,
       buyerPhone,
       buyerAddress,
+      selectedSize: selectedSizeForEmail,
     });
 
     const resend = getResend();

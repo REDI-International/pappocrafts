@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -9,6 +9,7 @@ import { type Product, mapSupabaseProduct } from "@/lib/products";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
 import { trackMarketplaceEvent, trackViewContent } from "@/components/Analytics";
+import { parseProductMetaTags } from "@/lib/product-listing-meta";
 
 type AccountSession = { email: string; role: string; name: string };
 
@@ -33,6 +34,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderNotice, setOrderNotice] = useState<"success" | "error" | null>(null);
+
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+
+  const meta = useMemo(() => parseProductMetaTags(product?.tags ?? []), [product]);
+
+  useEffect(() => {
+    if (!product) {
+      setSelectedSize(null);
+      return;
+    }
+    const { sizes } = parseProductMetaTags(product.tags);
+    setSelectedSize(sizes.length > 0 ? sizes[0] : null);
+  }, [product]);
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("admin-token") : null;
@@ -121,10 +135,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     if (!product || orderBusy) return;
     setOrderNotice(null);
 
+    const m = parseProductMetaTags(product.tags);
+    if (m.sizes.length > 0 && !selectedSize) return;
+
+    const orderPayload: Record<string, unknown> = { productId: product.id };
+    if (m.sizes.length > 0 && selectedSize) orderPayload.selectedSize = selectedSize;
+
     if (canQuickOrder) {
       setOrderBusy(true);
       try {
-        await postOrder({ productId: product.id });
+        await postOrder(orderPayload);
         setOrderNotice("success");
       } catch {
         setOrderNotice("error");
@@ -146,14 +166,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     setOrderBusy(true);
     setOrderNotice(null);
     try {
-      await postOrder({
+      const m = parseProductMetaTags(product.tags);
+      const orderPayload: Record<string, unknown> = {
         productId: product.id,
         guest: {
           email: guestEmail.trim(),
           phone: guestPhone.trim(),
           address: guestAddress.trim(),
         },
-      });
+      };
+      if (m.sizes.length > 0 && selectedSize) orderPayload.selectedSize = selectedSize;
+      await postOrder(orderPayload);
       setGuestModalOpen(false);
       setOrderNotice("success");
     } catch {
@@ -282,6 +305,22 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 )}
               </div>
 
+              {(meta.sellerGender === "f" || meta.sellerGender === "m") && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${
+                      meta.sellerGender === "f"
+                        ? "bg-pink-100 text-pink-900"
+                        : "bg-sky-100 text-sky-900"
+                    }`}
+                  >
+                    {meta.sellerGender === "f"
+                      ? t("product.badgeFemaleEntrepreneur")
+                      : t("product.badgeMaleEntrepreneur")}
+                  </span>
+                </div>
+              )}
+
               <h1 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal tracking-tight">
                 {product.name}
               </h1>
@@ -346,6 +385,30 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
+              {meta.sizes.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-charcoal/45">
+                    {t("product.availableSizes")}
+                  </p>
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={t("product.availableSizes")}>
+                    {meta.sizes.map((sz) => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => setSelectedSize(sz)}
+                        className={`min-w-[2.75rem] rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                          selectedSize === sz
+                            ? "border-green bg-green text-white shadow-md shadow-green/20"
+                            : "border-charcoal/15 bg-white text-charcoal hover:border-green/35"
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-8 flex flex-col gap-3">
                 {orderNotice === "success" && (
                   <p className="rounded-xl border border-green/25 bg-green/5 px-4 py-3 text-sm text-charcoal">
@@ -368,8 +431,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
 
               <div className="mt-8 flex flex-wrap gap-2">
-                {product.tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-light-dark px-3 py-1 text-xs text-charcoal/50">
+                {meta.displayTags.map((tag, idx) => (
+                  <span key={`${tag}-${idx}`} className="rounded-full bg-light-dark px-3 py-1 text-xs text-charcoal/50">
                     {tag}
                   </span>
                 ))}
