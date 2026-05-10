@@ -3,15 +3,19 @@
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { type Product, mapSupabaseProduct } from "@/lib/products";
 import { useLocale } from "@/lib/locale-context";
+import { useCart } from "@/lib/cart-context";
 import { translateShopCategory } from "@/lib/translations";
-import { trackMarketplaceEvent, trackViewContent } from "@/components/Analytics";
+import { trackAddToCart, trackMarketplaceEvent, trackViewContent } from "@/components/Analytics";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
+  const { addItem } = useCart();
   const { t, formatProductRegionalPrice } = useLocale();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -74,6 +78,29 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       cancelled = true;
     };
   }, [id]);
+
+  function handleAddToCart() {
+    if (!product?.inStock) return;
+    addItem(product);
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      currency: product.currency,
+    });
+  }
+
+  function handleBuyNow() {
+    if (!product?.inStock) return;
+    addItem(product, 1, { openCart: false });
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      currency: product.currency,
+    });
+    router.push("/checkout");
+  }
 
   async function handleRevealContact() {
     if (!product || revealLoading || revealedPhone) return;
@@ -271,13 +298,32 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <p className="mt-6 text-charcoal/70 leading-relaxed">{product.longDescription}</p>
 
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  disabled={!product.inStock}
+                  onClick={handleAddToCart}
+                  className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {t("product.addToCart")}
+                </button>
+                <button
+                  type="button"
+                  disabled={!product.inStock}
+                  onClick={handleBuyNow}
+                  className="w-full rounded-full border-2 border-green bg-white py-3.5 text-center text-base font-semibold text-green hover:bg-green/5 transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {t("product.buyNow")}
+                </button>
+              </div>
+
               <div className="mt-8 flex flex-col gap-3">
                 {!revealedPhone ? (
                   <button
                     type="button"
                     onClick={handleRevealContact}
                     disabled={revealLoading}
-                    className="w-full rounded-full bg-green py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-green/25 hover:bg-green-dark transition-all disabled:opacity-60"
+                    className="w-full rounded-full border border-charcoal/15 bg-charcoal/5 py-3.5 text-center text-base font-semibold text-charcoal hover:bg-charcoal/10 transition-all disabled:opacity-60"
                   >
                     {revealLoading ? t("listing.submitting") : t("listing.revealContactDetails")}
                   </button>
@@ -302,7 +348,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <div className="mt-8 flex flex-wrap gap-2">
                 {product.tags.map((tag) => (
                   <span key={tag} className="rounded-full bg-light-dark px-3 py-1 text-xs text-charcoal/50">
-                    #{tag}
+                    {tag}
                   </span>
                 ))}
               </div>
