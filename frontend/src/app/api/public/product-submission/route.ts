@@ -5,6 +5,7 @@ import { normalizeListingPhone } from "@/lib/listing-phone";
 import { slugifyBusinessName } from "@/lib/slug";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
 import { normalizeProductImageUrls, productImageDbPayload } from "@/lib/product-images";
+import { isSerbianListing, sendSerbiaProductNotification } from "@/lib/approval-notification";
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -103,14 +104,32 @@ export async function POST(request: NextRequest) {
       phone: contactPhone,
     };
 
-    let { error } = await db.from("products").insert(row);
-    if (error && isSupabaseMissingColumnError(error, "images")) {
+    let insertResult = await db.from("products").insert(row).select("id, approval_token").single();
+    if (insertResult.error && isSupabaseMissingColumnError(insertResult.error, "images")) {
       const { images: _omit, ...withoutImages } = row;
-      ({ error } = await db.from("products").insert(withoutImages));
+      insertResult = await db.from("products").insert(withoutImages).select("id, approval_token").single();
     }
-    if (error) {
+    if (insertResult.error) {
+      const error = insertResult.error;
       console.error("[public/product-submission]", error.code, error.message, error.details, error.hint);
       return NextResponse.json({ error: "Could not save your submission. Please try again later." }, { status: 500 });
+    }
+
+    // Notify the Serbian team so they can approve/reject directly from their inbox.
+    if (isSerbianListing(country) && insertResult.data?.approval_token) {
+      sendSerbiaProductNotification({
+        token: String(insertResult.data.approval_token),
+        id,
+        name,
+        artisan,
+        category,
+        country,
+        price,
+        currency,
+        description,
+        submitterEmail: contactEmail || null,
+        submitterPhone: contactPhone || null,
+      }).catch((err) => console.error("[public/product-submission] notification email failed:", err));
     }
 
     return NextResponse.json({

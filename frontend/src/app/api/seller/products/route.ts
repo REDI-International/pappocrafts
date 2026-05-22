@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
 import { normalizeProductImageUrls, productImageDbPayload } from "@/lib/product-images";
+import { isSerbianListing, sendSerbiaProductNotification } from "@/lib/approval-notification";
 
 async function getSession(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -98,6 +99,25 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await db.from("products").insert(row).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Notify the Serbian team so they can approve/reject directly from their inbox.
+    const productCountry = String(row.country || "");
+    if (isSerbianListing(productCountry) && data?.approval_token) {
+      sendSerbiaProductNotification({
+        token: String(data.approval_token),
+        id: String(data.id),
+        name: String(data.name || row.name || ""),
+        artisan: String(data.artisan || artisan),
+        category: String(data.category || row.category || ""),
+        country: productCountry,
+        price: Number(data.price ?? row.price ?? 0),
+        currency: String(data.currency || row.currency || "EUR"),
+        description: String(data.description || row.description || ""),
+        submitterEmail: String(profile.contact_email || ctx.session.email || "") || null,
+        submitterPhone: phone || null,
+      }).catch((err) => console.error("[seller/products] notification email failed:", err));
+    }
+
     return NextResponse.json(data, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

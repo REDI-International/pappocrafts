@@ -3,6 +3,7 @@ import { createAdminClient, isPostgrestSchemaMismatch } from "@/lib/supabase/adm
 import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
+import { isSerbianListing, sendSerbiaServiceNotification } from "@/lib/approval-notification";
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -111,13 +112,32 @@ export async function POST(request: NextRequest) {
       available,
     };
 
-    let { error } = await db.from("service_listing_requests").insert(payload);
-    if (error && isPostgrestSchemaMismatch(error)) {
-      ({ error } = await db.from("service_listing_requests").insert(legacyPayload));
+    let insertResult = await db.from("service_listing_requests").insert(payload).select("id, approval_token").single();
+    if (insertResult.error && isPostgrestSchemaMismatch(insertResult.error)) {
+      insertResult = await db.from("service_listing_requests").insert(legacyPayload).select("id, approval_token").single();
     }
-    if (error) {
+    if (insertResult.error) {
+      const error = insertResult.error;
       console.error("[public/service-submission]", error.code, error.message, error.details, error.hint);
       return NextResponse.json({ error: "Could not save your request. Please try again later." }, { status: 500 });
+    }
+
+    // Notify the Serbian team so they can approve/reject directly from their inbox.
+    if (isSerbianListing(country) && insertResult.data?.approval_token) {
+      sendSerbiaServiceNotification({
+        token: String(insertResult.data.approval_token),
+        id: String(insertResult.data.id),
+        serviceTitle,
+        contactName,
+        serviceCategory,
+        country,
+        location,
+        hourlyRate,
+        currency,
+        serviceDescription,
+        contactEmail: contactEmail || null,
+        contactPhone: contactPhone || null,
+      }).catch((err) => console.error("[public/service-submission] notification email failed:", err));
     }
 
     return NextResponse.json({
