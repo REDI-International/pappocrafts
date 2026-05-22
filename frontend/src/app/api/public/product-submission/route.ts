@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
+import { createAdminClient, isSupabaseMissingColumnError, isPostgrestSchemaMismatch } from "@/lib/supabase/admin";
 import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 import { normalizeListingPhone } from "@/lib/listing-phone";
 import { slugifyBusinessName } from "@/lib/slug";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
 import { normalizeProductImageUrls, productImageDbPayload } from "@/lib/product-images";
+import { isSerbianListing, sendSerbiaProductNotification } from "@/lib/approval-notification";
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const id = `pub-product-${crypto.randomUUID()}`;
+    const approvalToken = crypto.randomUUID();
     const business_slug = slugifyBusinessName(artisan);
 
     let db;
@@ -101,16 +103,47 @@ export async function POST(request: NextRequest) {
       submitter_email: contactEmail || null,
       submitter_phone: contactPhone,
       phone: contactPhone,
+      approval_token: approvalToken,
     };
 
-    let { error } = await db.from("products").insert(row);
-    if (error && isSupabaseMissingColumnError(error, "images")) {
-      const { images: _omit, ...withoutImages } = row;
-      ({ error } = await db.from("products").insert(withoutImages));
+    let insertResult = await db.from("products").insert(row).select("id").single();
+    let tokenStored = true;
+
+    // Graceful fallback: approval_token column not yet in DB (migration 044 pending).
+    if (insertResult.error && (isPostgrestSchemaMismatch(insertResult.error) || isSupabaseMissingColumnError(insertResult.error, "approval_token"))) {
+      const { approval_token: _tok, ...rowWithoutToken } = row;
+      insertResult = await db.from("products").insert(rowWithoutToken).select("id").single();
+      tokenStored = false;
     }
-    if (error) {
+    // Graceful fallback: images column not yet in DB.
+    if (insertResult.error && isSupabaseMissingColumnError(insertResult.error, "images")) {
+      const { images: _omit, approval_token: _tok2, ...withoutExtras } = row;
+      insertResult = await db.from("products").insert(withoutExtras).select("id").single();
+      tokenStored = false;
+    }
+    if (insertResult.error) {
+      const error = insertResult.error;
       console.error("[public/product-submission]", error.code, error.message, error.details, error.hint);
       return NextResponse.json({ error: "Could not save your submission. Please try again later." }, { status: 500 });
+    }
+
+    // Notify the Serbian team so they can approve/reject directly from their inbox.
+    // Email is always sent for Serbian submissions; approve/reject buttons only work
+    // once migration 044 has been applied (tokenStored = true).
+    if (isSerbianListing(country)) {
+      sendSerbiaProductNotification({
+        token: tokenStored ? approvalToken : null,
+        id,
+        name,
+        artisan,
+        category,
+        country,
+        price,
+        currency,
+        description,
+        submitterEmail: contactEmail || null,
+        submitterPhone: contactPhone || null,
+      }).catch((err) => console.error("[public/product-submission] notification email failed:", err));
     }
 
     return NextResponse.json({

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, isPostgrestSchemaMismatch } from "@/lib/supabase/admin";
+import { createAdminClient, isPostgrestSchemaMismatch, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
+import { isSerbianListing, sendSerbiaServiceNotification } from "@/lib/approval-notification";
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -80,6 +81,8 @@ export async function POST(request: NextRequest) {
       return serviceSubmissionConfigErrorResponse();
     }
 
+    const approvalToken = crypto.randomUUID();
+
     const payload = {
       status: "pending" as const,
       contact_name: contactName,
@@ -95,6 +98,7 @@ export async function POST(request: NextRequest) {
       currency,
       image_url: imageUrl,
       available,
+      approval_token: approvalToken,
     };
 
     const legacyPayload = {
@@ -111,13 +115,42 @@ export async function POST(request: NextRequest) {
       available,
     };
 
-    let { error } = await db.from("service_listing_requests").insert(payload);
-    if (error && isPostgrestSchemaMismatch(error)) {
-      ({ error } = await db.from("service_listing_requests").insert(legacyPayload));
+    let insertResult = await db.from("service_listing_requests").insert(payload).select("id").single();
+    let tokenStored = true;
+
+    // Graceful fallback: approval_token column not yet in DB (migration 044 pending).
+    if (insertResult.error && (isPostgrestSchemaMismatch(insertResult.error) || isSupabaseMissingColumnError(insertResult.error, "approval_token"))) {
+      const { approval_token: _tok, ...payloadWithoutToken } = payload;
+      insertResult = await db.from("service_listing_requests").insert(payloadWithoutToken).select("id").single();
+      tokenStored = false;
     }
-    if (error) {
+    // Graceful fallback: other schema mismatches (hourly_rate, image_url, currency, etc.).
+    if (insertResult.error && isPostgrestSchemaMismatch(insertResult.error)) {
+      insertResult = await db.from("service_listing_requests").insert(legacyPayload).select("id").single();
+      tokenStored = false;
+    }
+    if (insertResult.error) {
+      const error = insertResult.error;
       console.error("[public/service-submission]", error.code, error.message, error.details, error.hint);
       return NextResponse.json({ error: "Could not save your request. Please try again later." }, { status: 500 });
+    }
+
+    // Notify the Serbian team so they can approve/reject directly from their inbox.
+    if (isSerbianListing(country)) {
+      sendSerbiaServiceNotification({
+        token: tokenStored ? approvalToken : null,
+        id: String(insertResult.data?.id ?? ""),
+        serviceTitle,
+        contactName,
+        serviceCategory,
+        country,
+        location,
+        hourlyRate,
+        currency,
+        serviceDescription,
+        contactEmail: contactEmail || null,
+        contactPhone: contactPhone || null,
+      }).catch((err) => console.error("[public/service-submission] notification email failed:", err));
     }
 
     return NextResponse.json({
