@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, isPostgrestSchemaMismatch } from "@/lib/supabase/admin";
+import { createAdminClient, isPostgrestSchemaMismatch, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
       return serviceSubmissionConfigErrorResponse();
     }
 
+    const approvalToken = crypto.randomUUID();
+
     const payload = {
       status: "pending" as const,
       contact_name: contactName,
@@ -96,6 +98,7 @@ export async function POST(request: NextRequest) {
       currency,
       image_url: imageUrl,
       available,
+      approval_token: approvalToken,
     };
 
     const legacyPayload = {
@@ -112,9 +115,19 @@ export async function POST(request: NextRequest) {
       available,
     };
 
-    let insertResult = await db.from("service_listing_requests").insert(payload).select("id, approval_token").single();
+    let insertResult = await db.from("service_listing_requests").insert(payload).select("id").single();
+    let tokenStored = true;
+
+    // Graceful fallback: approval_token column not yet in DB (migration 044 pending).
+    if (insertResult.error && (isPostgrestSchemaMismatch(insertResult.error) || isSupabaseMissingColumnError(insertResult.error, "approval_token"))) {
+      const { approval_token: _tok, ...payloadWithoutToken } = payload;
+      insertResult = await db.from("service_listing_requests").insert(payloadWithoutToken).select("id").single();
+      tokenStored = false;
+    }
+    // Graceful fallback: other schema mismatches (hourly_rate, image_url, currency, etc.).
     if (insertResult.error && isPostgrestSchemaMismatch(insertResult.error)) {
-      insertResult = await db.from("service_listing_requests").insert(legacyPayload).select("id, approval_token").single();
+      insertResult = await db.from("service_listing_requests").insert(legacyPayload).select("id").single();
+      tokenStored = false;
     }
     if (insertResult.error) {
       const error = insertResult.error;
@@ -123,10 +136,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Notify the Serbian team so they can approve/reject directly from their inbox.
-    if (isSerbianListing(country) && insertResult.data?.approval_token) {
+    if (isSerbianListing(country)) {
       sendSerbiaServiceNotification({
-        token: String(insertResult.data.approval_token),
-        id: String(insertResult.data.id),
+        token: tokenStored ? approvalToken : null,
+        id: String(insertResult.data?.id ?? ""),
         serviceTitle,
         contactName,
         serviceCategory,

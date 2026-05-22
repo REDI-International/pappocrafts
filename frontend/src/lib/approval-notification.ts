@@ -63,7 +63,9 @@ function actionButton(label: string, href: string, bg: string) {
 // ── Product notification ────────────────────────────────────────────────────
 
 export interface ProductNotificationInput {
-  token: string;
+  /** Approval token stored in DB. If null (migration not yet applied) the email
+   *  is sent as a plain notification with a link to the admin panel instead. */
+  token: string | null;
   id: string;
   name: string;
   artisan: string;
@@ -84,9 +86,6 @@ export async function sendSerbiaProductNotification(
     console.warn("[approval-notification] RESEND_API_KEY not set — skipping Serbia notification email.");
     return;
   }
-
-  const approveUrl = approvalLink(input.token, "approve", "product");
-  const rejectUrl = approvalLink(input.token, "reject", "product");
 
   const html = `
 <!DOCTYPE html>
@@ -113,17 +112,20 @@ export async function sendSerbiaProductNotification(
       <p style="margin:0;font-size:14px;line-height:1.6;color:#555;">${escapeHtml(input.description)}</p>
     </div>
 
-    <div style="text-align:center;margin:28px 0 16px;">
-      ${actionButton("✓ Approve", approveUrl, "#4A9B3F")}
-      ${actionButton("✗ Reject", rejectUrl, "#c0392b")}
+    ${input.token
+      ? `<div style="text-align:center;margin:28px 0 16px;">
+      ${actionButton("✓ Approve", approvalLink(input.token, "approve", "product"), "#4A9B3F")}
+      ${actionButton("✗ Reject", approvalLink(input.token, "reject", "product"), "#c0392b")}
     </div>
-
     <p style="font-size:12px;color:#aaa;text-align:center;margin:8px 0 0;">
       Clicking a button above will immediately update the listing status.<br/>
       If the buttons do not work, copy these links into your browser:<br/>
-      Approve: ${approveUrl}<br/>
-      Reject: ${rejectUrl}
-    </p>
+      Approve: ${approvalLink(input.token, "approve", "product")}<br/>
+      Reject: ${approvalLink(input.token, "reject", "product")}
+    </p>`
+      : `<p style="text-align:center;margin:20px 0;">
+      <a href="${getSiteUrl()}/admin/approvals" style="display:inline-block;background:#4A9B3F;color:#fff;text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:700;font-size:15px;">Review in admin panel</a>
+    </p>`}
   </div>
 
   <div style="border-top:1px solid #eee;padding-top:12px;font-size:12px;color:#bbb;text-align:center;">
@@ -152,7 +154,9 @@ export async function sendSerbiaProductNotification(
 // ── Service notification ────────────────────────────────────────────────────
 
 export interface ServiceNotificationInput {
-  token: string;
+  /** Approval token stored in DB. If null (migration not yet applied) the email
+   *  is sent as a plain notification with a link to the admin panel instead. */
+  token: string | null;
   id: string;
   serviceTitle: string;
   contactName: string;
@@ -174,9 +178,6 @@ export async function sendSerbiaServiceNotification(
     console.warn("[approval-notification] RESEND_API_KEY not set — skipping Serbia notification email.");
     return;
   }
-
-  const approveUrl = approvalLink(input.token, "approve", "service");
-  const rejectUrl = approvalLink(input.token, "reject", "service");
 
   const html = `
 <!DOCTYPE html>
@@ -204,17 +205,21 @@ export async function sendSerbiaServiceNotification(
       <p style="margin:0;font-size:14px;line-height:1.6;color:#555;">${escapeHtml(input.serviceDescription)}</p>
     </div>
 
-    <div style="text-align:center;margin:28px 0 16px;">
-      ${actionButton("✓ Approve", approveUrl, "#4A9B3F")}
-      ${actionButton("✗ Reject", rejectUrl, "#c0392b")}
+    ${input.token
+      ? `<div style="text-align:center;margin:28px 0 16px;">
+      ${actionButton("✓ Approve", approvalLink(input.token, "approve", "service"), "#4A9B3F")}
+      ${actionButton("✗ Reject", approvalLink(input.token, "reject", "service"), "#c0392b")}
     </div>
-
     <p style="font-size:12px;color:#aaa;text-align:center;margin:8px 0 0;">
       Clicking a button above will immediately update the listing status.<br/>
       If the buttons do not work, copy these links into your browser:<br/>
-      Approve: ${approveUrl}<br/>
-      Reject: ${rejectUrl}
-    </p>
+      Approve: ${approvalLink(input.token, "approve", "service")}<br/>
+      Reject: ${approvalLink(input.token, "reject", "service")}
+    </p>`
+      : `<p style="text-align:center;margin:20px 0;">
+      <a href="${getSiteUrl()}/admin/service-requests" style="display:inline-block;background:#4A9B3F;color:#fff;text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:700;font-size:15px;">Review in admin panel</a>
+    </p>`}
+
   </div>
 
   <div style="border-top:1px solid #eee;padding-top:12px;font-size:12px;color:#bbb;text-align:center;">

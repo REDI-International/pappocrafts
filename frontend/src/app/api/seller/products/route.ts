@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveUserIdFromEmail, validateSession } from "@/lib/admin-store";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, isPostgrestSchemaMismatch, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
 import { isValidListingPhone, normalizeListingPhone } from "@/lib/listing-phone";
 import { isListingCurrency } from "@/lib/eur-fallback-rates";
 import { normalizeProductImageUrls, productImageDbPayload } from "@/lib/product-images";
@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
       fromGallery.length ? fromGallery : legacy ? [legacy] : []
     );
 
+    const approvalToken = crypto.randomUUID();
+
     const row = {
       id,
       name: body.name,
@@ -95,30 +97,40 @@ export async function POST(request: NextRequest) {
       submitter_phone: phone,
       contact_email: String(profile.contact_email || ctx.session.email || "").trim().toLowerCase(),
       seller_gender: profile.gender === "M" || profile.gender === "F" ? profile.gender : null,
+      approval_token: approvalToken,
     };
 
-    const { data, error } = await db.from("products").insert(row).select().single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    let insertData = await db.from("products").insert(row).select().single();
+    let tokenStored = true;
+
+    // Graceful fallback: approval_token column not yet in DB (migration 044 pending).
+    if (insertData.error && (isPostgrestSchemaMismatch(insertData.error) || isSupabaseMissingColumnError(insertData.error, "approval_token"))) {
+      const { approval_token: _tok, ...rowWithoutToken } = row;
+      insertData = await db.from("products").insert(rowWithoutToken).select().single();
+      tokenStored = false;
+    }
+    if (insertData.error) return NextResponse.json({ error: insertData.error.message }, { status: 500 });
+    const data = insertData.data;
 
     // Notify the Serbian team so they can approve/reject directly from their inbox.
     const productCountry = String(row.country || "");
-    if (isSerbianListing(productCountry) && data?.approval_token) {
+    if (isSerbianListing(productCountry)) {
       sendSerbiaProductNotification({
-        token: String(data.approval_token),
-        id: String(data.id),
-        name: String(data.name || row.name || ""),
-        artisan: String(data.artisan || artisan),
-        category: String(data.category || row.category || ""),
+        token: tokenStored ? approvalToken : null,
+        id: String(data?.id ?? id),
+        name: String(data?.name || row.name || ""),
+        artisan: String(data?.artisan || artisan),
+        category: String(data?.category || row.category || ""),
         country: productCountry,
-        price: Number(data.price ?? row.price ?? 0),
-        currency: String(data.currency || row.currency || "EUR"),
-        description: String(data.description || row.description || ""),
+        price: Number(data?.price ?? row.price ?? 0),
+        currency: String(data?.currency || row.currency || "EUR"),
+        description: String(data?.description || row.description || ""),
         submitterEmail: String(profile.contact_email || ctx.session.email || "") || null,
         submitterPhone: phone || null,
       }).catch((err) => console.error("[seller/products] notification email failed:", err));
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(data ?? {}, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }

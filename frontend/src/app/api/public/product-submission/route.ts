@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, isSupabaseMissingColumnError } from "@/lib/supabase/admin";
+import { createAdminClient, isSupabaseMissingColumnError, isPostgrestSchemaMismatch } from "@/lib/supabase/admin";
 import { verifyTurnstileFromRequest } from "@/lib/verify-turnstile";
 import { normalizeListingPhone } from "@/lib/listing-phone";
 import { slugifyBusinessName } from "@/lib/slug";
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const id = `pub-product-${crypto.randomUUID()}`;
+    const approvalToken = crypto.randomUUID();
     const business_slug = slugifyBusinessName(artisan);
 
     let db;
@@ -102,12 +103,23 @@ export async function POST(request: NextRequest) {
       submitter_email: contactEmail || null,
       submitter_phone: contactPhone,
       phone: contactPhone,
+      approval_token: approvalToken,
     };
 
-    let insertResult = await db.from("products").insert(row).select("id, approval_token").single();
+    let insertResult = await db.from("products").insert(row).select("id").single();
+    let tokenStored = true;
+
+    // Graceful fallback: approval_token column not yet in DB (migration 044 pending).
+    if (insertResult.error && (isPostgrestSchemaMismatch(insertResult.error) || isSupabaseMissingColumnError(insertResult.error, "approval_token"))) {
+      const { approval_token: _tok, ...rowWithoutToken } = row;
+      insertResult = await db.from("products").insert(rowWithoutToken).select("id").single();
+      tokenStored = false;
+    }
+    // Graceful fallback: images column not yet in DB.
     if (insertResult.error && isSupabaseMissingColumnError(insertResult.error, "images")) {
-      const { images: _omit, ...withoutImages } = row;
-      insertResult = await db.from("products").insert(withoutImages).select("id, approval_token").single();
+      const { images: _omit, approval_token: _tok2, ...withoutExtras } = row;
+      insertResult = await db.from("products").insert(withoutExtras).select("id").single();
+      tokenStored = false;
     }
     if (insertResult.error) {
       const error = insertResult.error;
@@ -116,9 +128,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Notify the Serbian team so they can approve/reject directly from their inbox.
-    if (isSerbianListing(country) && insertResult.data?.approval_token) {
+    // Email is always sent for Serbian submissions; approve/reject buttons only work
+    // once migration 044 has been applied (tokenStored = true).
+    if (isSerbianListing(country)) {
       sendSerbiaProductNotification({
-        token: String(insertResult.data.approval_token),
+        token: tokenStored ? approvalToken : null,
         id,
         name,
         artisan,
