@@ -11,6 +11,15 @@ import { Resend } from "resend";
 const SERBIA_REVIEW_EMAIL =
   process.env.SERBIA_REVIEW_EMAIL || "rediserbia@redi-ngo.eu";
 
+// Additional CC recipients (comma-separated). Defaults to cboldis@yahoo.com.
+function getCcRecipients(): string[] {
+  const raw = process.env.SERBIA_REVIEW_CC ?? "cboldis@yahoo.com";
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export function isSerbianListing(country: string): boolean {
   return country.trim().toLowerCase().includes("serbia");
 }
@@ -123,10 +132,12 @@ export async function sendSerbiaProductNotification(
 </body>
 </html>`;
 
+  const cc = getCcRecipients();
   try {
     const result = await resend.emails.send({
       from: getFromAddress(),
       to: [SERBIA_REVIEW_EMAIL],
+      ...(cc.length ? { cc } : {}),
       subject: `[PappoShop] New Serbian product to review: ${input.name} by ${input.artisan}`,
       html,
     });
@@ -212,10 +223,12 @@ export async function sendSerbiaServiceNotification(
 </body>
 </html>`;
 
+  const cc = getCcRecipients();
   try {
     const result = await resend.emails.send({
       from: getFromAddress(),
       to: [SERBIA_REVIEW_EMAIL],
+      ...(cc.length ? { cc } : {}),
       subject: `[PappoShop] New Serbian service to review: ${input.serviceTitle} by ${input.contactName}`,
       html,
     });
