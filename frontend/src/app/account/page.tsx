@@ -472,15 +472,21 @@ function SellerDashboard() {
   }
 
   async function uploadSellerListingImage(file: File): Promise<string> {
+    const { compressImageForUpload } = await import("@/lib/image-compress");
+    const compressed = await compressImageForUpload(file);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressed);
     const res = await fetch("/api/public/upload", {
       method: "POST",
       body: formData,
     });
     const data = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
     if (!res.ok || !data.url) {
-      throw new Error(data.error || "Image upload failed.");
+      const msg =
+        res.status === 413
+          ? "Image is too large. Please use a smaller or lower-resolution photo."
+          : data.error || "Image upload failed.";
+      throw new Error(msg);
     }
     return data.url;
   }
