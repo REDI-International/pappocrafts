@@ -95,6 +95,8 @@ export const serviceCategories = [
   { name: "Transport & Moving", icon: "🚚", description: "Moving, driving" },
   { name: "IT & Digital", icon: "💻", description: "PC, web, phones" },
   { name: "Events & Catering", icon: "🎉", description: "Catering, music, planning" },
+  { name: "Jobs", icon: "💼", description: "Job opportunities & employment" },
+  { name: "Trainings", icon: "🎓", description: "Courses, workshops & skills" },
 ];
 
 export const serviceCategoryNames = serviceCategories.map((c) => c.name);
