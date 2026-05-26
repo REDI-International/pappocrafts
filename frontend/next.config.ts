@@ -3,6 +3,12 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      // Allow large image uploads through Next.js server actions / route handlers.
+      bodySizeLimit: "15mb",
+    },
+  },
   async rewrites() {
     return [
       { source: "/feedback-testing", destination: "/feedback-testing.html" },

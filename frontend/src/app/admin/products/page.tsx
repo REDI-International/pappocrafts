@@ -191,14 +191,21 @@ export default function AdminProducts() {
     if (!editing) return;
     setUploading(true);
     try {
+      const { compressImageForUpload } = await import("@/lib/image-compress");
+      const compressed = await compressImageForUpload(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
       });
-      const data = await res.json();
+      let data: { error?: string; url?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // Non-JSON response (e.g. 413 Request Entity Too Large from proxy)
+      }
       if (res.ok && data.url) {
         setEditing((e) => {
           if (!e) return e;
@@ -207,7 +214,11 @@ export default function AdminProducts() {
           return { ...e, imageSlots: next };
         });
       } else {
-        alert(`Image upload failed: ${data.error || "Unknown error"}`);
+        const msg =
+          res.status === 413
+            ? "Image is too large. Please use a smaller or lower-resolution photo."
+            : data.error || "Unknown error";
+        alert(`Image upload failed: ${msg}`);
       }
     } catch (err) {
       alert(`Image upload failed: ${err instanceof Error ? err.message : "Network error"}`);

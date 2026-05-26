@@ -255,15 +255,23 @@ export default function ListingOfferModal({
   }
 
   async function uploadPublicListingImage(file: File): Promise<string> {
+    const { compressImageForUpload } = await import("@/lib/image-compress");
+    const compressed = await compressImageForUpload(file);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressed);
     const res = await fetch("/api/public/upload", {
       method: "POST",
       body: formData,
     });
     const data = (await res.json().catch(() => ({}))) as { error?: unknown; url?: unknown };
     if (!res.ok || typeof data.url !== "string") {
-      throw new Error(typeof data.error === "string" ? data.error : t("listing.error"));
+      const msg =
+        res.status === 413
+          ? "Image is too large. Please use a smaller or lower-resolution photo."
+          : typeof data.error === "string"
+            ? data.error
+            : t("listing.error");
+      throw new Error(msg);
     }
     return data.url;
   }
