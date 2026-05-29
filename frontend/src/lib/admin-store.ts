@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-export type UserRole = "superadmin" | "admin" | "user" | "seller";
+export type UserRole = "superadmin" | "admin" | "user" | "seller" | "enroller";
 
 export interface StoredOrder {
   id: string;
@@ -56,6 +56,9 @@ const FALLBACK_USERS = [
   { email: "victor.dulgheru@yahoo.com", passwordHash: sha256("admin123"), role: "admin" as UserRole, name: "Victor" },
   { email: "richard@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "admin" as UserRole, name: "Richard" },
   { email: "lejla@redi-ngo.eu", passwordHash: sha256("admin123"), role: "admin" as UserRole, name: "Lejla" },
+  { email: "musa@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "enroller" as UserRole, name: "Musa" },
+  { email: "omer@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "enroller" as UserRole, name: "Omer" },
+  { email: "hadis@redi-ngo.eu", passwordHash: sha256("Welcome2REDI*"), role: "enroller" as UserRole, name: "Hadis" },
 ];
 
 const sessions: Map<string, Session> = new Map();

@@ -21,7 +21,7 @@ async function getSession(request: NextRequest) {
 }
 
 function isStaff(s: Session | null) {
-  return s && (s.role === "superadmin" || s.role === "admin");
+  return s && (s.role === "superadmin" || s.role === "admin" || s.role === "enroller");
 }
 
 export async function GET(request: NextRequest) {
