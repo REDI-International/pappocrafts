@@ -107,15 +107,23 @@ function AdminServicesInner() {
     setSaving(true);
     try {
       const method = isNew ? "POST" : "PATCH";
-      await fetch("/api/admin/services", {
+      const res = await fetch("/api/admin/services", {
         method,
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
         body: JSON.stringify(editing),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Save failed: ${err.error ?? res.statusText}`);
+        setSaving(false);
+        return;
+      }
       await fetchServices();
       setEditing(null);
       setIsNew(false);
-    } catch { /* ignore */ }
+    } catch (e) {
+      alert(`Save failed: ${e instanceof Error ? e.message : "Unknown error"}`);
+    }
     setSaving(false);
   }
 

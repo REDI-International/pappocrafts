@@ -85,11 +85,22 @@ export async function PATCH(request: NextRequest) {
     const updates: Record<string, unknown> = {};
     if (body.name !== undefined) updates.name = body.name;
     if (body.title !== undefined) updates.title = body.title;
-    if (body.description !== undefined) updates.description = body.description;
+    if (body.description !== undefined) {
+      updates.description = body.description;
+      // keep summary in sync so listing cards always reflect the latest short description
+      updates.summary = body.summary ?? body.description;
+    }
     if (body.longDescription !== undefined) updates.long_description = body.longDescription;
+    if (body.long_description !== undefined) updates.long_description = body.long_description;
     if (body.category !== undefined) updates.category = body.category;
     if (body.hourlyRate !== undefined) updates.hourly_rate = body.hourlyRate;
+    if (body.hourly_rate !== undefined) updates.hourly_rate = body.hourly_rate;
     if (body.fixedRateFrom !== undefined) updates.fixed_rate_from = body.fixedRateFrom;
+    if (body.fixed_rate_from !== undefined) updates.fixed_rate_from = body.fixed_rate_from;
+    if (body.currency !== undefined) updates.currency = body.currency;
+    if (body.rating !== undefined) updates.rating = body.rating;
+    if (body.reviewCount !== undefined) updates.review_count = body.reviewCount;
+    if (body.review_count !== undefined) updates.review_count = body.review_count;
     if (body.location !== undefined) updates.location = body.location;
     if (body.country !== undefined) updates.country = body.country;
     if (body.phone !== undefined || body.contactPhone !== undefined) {
@@ -103,9 +114,12 @@ export async function PATCH(request: NextRequest) {
     if (body.badges !== undefined) updates.badges = body.badges;
     if (body.available !== undefined) updates.available = body.available;
     if (body.responseTime !== undefined) updates.response_time = body.responseTime;
+    if (body.response_time !== undefined) updates.response_time = body.response_time;
+    if (body.completedJobs !== undefined) updates.completed_jobs = body.completedJobs;
+    if (body.completed_jobs !== undefined) updates.completed_jobs = body.completed_jobs;
     if (body.providerName !== undefined) updates.provider_name = body.providerName;
     if (body.provider_name !== undefined) updates.provider_name = body.provider_name;
-    if (body.summary !== undefined) updates.summary = body.summary;
+    if (body.summary !== undefined && updates.summary === undefined) updates.summary = body.summary;
     if (body.yearsExperience !== undefined) updates.years_experience = body.yearsExperience;
     if (body.years_experience !== undefined) updates.years_experience = body.years_experience;
     if (body.languagesSpoken !== undefined) updates.languages_spoken = body.languagesSpoken;
