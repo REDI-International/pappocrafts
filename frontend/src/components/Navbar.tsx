@@ -203,6 +203,9 @@ export default function Navbar() {
                   {t("nav.services")}
                 </Link>
               </div>
+              <Link href="/landing#mission" className="text-sm font-medium text-charcoal/70 hover:text-green transition-colors">
+                {t("nav.mission")}
+              </Link>
               <Link href="/landing#how-it-works" className="text-sm font-medium text-charcoal/70 hover:text-green transition-colors">
                 {t("nav.howItWorks")}
               </Link>
@@ -302,6 +305,9 @@ export default function Navbar() {
                 }`}
               >
                 {t("nav.services")}
+              </Link>
+              <Link href="/landing#mission" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-charcoal/70 hover:bg-light-dark hover:text-green transition-colors">
+                {t("nav.mission")}
               </Link>
               <Link href="/landing#how-it-works" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-charcoal/70 hover:bg-light-dark hover:text-green transition-colors">
                 {t("nav.howItWorks")}
