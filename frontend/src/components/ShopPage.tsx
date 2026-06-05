@@ -10,6 +10,7 @@ import { categories, type Product, mapSupabaseProduct, shopCategoryChips } from 
 import { amountInListingCurrencyToEur } from "@/lib/eur-fallback-rates";
 import { useLocale } from "@/lib/locale-context";
 import { translateShopCategory } from "@/lib/translations";
+import { LISTING_COUNTRIES } from "@/lib/country-currency";
 import { hasFeaturedMarker } from "@/lib/listing-featured";
 import { trackMarketplaceEvent } from "@/components/Analytics";
 import ProductImageOverlays from "@/components/ProductImageOverlays";
@@ -88,7 +89,7 @@ function ShopContent() {
   }, [searchParams, listingBase]);
 
   const countryOptions = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(LISTING_COUNTRIES);
     products.forEach((p) => {
       if (p.country?.trim()) set.add(p.country.trim());
     });
@@ -124,7 +125,8 @@ function ShopContent() {
       result = result.filter((p) => {
         if (p.businessSlug === slug) return true;
         if (!targetBusiness) return false;
-        return normalizeBrandLabel(p.businessName) === targetBusiness;
+        if (normalizeBrandLabel(p.businessName) === targetBusiness) return true;
+        return normalizeBrandLabel(p.artisan) === targetBusiness;
       });
     } else if (activeArtisan) {
       result = result.filter((p) => p.artisan === activeArtisan);
@@ -314,7 +316,7 @@ function ShopContent() {
                   : "border-green/20 bg-white text-green hover:bg-green/5"
               }`}
             >
-              Women Entrepreneurship
+              {t("shop.womenEntrepreneurship")}
             </button>
           </div>
 
@@ -323,7 +325,7 @@ function ShopContent() {
               <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-green">
-                    Women Entrepreneurship
+                    {t("shop.womenEntrepreneurship")}
                   </p>
                   <h2 className="mt-2 font-serif text-2xl font-bold text-charcoal">
                     Discover products from women-led Roma businesses

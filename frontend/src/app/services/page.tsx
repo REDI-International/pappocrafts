@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { serviceProviders, serviceCategories, mapSupabaseServiceRow, type ServiceProvider } from "@/lib/services";
 import { useLocale } from "@/lib/locale-context";
 import { translateServiceCategory } from "@/lib/translations";
+import { LISTING_COUNTRIES } from "@/lib/country-currency";
 import { hasFeaturedMarker } from "@/lib/listing-featured";
 
 const SERVICES_PER_PAGE = 12;
@@ -43,7 +44,7 @@ function ServicesContent() {
   }, []);
 
   const countryOptions = useMemo(() => {
-    const s = new Set<string>();
+    const s = new Set<string>(LISTING_COUNTRIES);
     list.forEach((p) => {
       if (p.country?.trim()) s.add(p.country.trim());
     });
@@ -162,11 +163,6 @@ function ServicesContent() {
       <main className="pt-20 pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="sr-only">{t("services.title")}</h1>
-          <div className="text-center max-w-2xl mx-auto mb-5">
-            <p className="text-base text-charcoal/60 leading-relaxed">
-              {t("services.desc")}
-            </p>
-          </div>
 
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center max-w-3xl mx-auto">
             <div className="relative flex-1 min-w-[200px] max-w-sm mx-auto sm:mx-0">

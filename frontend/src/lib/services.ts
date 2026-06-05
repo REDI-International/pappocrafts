@@ -79,9 +79,8 @@ export const serviceCategories = [
   { name: "Carpentry", icon: "🪚", description: "Woodwork, doors, shelves" },
   { name: "Painting", icon: "🎨", description: "Interior & exterior paint" },
   { name: "Interior Decoration", icon: "✨", description: "Styling, décor, finishes" },
-  { name: "Handyman & General Maintenance", icon: "🛠️", description: "Small repairs & fixes" },
   { name: "Gardening & Landscaping", icon: "🌿", description: "Gardens, lawns, outdoor work" },
-  { name: "Home Renovation", icon: "🏠", description: "Larger home projects" },
+  { name: "Home Renovation", icon: "🏠", description: "Construction & renovation" },
   { name: "Appliance Repair", icon: "🔌", description: "Washers, fridges, small appliances" },
   { name: "Home Repair", icon: "🔧", description: "General home fixes" },
   { name: "Pet Care", icon: "🐕", description: "Sitting, walking, grooming" },
@@ -97,6 +96,7 @@ export const serviceCategories = [
   { name: "Events & Catering", icon: "🎉", description: "Catering, music, planning" },
   { name: "Jobs", icon: "💼", description: "Job opportunities & employment" },
   { name: "Trainings", icon: "🎓", description: "Courses, workshops & skills" },
+  { name: "Travel Agency", icon: "✈️", description: "Travel, tours & bookings" },
 ];
 
 export const serviceCategoryNames = serviceCategories.map((c) => c.name);

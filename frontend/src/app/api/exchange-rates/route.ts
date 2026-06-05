@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { UNITS_PER_ONE_EUR } from "@/lib/eur-fallback-rates";
 
-const SUPPORTED_CURRENCIES = ["RSD", "ALL", "BAM", "MKD", "TRY"] as const;
+const SUPPORTED_CURRENCIES = ["RSD", "ALL", "BAM", "MKD"] as const;
 
 interface CachedRates {
   rates: Record<string, number>;

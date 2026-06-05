@@ -35,12 +35,6 @@ export default function Footer() {
               <p className="mt-2 text-sm font-medium text-green-light select-all" translate="no">
                 {t("footer.supportEmail")}
               </p>
-              <p className="mt-3 text-xs text-white/40">
-                {t("footer.techIssues")}{" "}
-                <span className="text-white/60 select-all" translate="no">
-                  {t("footer.supportEmail")}
-                </span>
-              </p>
               <p className="mt-3">
                 <Link
                   href="/feedback"
