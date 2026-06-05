@@ -36,6 +36,8 @@ function ShopContent() {
   const [countryFilter, setCountryFilter] = useState("");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [womenOnly, setWomenOnly] = useState(searchParams.get("women") === "true");
+  const [ecoOnly, setEcoOnly] = useState(searchParams.get("eco") === "true");
+  const [handmadeOnly, setHandmadeOnly] = useState(searchParams.get("handmade") === "true");
   const [activeArtisan, setActiveArtisan] = useState(artisanFilter);
   const [activeBusinessSlug, setActiveBusinessSlug] = useState(businessFilter);
   const [products, setProducts] = useState<Product[]>([]);
@@ -140,6 +142,13 @@ function ShopContent() {
     if (inStockOnly) {
       result = result.filter((p) => p.inStock);
     }
+    if (ecoOnly || handmadeOnly) {
+      result = result.filter((p) => {
+        if (ecoOnly && p.category === "Eco Products") return true;
+        if (handmadeOnly && p.category === "Handmade Accessories") return true;
+        return false;
+      });
+    }
     if (womenOnly) {
       result = result.filter((p) => p.womenEntrepreneurship);
     }
@@ -155,7 +164,7 @@ function ShopContent() {
       );
     }
     return result;
-  }, [activeCategory, activeArtisan, activeBusinessSlug, activeBusinessName, search, products, countryFilter, inStockOnly, womenOnly]);
+  }, [activeCategory, activeArtisan, activeBusinessSlug, activeBusinessName, search, products, countryFilter, inStockOnly, womenOnly, ecoOnly, handmadeOnly]);
 
   const sortedProducts = useMemo(() => {
     const copy = [...filtered];
@@ -192,7 +201,7 @@ function ShopContent() {
     [sortedProducts, currentPage]
   );
 
-  const filterKey = `${activeCategory}|${search}|${countryFilter}|${inStockOnly}|${womenOnly}|${activeArtisan}|${activeBusinessSlug}|${sortMode}`;
+  const filterKey = `${activeCategory}|${search}|${countryFilter}|${inStockOnly}|${womenOnly}|${ecoOnly}|${handmadeOnly}|${activeArtisan}|${activeBusinessSlug}|${sortMode}`;
   const prevFilterKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -318,6 +327,46 @@ function ShopContent() {
             >
               {t("shop.womenEntrepreneurship")}
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !ecoOnly;
+                setEcoOnly(next);
+                const u = new URLSearchParams(searchParams.toString());
+                if (next) u.set("eco", "true");
+                else u.delete("eco");
+                u.delete("page");
+                const q = u.toString();
+                router.replace(q ? `${listingBase}?${q}` : listingBase, { scroll: false });
+              }}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                ecoOnly
+                  ? "border-green bg-green text-white"
+                  : "border-green/20 bg-white text-green hover:bg-green/5"
+              }`}
+            >
+              ♻️ {t("shop.ecoProducts")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !handmadeOnly;
+                setHandmadeOnly(next);
+                const u = new URLSearchParams(searchParams.toString());
+                if (next) u.set("handmade", "true");
+                else u.delete("handmade");
+                u.delete("page");
+                const q = u.toString();
+                router.replace(q ? `${listingBase}?${q}` : listingBase, { scroll: false });
+              }}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                handmadeOnly
+                  ? "border-green bg-green text-white"
+                  : "border-green/20 bg-white text-green hover:bg-green/5"
+              }`}
+            >
+              🤲 {t("shop.handmade")}
+            </button>
           </div>
 
           {womenOnly && (
@@ -427,9 +476,13 @@ function ShopContent() {
                   setCountryFilter("");
                   setInStockOnly(false);
                   setWomenOnly(false);
+                  setEcoOnly(false);
+                  setHandmadeOnly(false);
                   setSortMode("featured");
                   const u = new URLSearchParams(searchParams.toString());
                   u.delete("women");
+                  u.delete("eco");
+                  u.delete("handmade");
                   u.delete("page");
                   const q = u.toString();
                   router.replace(q ? `${listingBase}?${q}` : listingBase, { scroll: false });
