@@ -49,6 +49,9 @@ export default function ListingOfferModal({
   const [productEmail, setProductEmail] = useState("");
   const [productPhone, setProductPhone] = useState("");
   const [productInStock, setProductInStock] = useState(true);
+  const [productWomenEntrepreneurship, setProductWomenEntrepreneurship] = useState(false);
+  const [productEcoProducts, setProductEcoProducts] = useState(false);
+  const [productHandmade, setProductHandmade] = useState(false);
 
   const [svcName, setSvcName] = useState("");
   const [svcEmail, setSvcEmail] = useState("");
@@ -62,6 +65,9 @@ export default function ListingOfferModal({
   const [svcLocation, setSvcLocation] = useState("");
   const [svcCountry, setSvcCountry] = useState<string>(LISTING_COUNTRIES[2]);
   const [svcAvailable, setSvcAvailable] = useState(true);
+  const [svcWomenEntrepreneurship, setSvcWomenEntrepreneurship] = useState(false);
+  const [svcEcoProducts, setSvcEcoProducts] = useState(false);
+  const [svcHandmade, setSvcHandmade] = useState(false);
   const [svcNotes, setSvcNotes] = useState("");
   const [svcImageUrl, setSvcImageUrl] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -117,6 +123,9 @@ export default function ListingOfferModal({
     setProductEmail("");
     setProductPhone("");
     setProductInStock(true);
+    setProductWomenEntrepreneurship(false);
+    setProductEcoProducts(false);
+    setProductHandmade(false);
     setSvcName("");
     setSvcEmail("");
     setSvcPhone("");
@@ -127,6 +136,9 @@ export default function ListingOfferModal({
     setSvcLocation("");
     setSvcCountry(LISTING_COUNTRIES[2]);
     setSvcAvailable(true);
+    setSvcWomenEntrepreneurship(false);
+    setSvcEcoProducts(false);
+    setSvcHandmade(false);
     setSvcNotes("");
     setSvcImageUrl("");
     setCaptchaToken(null);
@@ -160,6 +172,9 @@ export default function ListingOfferModal({
           contactEmail: productEmail.trim() || undefined,
           contactPhone: productPhone,
           inStock: productInStock,
+          womenEntrepreneurship: productWomenEntrepreneurship || undefined,
+          ecoProduct: productEcoProducts || undefined,
+          handmade: productHandmade || undefined,
           captchaToken: captchaToken || undefined,
         }),
       });
@@ -201,6 +216,9 @@ export default function ListingOfferModal({
           location: svcLocation,
           country: svcCountry,
           available: svcAvailable,
+          womenEntrepreneurship: svcWomenEntrepreneurship || undefined,
+          ecoProduct: svcEcoProducts || undefined,
+          handmade: svcHandmade || undefined,
           notes: svcNotes || undefined,
           imageUrl: svcImageUrl.trim() || undefined,
           captchaToken: captchaToken || undefined,
@@ -666,6 +684,38 @@ export default function ListingOfferModal({
                       </button>
                     </div>
                   </div>
+                  <div>
+                    <label className={labelClass}>Labels (optional)</label>
+                    <div className="mt-2 flex flex-col gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={productWomenEntrepreneurship}
+                          onChange={(e) => setProductWomenEntrepreneurship(e.target.checked)}
+                          className="rounded border-charcoal/20 text-green focus:ring-green"
+                        />
+                        <span className="text-xs text-charcoal/70">Woman Entrepreneurship</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={productEcoProducts}
+                          onChange={(e) => setProductEcoProducts(e.target.checked)}
+                          className="rounded border-charcoal/20 text-green focus:ring-green"
+                        />
+                        <span className="text-xs text-charcoal/70">Eco Products</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={productHandmade}
+                          onChange={(e) => setProductHandmade(e.target.checked)}
+                          className="rounded border-charcoal/20 text-green focus:ring-green"
+                        />
+                        <span className="text-xs text-charcoal/70">Handmade</span>
+                      </label>
+                    </div>
+                  </div>
                   <button
                     type="submit"
                     disabled={
@@ -911,6 +961,38 @@ export default function ListingOfferModal({
                       >
                         Not available now
                       </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Labels (optional)</label>
+                    <div className="mt-2 flex flex-col gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={svcWomenEntrepreneurship}
+                          onChange={(e) => setSvcWomenEntrepreneurship(e.target.checked)}
+                          className="rounded border-charcoal/20 text-green focus:ring-green"
+                        />
+                        <span className="text-xs text-charcoal/70">Woman Entrepreneurship</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={svcEcoProducts}
+                          onChange={(e) => setSvcEcoProducts(e.target.checked)}
+                          className="rounded border-charcoal/20 text-green focus:ring-green"
+                        />
+                        <span className="text-xs text-charcoal/70">Eco Products</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={svcHandmade}
+                          onChange={(e) => setSvcHandmade(e.target.checked)}
+                          className="rounded border-charcoal/20 text-green focus:ring-green"
+                        />
+                        <span className="text-xs text-charcoal/70">Handmade</span>
+                      </label>
                     </div>
                   </div>
                   <button

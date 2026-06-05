@@ -345,20 +345,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 {product.name}
               </h1>
 
-              <p className="mt-2 text-charcoal/60">
-                {t("product.handcraftedBy")}{" "}
-                <Link
-                  href={
-                    product.businessSlug
-                      ? `/?business=${encodeURIComponent(product.businessSlug)}`
-                      : `/?artisan=${encodeURIComponent(product.artisan)}`
-                  }
-                  className="font-bold text-charcoal hover:text-green transition-colors"
-                >
-                  {product.businessName}
-                </Link>
-              </p>
-
               {hasSellerProfile && (
                 <div className="mt-4 rounded-xl border border-charcoal/10 bg-light/60 p-4">
                   <div className="flex items-start gap-3">

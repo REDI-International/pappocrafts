@@ -8,7 +8,6 @@ export const UNITS_PER_ONE_EUR: Record<string, number> = {
   ALL: 100.5,
   BAM: 1.956,
   MKD: 61.5,
-  TRY: 38.5,
 };
 
 const ALLOWED = new Set(Object.keys(UNITS_PER_ONE_EUR));

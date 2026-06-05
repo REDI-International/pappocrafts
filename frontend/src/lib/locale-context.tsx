@@ -27,7 +27,7 @@ import {
 } from "./pricing";
 import { UNITS_PER_ONE_EUR, amountInListingCurrencyToEur } from "./eur-fallback-rates";
 
-export type CurrencyCode = "EUR" | "RSD" | "ALL" | "BAM" | "MKD" | "TRY";
+export type CurrencyCode = "EUR" | "RSD" | "ALL" | "BAM" | "MKD";
 
 interface LocaleConfig {
   code: SelectableLocale;
@@ -51,7 +51,6 @@ export const currencies: CurrencyConfig[] = [
   { code: "ALL", symbol: "L", name: "Albanian Lek", flag: "🇦🇱", symbolPosition: "after", decimals: 0 },
   { code: "BAM", symbol: "KM", name: "Bosnian Mark", flag: "🇧🇦", symbolPosition: "after", decimals: 2 },
   { code: "MKD", symbol: "ден", name: "Macedonian Denar", flag: "🇲🇰", symbolPosition: "after", decimals: 0 },
-  { code: "TRY", symbol: "₺", name: "Turkish Lira", flag: "🇹🇷", symbolPosition: "before", decimals: 2 },
 ];
 
 export const locales: LocaleConfig[] = [

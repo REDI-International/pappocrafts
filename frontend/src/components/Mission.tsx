@@ -21,6 +21,7 @@ export default function Mission() {
   const title = useAdminMissionCopy && siteSettings.mission_title.trim() ? siteSettings.mission_title : t("mission.title");
   const desc1 = useAdminMissionCopy && siteSettings.mission_desc1.trim() ? siteSettings.mission_desc1 : t("mission.desc1");
   const desc2 = useAdminMissionCopy && siteSettings.mission_desc2.trim() ? siteSettings.mission_desc2 : t("mission.desc2");
+  const desc3 = t("mission.desc3");
 
   return (
     <section id="mission" className="py-24 sm:py-32">
@@ -41,6 +42,9 @@ export default function Mission() {
             </p>
             <p className="mt-4 text-lg text-charcoal/70 leading-relaxed">
               {desc2}
+            </p>
+            <p className="mt-4 text-lg text-charcoal/70 leading-relaxed">
+              {desc3}
             </p>
 
             <a
