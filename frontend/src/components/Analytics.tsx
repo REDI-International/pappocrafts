@@ -1,21 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Script from "next/script";
+import { hasAnalyticsConsent } from "@/components/CookieConsent";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const GADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
 
 export default function Analytics() {
+  const [consented, setConsented] = useState(false);
+
+  useEffect(() => {
+    // Read existing consent from localStorage
+    setConsented(hasAnalyticsConsent());
+
+    // Load analytics immediately when the user accepts in this session
+    function onAccept() {
+      setConsented(true);
+    }
+    window.addEventListener("cookie-consent-accepted", onAccept);
+    return () => window.removeEventListener("cookie-consent-accepted", onAccept);
+  }, []);
+
   const hasGA = !!GA_ID;
   const hasGAds = !!GADS_ID;
   const hasFB = !!FB_PIXEL_ID;
 
-  if (!hasGA && !hasFB) return null;
+  if (!consented || (!hasGA && !hasFB)) return null;
 
   return (
     <>
-      {/* Google Analytics + Google Ads */}
+      {/* Google Analytics + Google Ads — loaded only after cookie consent */}
       {hasGA && (
         <>
           <Script
@@ -34,7 +50,7 @@ export default function Analytics() {
         </>
       )}
 
-      {/* Facebook Pixel */}
+      {/* Facebook Pixel — loaded only after cookie consent */}
       {hasFB && (
         <>
           <Script id="facebook-pixel" strategy="afterInteractive">
@@ -79,7 +95,6 @@ export function trackPurchase(params: {
 }) {
   const { orderId, total, currency = "EUR", items = [] } = params;
 
-  // Google Analytics 4 — purchase event
   if (typeof window !== "undefined" && "gtag" in window) {
     (window as unknown as { gtag: (...args: unknown[]) => void }).gtag("event", "purchase", {
       transaction_id: orderId,
@@ -94,7 +109,6 @@ export function trackPurchase(params: {
     });
   }
 
-  // Google Ads conversion
   if (typeof window !== "undefined" && "gtag" in window && GADS_ID) {
     const conversionLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL;
     if (conversionLabel) {
@@ -107,7 +121,6 @@ export function trackPurchase(params: {
     }
   }
 
-  // Facebook Pixel — Purchase event
   if (typeof window !== "undefined" && "fbq" in window) {
     (window as unknown as { fbq: (...args: unknown[]) => void }).fbq("track", "Purchase", {
       value: total,

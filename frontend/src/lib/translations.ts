@@ -98,7 +98,7 @@ type Translations = Record<TranslationKey, string>;
 
 const en: Translations = {
   "nav.home": "Home",
-  "nav.shop": "Shop",
+  "nav.shop": "Products",
   "nav.services": "Services",
   "nav.howItWorks": "How It Works",
   "nav.mission": "Our Story",
@@ -461,7 +461,7 @@ const en: Translations = {
 
 const sr: Translations = {
   "nav.home": "Početna",
-  "nav.shop": "Prodavnica",
+  "nav.shop": "Proizvodi",
   "nav.services": "Usluge",
   "nav.howItWorks": "Kako funkcioniše",
   "nav.mission": "Naša priča",
@@ -560,9 +560,9 @@ const sr: Translations = {
   "svc.desc": "Više od ručno izrađenih proizvoda — povežite se sa pouzdanim pružaocima usluga širom Zapadnog Balkana za popravke u kući, brigu o ljubimcima, podučavanje i još mnogo toga.",
   "svc.browseAll": "Pregledaj sve usluge",
   "mission.badge": "Naša priča",
-  "mission.title": "Sa dušom iz 'Djedove radionice'",
+  "mission.title": "Sa dušom iz 'Dedine radionice'",
   "mission.desc1":
-    "PappoShop znači 'Djedova radionica' na romskom – otkrijte autentične rukotvorine, usluge i proizvode od preduzetnika širom Zapadnog Balkana. Svakom kupovinom ulažete u njihov profesionalni razvoj i doprinosite očuvanju drevnog kulturnog bogatstva naše regije.",
+    "PappoShop znači 'Dedina radionica' na romskom – otkrijte autentične rukotvorine, usluge i proizvode od preduzetnika širom Zapadnog Balkana. Svakom kupovinom ulažete u njihov profesionalni razvoj i doprinosite očuvanju drevnog kulturnog bogatstva naše regije.",
   "mission.desc2":
     "PappoShop povezuje talentovane preduzetnike i pružaoce usluga sa kupcima koji cene autentičnost i kvalitet. I svakom kupovinom direktno podržavate njihov put ka samoodrživosti.",
   "mission.desc3":
@@ -824,7 +824,7 @@ const sr: Translations = {
 
 const sq: Translations = {
   "nav.home": "Fillimi",
-  "nav.shop": "Dyqani",
+  "nav.shop": "Produktet",
   "nav.services": "Shërbimet",
   "nav.howItWorks": "Si funksionon",
   "nav.mission": "Historia jonë",
@@ -1187,7 +1187,7 @@ const sq: Translations = {
 
 const bs: Translations = {
   "nav.home": "Početna",
-  "nav.shop": "Trgovina",
+  "nav.shop": "Proizvodi",
   "nav.services": "Usluge",
   "nav.howItWorks": "Kako funkcionira",
   "nav.mission": "Naša priča",
@@ -1549,7 +1549,7 @@ const bs: Translations = {
 
 const mk: Translations = {
   "nav.home": "Почетна",
-  "nav.shop": "Продавница",
+  "nav.shop": "Производи",
   "nav.services": "Услуги",
   "nav.howItWorks": "Како функционира",
   "nav.mission": "Нашата приказна",
@@ -1922,7 +1922,7 @@ const cnr: Translations = {
 
 const tr: Translations = {
   "nav.home": "Ana Sayfa",
-  "nav.shop": "Mağaza",
+  "nav.shop": "Ürünler",
   "nav.services": "Hizmetler",
   "nav.howItWorks": "Nasıl Çalışır",
   "nav.mission": "Hikayemiz",

@@ -27,7 +27,7 @@ import {
 } from "./pricing";
 import { UNITS_PER_ONE_EUR, amountInListingCurrencyToEur } from "./eur-fallback-rates";
 
-export type CurrencyCode = "EUR" | "RSD" | "ALL" | "BAM" | "MKD";
+export type CurrencyCode = "EUR" | "RSD" | "ALL" | "MKD";
 
 interface LocaleConfig {
   code: SelectableLocale;
@@ -49,15 +49,14 @@ export const currencies: CurrencyConfig[] = [
   { code: "EUR", symbol: "€", name: "Euro", flag: "🇪🇺", symbolPosition: "before", decimals: 2 },
   { code: "RSD", symbol: "RSD", name: "Serbian Dinar", flag: "🇷🇸", symbolPosition: "after", decimals: 0 },
   { code: "ALL", symbol: "L", name: "Albanian Lek", flag: "🇦🇱", symbolPosition: "after", decimals: 0 },
-  { code: "BAM", symbol: "KM", name: "Bosnian Mark", flag: "🇧🇦", symbolPosition: "after", decimals: 2 },
   { code: "MKD", symbol: "ден", name: "Macedonian Denar", flag: "🇲🇰", symbolPosition: "after", decimals: 0 },
 ];
 
 export const locales: LocaleConfig[] = [
-  { code: "en", name: "English", flag: "🇬🇧", defaultCurrency: "EUR" },
-  { code: "sr", name: "Srpski", flag: "🇷🇸", defaultCurrency: "RSD" },
-  { code: "sq", name: "Shqip", flag: "🇦🇱", defaultCurrency: "ALL" },
-  { code: "mk", name: "Македонски", flag: "🇲🇰", defaultCurrency: "MKD" },
+  { code: "en", name: "ENG", flag: "🇬🇧", defaultCurrency: "EUR" },
+  { code: "sr", name: "SR", flag: "🇷🇸", defaultCurrency: "RSD" },
+  { code: "sq", name: "SQ", flag: "🇦🇱", defaultCurrency: "ALL" },
+  { code: "mk", name: "MK", flag: "🇲🇰", defaultCurrency: "MKD" },
 ];
 
 const FALLBACK_RATES: Record<string, number> = { ...UNITS_PER_ONE_EUR };
