@@ -6,7 +6,6 @@ export const UNITS_PER_ONE_EUR: Record<string, number> = {
   EUR: 1,
   RSD: 117.2,
   ALL: 100.5,
-  BAM: 1.956,
   MKD: 61.5,
 };
 
